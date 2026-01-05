@@ -5,3 +5,4 @@ Proyecto de Diseño de Software
 - Jonathan Steven Guamán Maza
 - Helen Scarleth Jarrín Román
 - Christian David Sigcha Diaz
+- Ariel Guaña
