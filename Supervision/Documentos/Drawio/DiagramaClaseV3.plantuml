@@ -1,0 +1,712 @@
+@startuml
+
+' --- CONFIGURACION DE ESTILO ---
+skinparam classAttributeIconSize 0
+skinparam monochrome true
+skinparam shadowing false
+skinparam linetype ortho
+skinparam groupInheritance 2
+
+' ===============================================
+' CAPA DE DOMINIO - ENTIDADES
+' ===============================================
+
+package "Dominio - Entidades" <<Rectangle>> {
+    
+    ' --- ENUMERACIONES ---
+    enum Rol {
+        JEFATURA_DICC
+        DIRECTOR_PROYECTO
+        AYUDANTE_PROYECTO
+    }
+
+    enum EstadoProyecto {
+        AUTORIZADO_PENDIENTE
+        ACTIVO
+        FINALIZADO
+        SUSPENDIDO
+        CANCELADO
+    }
+
+    enum TipoProyecto {
+        INVESTIGACION
+        TRANSFERENCIA_TECNOLOGICA
+        VINCULACION
+    }
+
+    enum EstadoContrato {
+        PENDIENTE_APROBACION_DIRECTOR
+        ACTIVO
+        FINALIZADO_NORMAL
+        FINALIZADO_RENUNCIA
+        RECHAZADO
+    }
+
+    enum EstadoBitacora {
+        BORRADOR
+        ENVIADA_REVISION
+        APROBADA
+        RECHAZADA
+        REQUIERE_MODIFICACION
+    }
+    
+    enum TipoNotificacion {
+        PROYECTO_CREADO
+        SOLICITUD_INGRESO_AYUDANTE
+        CONTRATO_APROBADO
+        CONTRATO_RECHAZADO
+        RENUNCIA_AYUDANTE
+        FINALIZACION_PROYECTO
+        BITACORA_ENVIADA
+        BITACORA_APROBADA
+        BITACORA_RECHAZADA
+    }
+
+    ' --- ENTIDAD BASE ---
+    abstract class EntidadBase {
+        # id : Long
+        # fechaCreacion : LocalDateTime
+        # fechaModificacion : LocalDateTime
+        # creadoPor : String
+        # modificadoPor : String
+        # activo : boolean
+        + getId() : Long
+        + marcarComoEliminado() : void
+    }
+
+    ' --- USUARIOS ---
+    abstract class Usuario {
+        - codigoEPN : String {unique}
+        - cedula : String {unique}
+        - nombres : String
+        - apellidos : String
+        - correoInstitucional : String {unique}
+        - passwordHash : String
+        - rol : Rol
+        - emailVerificado : boolean
+        - fechaRegistro : LocalDateTime
+        + getNombreCompleto() : String
+        + validarPassword(password : String) : boolean
+        + cambiarPassword(nuevaPassword : String) : void
+        + esCorreoInstitucional() : boolean
+    }
+
+    class Docente {
+        - departamento : String
+        - cubiculo : String
+        - extension : String
+        - areaInvestigacion : String
+        + getProyectosActivos() : List<Proyecto>
+        + getProyectosHistoricos() : List<Proyecto>
+        + aprobarSolicitudAyudante(solicitud : Contrato, meses : Integer, semestre : Integer) : void
+    }
+
+    class Ayudante {
+        - carrera : String
+        - facultad : String
+        - quintil : Integer
+        - semestreActual : Integer
+        - promedioGeneral : Double
+        + getContratosActivos() : List<Contrato>
+        + getContratosHistoricos() : List<Contrato>
+        + calcularHorasTotalesTrabajadas() : Double
+        + solicitarIngresoProyecto(codigoProyecto : String) : Contrato
+    }
+
+    class JefaturaDICC {
+        - cargo : String
+        - departamento : String
+        - codigoRegistroEspecial : String {unique}
+        + tienePermisoTotal() : boolean
+        + autorizarProyectos(codigosProyecto : List<String>) : void
+    }
+
+    ' --- AUTORIZACION DE PROYECTOS ---
+    class ProyectoAutorizado {
+        - codigoProyecto : String {unique}
+        - fechaAutorizacion : LocalDateTime
+        - autorizadoPor : String
+        - utilizado : boolean
+        - fechaUtilizacion : LocalDateTime
+        + marcarComoUtilizado() : void
+        + estaDisponible() : boolean
+    }
+
+    ' --- PROYECTOS ---
+    class Proyecto {
+        - codigoProyecto : String {unique}
+        - titulo : String
+        - descripcion : String
+        - objetivoGeneral : String
+        - fechaInicioReal : LocalDate
+        - fechaFinEstimada : LocalDate
+        - fechaFinReal : LocalDate
+        - duracionSemestres : Integer
+        - semestreActual : Integer
+        - estado : EstadoProyecto
+        - tipoProyecto : TipoProyecto
+        ' Metadatos de capacidad por semestre
+        - capacidadAyudantesPorSemestre : Map<Integer, Integer>
+        
+        + activar() : void
+        + finalizar(fechaFin : LocalDate) : void
+        + suspender(motivo : String) : void
+        + avanzarSemestre() : void
+        + calcularMesesRestantes() : Integer
+        + verificarCapacidadDisponible(semestre : Integer) : boolean
+        + calcularTotalAyudantesActivos() : Integer
+        + calcularTotalAyudantesPorSemestre(semestre : Integer) : Integer
+    }
+
+    class Laboratorio {
+        - codigoLaboratorio : String {unique}
+        - nombre : String
+        - ubicacion : String
+        - responsable : String
+        - extension : String
+        + getProyectosActivos() : List<Proyecto>
+    }
+
+    ' --- CONTRATOS ---
+    class Contrato {
+        - numeroContrato : String {unique}
+        - fechaSolicitud : LocalDateTime
+        - fechaAprobacion : LocalDateTime
+        - fechaRechazo : LocalDateTime
+        - fechaInicioContrato : LocalDate
+        - fechaFinContrato : LocalDate
+        - fechaRenuncia : LocalDate
+        - mesesPactados : Integer
+        - mesesTrabajados : Integer
+        - horasSemanalePactadas : Integer
+        - remuneracionMensual : BigDecimal
+        - estado : EstadoContrato
+        - motivoRechazo : String
+        - motivoRenuncia : String
+        - semestreAsignado : Integer
+        
+        + aprobar(meses : Integer, semestre : Integer, aprobadoPor : Docente) : void
+        + rechazar(motivo : String, rechazadoPor : Docente) : void
+        + registrarRenuncia(fecha : LocalDate, motivo : String) : void
+        + finalizarNormalmente() : void
+        + calcularMesesRestantes() : Integer
+        + calcularMesesEfectivos() : Integer
+        + esActivo() : boolean
+        + puedeReemplazarse() : boolean
+        + getMesesDisponiblesParaReemplazo() : Integer
+    }
+
+    ' --- SEGUIMIENTO ---
+    class BitacoraMensual {
+        - codigoBitacora : String {unique}
+        - mes : Integer
+        - anio : Integer
+        - fechaEnvio : LocalDateTime
+        - fechaRevision : LocalDateTime
+        - estado : EstadoBitacora
+        - horasTotales : Double
+        - comentariosAyudante : String
+        - comentariosDirector : String
+        
+        + enviarRevision() : void
+        + aprobar(comentarios : String, aprobadoPor : Docente) : void
+        + rechazar(comentarios : String, rechazadoPor : Docente) : void
+        + solicitarModificacion(comentarios : String) : void
+        + calcularHorasTotales() : Double
+        + estaEnPlazo() : boolean
+    }
+
+    class Actividad {
+        - numeroActividad : Integer
+        - descripcion : String
+        - objetivoActividad : String
+        - resultadoObtenido : String
+        - tiempoDedicadoHoras : Double
+        - fechaEjecucion : LocalDate
+        - evidenciaUrl : String
+        - categoria : String
+        
+        + validarTiempoDedicado() : boolean
+    }
+
+    ' --- PRODUCCION CIENTIFICA ---
+    class Articulo {
+        - doi : String {unique}
+        - titulo : String
+        - revista : String
+        - volumen : String
+        - numero : String
+        - paginaInicio : Integer
+        - paginaFin : Integer
+        - fechaPublicacion : LocalDate
+        - cuartil : String
+        - indexacion : String
+        - urlAcceso : String
+        - estadoPublicacion : String
+        
+        + agregarAutorInterno(usuario : Usuario, orden : Integer) : void
+        + agregarAutorExterno(autor : AutorExterno, orden : Integer) : void
+        + calcularFactorImpacto() : Double
+    }
+
+    class AutorExterno {
+        - nombres : String
+        - apellidos : String
+        - email : String
+        - afiliacion : String
+        - paisAfiliacion : String
+        - orcid : String
+        + getNombreCompleto() : String
+    }
+    
+    class AutorArticulo {
+        - ordenAutoria : Integer
+        - esAutorCorrespondiente : boolean
+        - contribucion : String
+    }
+
+    ' --- NOTIFICACIONES ---
+    class Notificacion {
+        - titulo : String
+        - mensaje : String
+        - tipo : TipoNotificacion
+        - fechaEnvio : LocalDateTime
+        - leida : boolean
+        - fechaLectura : LocalDateTime
+        - urlReferencia : String
+        - datosAdicionales : String
+        
+        + marcarComoLeida() : void
+        + esUrgente() : boolean
+    }
+
+    ' --- AUDITORIA ---
+    class EventoAuditoria {
+        - tipoEvento : String
+        - entidadAfectada : String
+        - idEntidadAfectada : Long
+        - accion : String
+        - detalles : String
+        - ipOrigen : String
+        - fechaEvento : LocalDateTime
+        + registrarEvento() : void
+    }
+
+    ' --- CONFIGURACION DEL SISTEMA ---
+    class ConfiguracionSistema {
+        - claveConfiguracion : String {unique}
+        - valorConfiguracion : String
+        - descripcion : String
+        - editablePorJefatura : boolean
+    }
+}
+
+' ===============================================
+' CAPA DE APLICACION - SERVICIOS
+' ===============================================
+
+package "Aplicación - Servicios" <<Rectangle>> {
+    
+    ' --- SERVICIOS DE DOMINIO ---
+    interface IProyectoService {
+        + crearProyectoConCodigo(proyecto : Proyecto, codigoAutorizado : String, director : Docente) : Proyecto
+        + actualizarProyecto(id : Long, proyecto : Proyecto) : Proyecto
+        + finalizarProyecto(id : Long, fechaFin : LocalDate) : void
+        + suspenderProyecto(id : Long, motivo : String) : void
+        + avanzarSemestreProyecto(id : Long) : void
+        + listarProyectosActivos() : List<Proyecto>
+        + listarProyectosPorDirector(docenteId : Long) : List<Proyecto>
+        + obtenerEstadisticasProyecto(id : Long) : EstadisticasProyectoDTO
+        + verificarCodigoAutorizado(codigo : String) : boolean
+    }
+
+    interface IAutorizacionProyectoService {
+        + cargarProyectosAutorizadosDesdeCSV(archivo : File) : Integer
+        + autorizarProyecto(codigoProyecto : String, jefaturaId : Long) : ProyectoAutorizado
+        + listarProyectosAutorizadosDisponibles() : List<ProyectoAutorizado>
+        + marcarProyectoComoUtilizado(codigoProyecto : String) : void
+        + eliminarAutorizacion(codigoProyecto : String) : void
+    }
+
+    interface IContratoService {
+        + solicitarIngresoProyecto(ayudanteId : Long, codigoProyecto : String) : Contrato
+        + aprobarSolicitud(contratoId : Long, meses : Integer, semestre : Integer, aprobadoPor : Docente) : void
+        + rechazarSolicitud(contratoId : Long, motivo : String, rechazadoPor : Docente) : void
+        + registrarRenuncia(contratoId : Long, fecha : LocalDate, motivo : String) : void
+        + verificarDisponibilidadPlaza(proyectoId : Long, semestre : Integer) : boolean
+        + calcularMesesDisponiblesReemplazo(contratoId : Long) : Integer
+        + listarSolicitudesPendientes(proyectoId : Long) : List<Contrato>
+        + listarContratosActivosPorProyecto(proyectoId : Long) : List<Contrato>
+    }
+
+    interface IBitacoraService {
+        + crearBitacora(contratoId : Long, mes : Integer, anio : Integer) : BitacoraMensual
+        + agregarActividad(bitacoraId : Long, actividad : Actividad) : void
+        + enviarRevision(bitacoraId : Long) : void
+        + aprobarBitacora(bitacoraId : Long, comentarios : String, docenteId : Long) : void
+        + rechazarBitacora(bitacoraId : Long, comentarios : String, docenteId : Long) : void
+        + generarReportePDF(bitacoraId : Long) : byte[]
+        + listarBitacorasPendientes(proyectoId : Long) : List<BitacoraMensual>
+        + listarBitacorasPorContrato(contratoId : Long) : List<BitacoraMensual>
+    }
+
+    interface IArticuloService {
+        + registrarArticulo(articulo : Articulo, proyectoId : Long) : Articulo
+        + asociarAutores(articuloId : Long, autores : List<AutorArticulo>) : void
+        + actualizarEstado(articuloId : Long, estado : String) : void
+        + listarArticulosPorProyecto(proyectoId : Long) : List<Articulo>
+        + obtenerRelacionArticulosAyudantes(proyectoId : Long) : List<RelacionArticuloAyudanteDTO>
+    }
+
+    interface INotificacionService {
+        + enviarNotificacion(notificacion : Notificacion, destinatarioId : Long) : void
+        + enviarNotificacionMasiva(notificacion : Notificacion, destinatarios : List<Long>) : void
+        + notificarNuevoProyecto(proyectoId : Long) : void
+        + notificarSolicitudIngreso(contratoId : Long) : void
+        + notificarAprobacionContrato(contratoId : Long) : void
+        + notificarRenuncia(contratoId : Long) : void
+        + notificarFinalizacionProyecto(proyectoId : Long) : void
+        + marcarComoLeida(notificacionId : Long) : void
+        + listarNotificacionesNoLeidas(usuarioId : Long) : List<Notificacion>
+    }
+
+    interface IEstadisticasService {
+        + obtenerKPIGlobales() : KPIGlobalesDTO
+        + generarReporteAyudantes() : ReporteAyudantesDTO
+        + generarReporteProyectos(filtros : FiltrosReporte) : ReporteProyectosDTO
+        + obtenerTendenciasContratacion() : TendenciasDTO
+        + calcularTotalAyudantesActivos() : Integer
+        + listarProyectosConEstadisticas() : List<EstadisticasProyectoDTO>
+    }
+
+    interface IAutenticacionService {
+        + registrarUsuario(usuario : Usuario, rol : Rol) : Usuario
+        + registrarJefatura(usuario : JefaturaDICC, codigoEspecial : String) : JefaturaDICC
+        + login(correo : String, password : String) : TokenDTO
+        + validarToken(token : String) : boolean
+        + renovarToken(tokenAntiguo : String) : TokenDTO
+        + logout(token : String) : void
+        + recuperarPassword(correo : String) : void
+        + validarCorreoInstitucional(correo : String) : boolean
+        + verificarCodigoJefatura(codigo : String) : boolean
+    }
+
+    interface IValidacionNegocioService {
+        + validarCreacionProyecto(proyecto : Proyecto, codigoAutorizado : String) : List<String>
+        + validarSolicitudIngreso(ayudanteId : Long, proyectoId : Long) : List<String>
+        + validarAprobacionContrato(contratoId : Long, meses : Integer, semestre : Integer) : List<String>
+        + validarRenuncia(contratoId : Long, fecha : LocalDate) : List<String>
+        + validarAyudanteDuplicadoEnProyecto(ayudanteId : Long, proyectoId : Long) : boolean
+        + validarCapacidadProyecto(proyectoId : Long, semestre : Integer) : boolean
+    }
+}
+
+' ===============================================
+' CAPA DE PERSISTENCIA - REPOSITORIOS
+' ===============================================
+
+package "Persistencia - Repositorios (DAO)" <<Database>> {
+    
+    interface IRepository<T> {
+        + guardar(entidad : T) : T
+        + actualizar(entidad : T) : T
+        + eliminar(id : Long) : void
+        + buscarPorId(id : Long) : Optional<T>
+        + listarTodos() : List<T>
+        + existePorId(id : Long) : boolean
+    }
+
+    interface IUsuarioRepository {
+        + buscarPorCodigoEPN(codigo : String) : Optional<Usuario>
+        + buscarPorCorreo(correo : String) : Optional<Usuario>
+        + buscarPorCedula(cedula : String) : Optional<Usuario>
+        + listarPorRol(rol : Rol) : List<Usuario>
+        + existeCorreo(correo : String) : boolean
+        + existeCodigoEPN(codigo : String) : boolean
+    }
+
+    interface IProyectoAutorizadoRepository {
+        + buscarPorCodigo(codigoProyecto : String) : Optional<ProyectoAutorizado>
+        + listarDisponibles() : List<ProyectoAutorizado>
+        + listarUtilizados() : List<ProyectoAutorizado>
+        + marcarComoUtilizado(codigoProyecto : String) : void
+        + existeCodigo(codigoProyecto : String) : boolean
+    }
+
+    interface IProyectoRepository {
+        + buscarPorCodigo(codigo : String) : Optional<Proyecto>
+        + listarPorEstado(estado : EstadoProyecto) : List<Proyecto>
+        + listarPorDirector(docenteId : Long) : List<Proyecto>
+        + listarPorLaboratorio(laboratorioId : Long) : List<Proyecto>
+        + listarPorTipo(tipo : TipoProyecto) : List<Proyecto>
+        + contarProyectosActivos() : Integer
+        + contarProyectosPorEstado(estado : EstadoProyecto) : Integer
+    }
+
+    interface IContratoRepository {
+        + buscarPorNumero(numero : String) : Optional<Contrato>
+        + listarPorProyecto(proyectoId : Long) : List<Contrato>
+        + listarPorAyudante(ayudanteId : Long) : List<Contrato>
+        + listarPorEstado(estado : EstadoContrato) : List<Contrato>
+        + listarActivosPorProyecto(proyectoId : Long) : List<Contrato>
+        + listarPendientesPorProyecto(proyectoId : Long) : List<Contrato>
+        + contarAyudantesActivosPorProyecto(proyectoId : Long) : Integer
+        + contarAyudantesActivosPorSemestre(proyectoId : Long, semestre : Integer) : Integer
+        + existeContratoActivoAyudanteEnProyecto(ayudanteId : Long, proyectoId : Long) : boolean
+    }
+
+    interface IBitacoraRepository {
+        + buscarPorContrato(contratoId : Long) : List<BitacoraMensual>
+        + buscarPorMesAnio(contratoId : Long, mes : Integer, anio : Integer) : Optional<BitacoraMensual>
+        + listarPendientesRevision(proyectoId : Long) : List<BitacoraMensual>
+        + listarAprobadasPorProyecto(proyectoId : Long) : List<BitacoraMensual>
+        + contarBitacorasPorEstado(contratoId : Long, estado : EstadoBitacora) : Integer
+    }
+
+    interface IArticuloRepository {
+        + buscarPorDOI(doi : String) : Optional<Articulo>
+        + listarPorProyecto(proyectoId : Long) : List<Articulo>
+        + listarPorAutor(usuarioId : Long) : List<Articulo>
+        + listarPorAnio(anio : Integer) : List<Articulo>
+        + contarArticulosPorProyecto(proyectoId : Long) : Integer
+    }
+
+    interface INotificacionRepository {
+        + listarPorUsuario(usuarioId : Long) : List<Notificacion>
+        + listarNoLeidasPorUsuario(usuarioId : Long) : List<Notificacion>
+        + contarNoLeidasPorUsuario(usuarioId : Long) : Integer
+        + eliminarAntiguasPorUsuario(usuarioId : Long, diasAntiguedad : Integer) : void
+    }
+
+    interface ILaboratorioRepository {
+        + buscarPorCodigo(codigo : String) : Optional<Laboratorio>
+        + listarTodos() : List<Laboratorio>
+    }
+
+    interface IConfiguracionRepository {
+        + buscarPorClave(clave : String) : Optional<ConfiguracionSistema>
+        + listarEditablesPorJefatura() : List<ConfiguracionSistema>
+        + actualizarValor(clave : String, valor : String) : void
+    }
+}
+
+' ===============================================
+' DTOs - TRANSFERENCIA DE DATOS
+' ===============================================
+
+package "DTOs - Transferencia de Datos" <<Folder>> {
+    
+    class RegistroUsuarioDTO {
+        + codigoEPN : String
+        + cedula : String
+        + nombres : String
+        + apellidos : String
+        + correoInstitucional : String
+        + password : String
+        + rol : Rol
+        + codigoEspecialJefatura : String
+    }
+
+    class SolicitudIngresoProyectoDTO {
+        + codigoProyecto : String
+        + comentarios : String
+    }
+
+    class AprobacionContratoDTO {
+        + contratoId : Long
+        + mesesAsignados : Integer
+        + semestreAsignado : Integer
+        + horasSemanales : Integer
+        + remuneracionMensual : BigDecimal
+        + comentarios : String
+    }
+
+    class ProyectoDTO {
+        + codigoProyecto : String
+        + titulo : String
+        + nombreDirector : String
+        + nombreLaboratorio : String
+        + estado : String
+        + tipoProyecto : String
+        + fechaInicio : LocalDate
+        + duracionSemestres : Integer
+        + semestreActual : Integer
+        + totalAyudantesActivos : Integer
+    }
+
+    class KPIGlobalesDTO {
+        + totalProyectosActivos : Integer
+        + totalProyectosFinalizados : Integer
+        + totalAyudantesActivos : Integer
+        + totalArticulosPublicados : Integer
+        + totalDirectores : Integer
+    }
+
+    class TokenDTO {
+        + token : String
+        + tipoToken : String
+        + fechaExpiracion : LocalDateTime
+        + usuarioId : Long
+        + rol : String
+        + nombreCompleto : String
+    }
+
+    class EstadisticasProyectoDTO {
+        + codigoProyecto : String
+        + titulo : String
+        + totalAyudantesActuales : Integer
+        + totalAyudantesHistoricos : Integer
+        + horasTotalesTrabajadas : Double
+        + articulosPublicados : Integer
+        + bitacorasAprobadas : Integer
+    }
+
+    class RelacionArticuloAyudanteDTO {
+        + tituloArticulo : String
+        + nombreAyudante : String
+        + codigoEPNAyudante : String
+        + ordenAutoria : Integer
+    }
+}
+
+' ===============================================
+' RELACIONES DE HERENCIA
+' ===============================================
+
+EntidadBase <|-- Usuario
+EntidadBase <|-- Proyecto
+EntidadBase <|-- Contrato
+EntidadBase <|-- BitacoraMensual
+EntidadBase <|-- Actividad
+EntidadBase <|-- Articulo
+EntidadBase <|-- Notificacion
+EntidadBase <|-- Laboratorio
+EntidadBase <|-- AutorExterno
+EntidadBase <|-- EventoAuditoria
+EntidadBase <|-- ProyectoAutorizado
+EntidadBase <|-- ConfiguracionSistema
+
+Usuario <|-- Docente
+Usuario <|-- Ayudante
+Usuario <|-- JefaturaDICC
+
+IRepository <|-- IUsuarioRepository
+IRepository <|-- IProyectoRepository
+IRepository <|-- IContratoRepository
+IRepository <|-- IBitacoraRepository
+IRepository <|-- IArticuloRepository
+IRepository <|-- INotificacionRepository
+IRepository <|-- ILaboratorioRepository
+IRepository <|-- IProyectoAutorizadoRepository
+IRepository <|-- IConfiguracionRepository
+
+' ===============================================
+' RELACIONES DE ASOCIACION Y COMPOSICION
+' ===============================================
+
+' Autorizacion de Proyectos
+JefaturaDICC "1" --> "*" ProyectoAutorizado : autoriza
+ProyectoAutorizado "0..1" --> "0..1" Proyecto : habilita creación
+
+' Proyecto y sus relaciones principales
+Proyecto "*" --> "1" Docente : dirigidoPor
+Proyecto "*" --> "1" Laboratorio : perteneceA
+Proyecto "1" *-- "*" Contrato : gestiona
+
+' Contrato y sus relaciones
+Contrato "*" --> "1" Ayudante : asignadoA
+Contrato "*" --> "1" Proyecto : enProyecto
+Contrato "1" *-- "*" BitacoraMensual : registra
+Contrato "*" --> "1" Docente : aprobadoPor
+
+' Bitacora y Actividades
+BitacoraMensual "1" *-- "*" Actividad : contiene
+BitacoraMensual "*" --> "1" Docente : revisadaPor
+
+' Articulo y Autores
+Proyecto "1" o-- "*" Articulo : financia/produce
+Articulo "1" *-- "*" AutorArticulo : tiene
+AutorArticulo "*" --> "0..1" Usuario : autorInterno
+AutorArticulo "*" --> "0..1" AutorExterno : autorExterno
+
+' Notificaciones
+Notificacion "*" --> "1" Usuario : destinatario
+Notificacion "*" --> "1" Usuario : emisor
+
+' Auditoria
+EventoAuditoria "*" --> "1" Usuario : realizadoPor
+
+' ===============================================
+' RELACIONES DE DEPENDENCIA (SERVICIOS)
+' ===============================================
+
+IProyectoService ..> IProyectoRepository : usa
+IProyectoService ..> IProyectoAutorizadoRepository : usa
+IProyectoService ..> INotificacionService : usa
+
+IAutorizacionProyectoService ..> IProyectoAutorizadoRepository : usa
+
+IContratoService ..> IContratoRepository : usa
+IContratoService ..> IProyectoRepository : usa
+IContratoService ..> IValidacionNegocioService : usa
+IContratoService ..> INotificacionService : usa
+
+IBitacoraService ..> IBitacoraRepository : usa
+IBitacoraService ..> IContratoRepository : usa
+
+IArticuloService ..> IArticuloRepository : usa
+IArticuloService ..> IProyectoRepository : usa
+
+IEstadisticasService ..> IProyectoRepository : usa
+IEstadisticasService ..> IContratoRepository : usa
+IEstadisticasService ..> IArticuloRepository : usa
+
+IAutenticacionService ..> IUsuarioRepository : usa
+IAutenticacionService ..> IConfiguracionRepository : usa
+
+' ===============================================
+' NOTAS ARQUITECTURALES
+' ===============================================
+
+note top of ProyectoAutorizado
+  <b>Flujo de Autorización:</b>
+  1. Jefatura carga CSV con códigos
+  2. Códigos quedan como "DISPONIBLES"
+  3. Director crea proyecto con código
+  4. Código se marca como "UTILIZADO"
+end note
+
+note right of Contrato
+  <b>Flujo de Contratación:</b>
+  1. Ayudante solicita ingreso con código
+  2. Queda PENDIENTE_APROBACION
+  3. Director asigna meses + semestre
+  4. Se activa el contrato
+  5. Sistema calcula fechas automáticamente
+end note
+
+note left of IRepository
+  <b>Patrón Repository/DAO</b>
+  - Abstrae acceso a datos
+  - Compatible con SQLite/PostgreSQL
+  - Facilita testing con mocks
+  - Permite cambiar BD sin afectar lógica
+end note
+
+note bottom of IAutenticacionService
+  <b>Registro de Usuarios:</b>
+  - Libre con selección de rol
+  - Validación de @epn.edu.ec
+  - Jefatura requiere código especial único
+  - Director requiere código proyecto autorizado
+  - Ayudante solicita ingreso después
+end note
+
+note top of JefaturaDICC
+  <b>Código Especial Jefatura:</b>
+  Se guarda en ConfiguracionSistema
+  con clave "CODIGO_REGISTRO_JEFATURA"
+  Solo la primera Jefatura puede usarlo
+end note
+
+@enduml
