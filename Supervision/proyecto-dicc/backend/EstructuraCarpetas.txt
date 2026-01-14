@@ -21,6 +21,7 @@ proyecto-dicc/
 │   │   │   │               │   ├── BitacoraController.java
 │   │   │   │               │   ├── ArticuloController.java
 │   │   │   │               │   ├── NotificacionController.java
+│   │   │   │               │   ├── AutorizacionProyectoController.java  · nuevo
 │   │   │   │               │   └── EstadisticasController.java
 │   │   │   │               │
 │   │   │   │               ├── service/                      # Servicios (Lógica)
@@ -95,6 +96,8 @@ proyecto-dicc/
 │   │   │   │               │   │   ├── RevisionBitacoraRequest.java  # nuevo
 │   │   │   │               │   │   ├── RegistrarRenunciaRequest.java  # nuevo
 │   │   │   │               │   │   ├── AgregarActividadRequest.java  # nuevo
+│   │   │   │               │   │   ├── ReporteAyudantesDTO.java  # nuevo
+│   │   │   │               │   │   ├── ReporteProyectosDTO.java  # nuevo
 │   │   │   │               │   │   ├── CrearProyectoRequest.java
 │   │   │   │               │   │   ├── SolicitudIngresoRequest.java
 │   │   │   │               │   │   ├── AprobacionContratoRequest.java
