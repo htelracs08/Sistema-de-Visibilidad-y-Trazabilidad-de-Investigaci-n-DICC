@@ -21,6 +21,7 @@ proyecto-dicc/
 │   │   │   │               │   ├── BitacoraController.java
 │   │   │   │               │   ├── ArticuloController.java
 │   │   │   │               │   ├── NotificacionController.java
+│   │   │   │               │   ├── AutorizacionProyectoController.java  · nuevo
 │   │   │   │               │   └── EstadisticasController.java
 │   │   │   │               │
 │   │   │   │               ├── service/                      # Servicios (Lógica)
@@ -54,7 +55,7 @@ proyecto-dicc/
 │   │   │   │               │   ├── IBitacoraRepository.java
 │   │   │   │               │   ├── IActividadRepository.java
 │   │   │   │               │   ├── IArticuloRepository.java
-│   │   │   │               │   ├── IAutorArticuloRepository.java
+│   │   │   │               │   ├── IAutorArticuloRepository.java  # quiza ya no se use
 │   │   │   │               │   ├── INotificacionRepository.java
 │   │   │   │               │   ├── ILaboratorioRepository.java
 │   │   │   │               │   └── IConfiguracionRepository.java
@@ -75,6 +76,7 @@ proyecto-dicc/
 │   │   │   │               │   ├── JefaturaDICC.java
 │   │   │   │               │   ├── Proyecto.java
 │   │   │   │               │   ├── ProyectoAutorizado.java
+│   │   │   │               │   ├── ProyectoCapacidadSemestre.java    # nuevo
 │   │   │   │               │   ├── Contrato.java
 │   │   │   │               │   ├── BitacoraMensual.java
 │   │   │   │               │   ├── Actividad.java
@@ -90,12 +92,22 @@ proyecto-dicc/
 │   │   │   │               │   ├── request/
 │   │   │   │               │   │   ├── LoginRequest.java
 │   │   │   │               │   │   ├── RegistroUsuarioRequest.java
+│   │   │   │               │   │   ├── RechazoContratoRequest.java  # nuevo
+│   │   │   │               │   │   ├── RevisionBitacoraRequest.java  # nuevo
+│   │   │   │               │   │   ├── RegistrarRenunciaRequest.java  # nuevo
+│   │   │   │               │   │   ├── AgregarActividadRequest.java  # nuevo
+│   │   │   │               │   │   ├── ReporteAyudantesDTO.java  # nuevo
+│   │   │   │               │   │   ├── ReporteProyectosDTO.java  # nuevo
 │   │   │   │               │   │   ├── CrearProyectoRequest.java
 │   │   │   │               │   │   ├── SolicitudIngresoRequest.java
 │   │   │   │               │   │   ├── AprobacionContratoRequest.java
 │   │   │   │               │   │   └── CrearBitacoraRequest.java
 │   │   │   │               │   └── response/
 │   │   │   │               │       ├── TokenResponse.java
+│   │   │   │               │       ├── ActividadResponse.java     # nuevo
+│   │   │   │               │       ├── NotificacionResponse.java     # nuevo
+│   │   │   │               │       ├── LaboratorioResponse.java     # nuevo
+│   │   │   │               │       ├── RelacionArticuloAyudanteResponse.java     # nuevo
 │   │   │   │               │       ├── UsuarioResponse.java
 │   │   │   │               │       ├── ProyectoResponse.java
 │   │   │   │               │       ├── ContratoResponse.java

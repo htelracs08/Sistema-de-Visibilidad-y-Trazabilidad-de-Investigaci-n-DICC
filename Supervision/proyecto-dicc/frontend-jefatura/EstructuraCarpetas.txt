@@ -1,0 +1,296 @@
+proyecto-dicc/
+│
+├── backend/                                    # Spring Boot Backend
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── epn/
+│   │   │   │           └── dicc/
+│   │   │   │               ├── DICCApplication.java          # Clase principal
+│   │   │   │               │
+│   │   │   │               ├── config/                       # Configuraciones
+│   │   │   │               │   ├── SecurityConfig.java
+│   │   │   │               │   ├── CorsConfig.java
+│   │   │   │               │   └── JwtConfig.java
+│   │   │   │               │
+│   │   │   │               ├── controller/                   # REST Controllers
+│   │   │   │               │   ├── AuthController.java
+│   │   │   │               │   ├── ProyectoController.java
+│   │   │   │               │   ├── ContratoController.java
+│   │   │   │               │   ├── BitacoraController.java
+│   │   │   │               │   ├── ArticuloController.java
+│   │   │   │               │   ├── NotificacionController.java
+│   │   │   │               │   ├── AutorizacionProyectoController.java  · nuevo
+│   │   │   │               │   └── EstadisticasController.java
+│   │   │   │               │
+│   │   │   │               ├── service/                      # Servicios (Lógica)
+│   │   │   │               │   ├── IProyectoService.java
+│   │   │   │               │   ├── ProyectoServiceImpl.java
+│   │   │   │               │   ├── IContratoService.java
+│   │   │   │               │   ├── ContratoServiceImpl.java
+│   │   │   │               │   ├── IBitacoraService.java
+│   │   │   │               │   ├── BitacoraServiceImpl.java
+│   │   │   │               │   ├── IArticuloService.java
+│   │   │   │               │   ├── ArticuloServiceImpl.java
+│   │   │   │               │   ├── IAutenticacionService.java
+│   │   │   │               │   ├── AutenticacionServiceImpl.java
+│   │   │   │               │   ├── INotificacionService.java
+│   │   │   │               │   ├── NotificacionServiceImpl.java
+│   │   │   │               │   ├── IEstadisticasService.java
+│   │   │   │               │   ├── EstadisticasServiceImpl.java
+│   │   │   │               │   ├── IAutorizacionProyectoService.java
+│   │   │   │               │   ├── AutorizacionProyectoServiceImpl.java
+│   │   │   │               │   ├── IValidacionNegocioService.java
+│   │   │   │               │   └── ValidacionNegocioServiceImpl.java
+│   │   │   │               │
+│   │   │   │               ├── repository/                   # DAOs/Repositorios
+│   │   │   │               │   ├── IUsuarioRepository.java
+│   │   │   │               │   ├── IDocenteRepository.java
+│   │   │   │               │   ├── IAyudanteRepository.java
+│   │   │   │               │   ├── IJefaturaRepository.java
+│   │   │   │               │   ├── IProyectoRepository.java
+│   │   │   │               │   ├── IProyectoAutorizadoRepository.java
+│   │   │   │               │   ├── IContratoRepository.java
+│   │   │   │               │   ├── IBitacoraRepository.java
+│   │   │   │               │   ├── IActividadRepository.java
+│   │   │   │               │   ├── IArticuloRepository.java
+│   │   │   │               │   ├── IAutorArticuloRepository.java  # quiza ya no se use
+│   │   │   │               │   ├── INotificacionRepository.java
+│   │   │   │               │   ├── ILaboratorioRepository.java
+│   │   │   │               │   └── IConfiguracionRepository.java
+│   │   │   │               │
+│   │   │   │               ├── model/                        # Entidades JPA
+│   │   │   │               │   ├── base/
+│   │   │   │               │   │   └── EntidadBase.java
+│   │   │   │               │   ├── enums/
+│   │   │   │               │   │   ├── Rol.java
+│   │   │   │               │   │   ├── EstadoProyecto.java
+│   │   │   │               │   │   ├── TipoProyecto.java
+│   │   │   │               │   │   ├── EstadoContrato.java
+│   │   │   │               │   │   ├── EstadoBitacora.java
+│   │   │   │               │   │   └── TipoNotificacion.java
+│   │   │   │               │   ├── Usuario.java
+│   │   │   │               │   ├── Docente.java
+│   │   │   │               │   ├── Ayudante.java
+│   │   │   │               │   ├── JefaturaDICC.java
+│   │   │   │               │   ├── Proyecto.java
+│   │   │   │               │   ├── ProyectoAutorizado.java
+│   │   │   │               │   ├── ProyectoCapacidadSemestre.java    # nuevo
+│   │   │   │               │   ├── Contrato.java
+│   │   │   │               │   ├── BitacoraMensual.java
+│   │   │   │               │   ├── Actividad.java
+│   │   │   │               │   ├── Articulo.java
+│   │   │   │               │   ├── AutorExterno.java
+│   │   │   │               │   ├── AutorArticulo.java
+│   │   │   │               │   ├── Notificacion.java
+│   │   │   │               │   ├── Laboratorio.java
+│   │   │   │               │   ├── ConfiguracionSistema.java
+│   │   │   │               │   └── EventoAuditoria.java
+│   │   │   │               │
+│   │   │   │               ├── dto/                          # Data Transfer Objects
+│   │   │   │               │   ├── request/
+│   │   │   │               │   │   ├── LoginRequest.java
+│   │   │   │               │   │   ├── RegistroUsuarioRequest.java
+│   │   │   │               │   │   ├── RechazoContratoRequest.java  # nuevo
+│   │   │   │               │   │   ├── RevisionBitacoraRequest.java  # nuevo
+│   │   │   │               │   │   ├── RegistrarRenunciaRequest.java  # nuevo
+│   │   │   │               │   │   ├── AgregarActividadRequest.java  # nuevo
+│   │   │   │               │   │   ├── ReporteAyudantesDTO.java  # nuevo
+│   │   │   │               │   │   ├── ReporteProyectosDTO.java  # nuevo
+│   │   │   │               │   │   ├── CrearProyectoRequest.java
+│   │   │   │               │   │   ├── SolicitudIngresoRequest.java
+│   │   │   │               │   │   ├── AprobacionContratoRequest.java
+│   │   │   │               │   │   └── CrearBitacoraRequest.java
+│   │   │   │               │   └── response/
+│   │   │   │               │       ├── TokenResponse.java
+│   │   │   │               │       ├── ActividadResponse.java     # nuevo
+│   │   │   │               │       ├── NotificacionResponse.java     # nuevo
+│   │   │   │               │       ├── LaboratorioResponse.java     # nuevo
+│   │   │   │               │       ├── RelacionArticuloAyudanteResponse.java     # nuevo
+│   │   │   │               │       ├── UsuarioResponse.java
+│   │   │   │               │       ├── ProyectoResponse.java
+│   │   │   │               │       ├── ContratoResponse.java
+│   │   │   │               │       ├── BitacoraResponse.java
+│   │   │   │               │       ├── KPIGlobalesResponse.java
+│   │   │   │               │       ├── EstadisticasProyectoResponse.java
+│   │   │   │               │       └── ApiResponse.java
+│   │   │   │               │
+│   │   │   │               ├── exception/                    # Manejo de Excepciones
+│   │   │   │               │   ├── GlobalExceptionHandler.java
+│   │   │   │               │   ├── ResourceNotFoundException.java
+│   │   │   │               │   ├── BusinessException.java
+│   │   │   │               │   └── UnauthorizedException.java
+│   │   │   │               │
+│   │   │   │               ├── security/                     # Seguridad JWT
+│   │   │   │               │   ├── JwtTokenProvider.java
+│   │   │   │               │   ├── JwtAuthenticationFilter.java
+│   │   │   │               │   └── UserDetailsServiceImpl.java
+│   │   │   │               │
+│   │   │   │               └── util/                         # Utilidades
+│   │   │   │                   ├── DateUtil.java
+│   │   │   │                   ├── ValidationUtil.java
+│   │   │   │                   └── PDFGenerator.java
+│   │   │   │
+│   │   │   └── resources/
+│   │   │       ├── application.properties                    # Configuración principal
+│   │   │       ├── application-dev.properties                # Configuración desarrollo
+│   │   │       ├── application-prod.properties               # Configuración producción
+│   │   │       ├── schema.sql                                # Script creación tablas
+│   │   │       ├── data.sql                                  # Datos iniciales
+│   │   │       └── templates/
+│   │   │           └── bitacora-template.html                # Template PDF
+│   │   │
+│   │   └── test/
+│   │       └── java/
+│   │           └── com/
+│   │               └── epn/
+│   │                   └── dicc/
+│   │                       ├── service/
+│   │                       │   ├── ProyectoServiceTest.java
+│   │                       │   └── ContratoServiceTest.java
+│   │                       └── controller/
+│   │                           └── AuthControllerTest.java
+│   │
+│   ├── pom.xml                                               # Dependencias Maven
+│   ├── database.db                                           # SQLite Database (generado)
+│   └── README.md
+│
+├── frontend-jefatura/                          # Cliente Swing Jefatura
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── epn/
+│   │   │   │           └── dicc/
+│   │   │   │               └── jefatura/
+│   │   │   │                   ├── Main.java
+│   │   │   │                   │
+│   │   │   │                   ├── view/                     # Ventanas Swing
+│   │   │   │                   │   ├── LoginFrame.java
+│   │   │   │                   │   ├── MainFrame.java
+│   │   │   │                   │   ├── DashboardPanel.java
+│   │   │   │                   │   ├── ProyectosPanel.java
+│   │   │   │                   │   ├── AyudantesPanel.java
+│   │   │   │                   │   ├── EstadisticasPanel.java
+│   │   │   │                   │   ├── AutorizarProyectosDialog.java
+│   │   │   │                   │   └── NotificacionesPanel.java
+│   │   │   │                   │
+│   │   │   │                   ├── api/                      # Cliente REST
+│   │   │   │                   │   ├── ApiClient.java
+│   │   │   │                   │   ├── AuthApi.java
+│   │   │   │                   │   ├── ProyectoApi.java
+│   │   │   │                   │   ├── EstadisticasApi.java
+│   │   │   │                   │   └── NotificacionApi.java
+│   │   │   │                   │
+│   │   │   │                   ├── model/                    # DTOs locales
+│   │   │   │                   │   ├── Usuario.java
+│   │   │   │                   │   ├── Proyecto.java
+│   │   │   │                   │   ├── KPIGlobales.java
+│   │   │   │                   │   └── Notificacion.java
+│   │   │   │                   │
+│   │   │   │                   └── util/
+│   │   │   │                       ├── SessionManager.java
+│   │   │   │                       ├── TableUtil.java
+│   │   │   │                       └── SwingUtil.java
+│   │   │   │
+│   │   │   └── resources/
+│   │   │       ├── config.properties
+│   │   │       └── icons/
+│   │   │
+│   │   └── test/
+│   │
+│   └── pom.xml
+│
+├── frontend-director/                          # Cliente Swing Director
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── epn/
+│   │   │   │           └── dicc/
+│   │   │   │               └── director/
+│   │   │   │                   ├── Main.java
+│   │   │   │                   │
+│   │   │   │                   ├── view/
+│   │   │   │                   │   ├── LoginFrame.java
+│   │   │   │                   │   ├── MainFrame.java
+│   │   │   │                   │   ├── MisProyectosPanel.java
+│   │   │   │                   │   ├── CrearProyectoDialog.java
+│   │   │   │                   │   ├── SolicitudesPanel.java
+│   │   │   │                   │   ├── AprobarContratoDialog.java
+│   │   │   │                   │   ├── BitacorasPanel.java
+│   │   │   │                   │   ├── RevisarBitacoraDialog.java
+│   │   │   │                   │   ├── ArticulosPanel.java
+│   │   │   │                   │   └── NotificacionesPanel.java
+│   │   │   │                   │
+│   │   │   │                   ├── api/
+│   │   │   │                   │   ├── ApiClient.java
+│   │   │   │                   │   ├── AuthApi.java
+│   │   │   │                   │   ├── ProyectoApi.java
+│   │   │   │                   │   ├── ContratoApi.java
+│   │   │   │                   │   ├── BitacoraApi.java
+│   │   │   │                   │   └── ArticuloApi.java
+│   │   │   │                   │
+│   │   │   │                   ├── model/
+│   │   │   │                   └── util/
+│   │   │   │
+│   │   │   └── resources/
+│   │   │
+│   │   └── test/
+│   │
+│   └── pom.xml
+│
+├── frontend-ayudante/                          # Cliente Swing Ayudante
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   │   └── com/
+│   │   │   │       └── epn/
+│   │   │   │           └── dicc/
+│   │   │   │               └── ayudante/
+│   │   │   │                   ├── Main.java
+│   │   │   │                   │
+│   │   │   │                   ├── view/
+│   │   │   │                   │   ├── LoginFrame.java
+│   │   │   │                   │   ├── RegistroFrame.java
+│   │   │   │                   │   ├── MainFrame.java
+│   │   │   │                   │   ├── SolicitarIngresoDialog.java
+│   │   │   │                   │   ├── MisContratosPanel.java
+│   │   │   │                   │   ├── BitacorasPanel.java
+│   │   │   │                   │   ├── CrearBitacoraDialog.java
+│   │   │   │                   │   ├── AgregarActividadDialog.java
+│   │   │   │                   │   └── NotificacionesPanel.java
+│   │   │   │                   │
+│   │   │   │                   ├── api/
+│   │   │   │                   │   ├── ApiClient.java
+│   │   │   │                   │   ├── AuthApi.java
+│   │   │   │                   │   ├── ContratoApi.java
+│   │   │   │                   │   └── BitacoraApi.java
+│   │   │   │                   │
+│   │   │   │                   ├── model/
+│   │   │   │                   └── util/
+│   │   │   │
+│   │   │   └── resources/
+│   │   │
+│   │   └── test/
+│   │
+│   └── pom.xml
+│
+├── docs/                                       # Documentación
+│   ├── diagrama-clases.puml
+│   ├── casos-uso.md
+│   ├── manual-usuario.md
+│   └── api-documentation.md
+│
+├── scripts/                                    # Scripts útiles
+│   ├── start-backend.bat
+│   ├── start-backend.sh
+│   ├── start-all.bat
+│   ├── start-all.sh
+│   ├── build-all.bat
+│   └── build-all.sh
+│
+├── .gitignore
+├── README.md
+└── pom.xml                                     # POM padre (opcional)
