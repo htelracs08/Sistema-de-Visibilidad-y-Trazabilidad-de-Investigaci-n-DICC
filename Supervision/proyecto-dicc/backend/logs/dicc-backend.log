@@ -1,0 +1,1392 @@
+2026-01-14 07:52:18 [restartedMain] INFO  com.epn.dicc.DICCApplication - Starting DICCApplication using Java 21.0.9 with PID 12524 (C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes started by JOHN in C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend)
+2026-01-14 07:52:18 [restartedMain] DEBUG com.epn.dicc.DICCApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-01-14 07:52:18 [restartedMain] INFO  com.epn.dicc.DICCApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-14 07:52:18 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-14 07:52:18 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-14 07:52:19 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-14 07:52:19 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 229 ms. Found 16 JPA repository interfaces.
+2026-01-14 07:52:20 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-01-14 07:52:20 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-14 07:52:20 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-01-14 07:52:20 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-01-14 07:52:20 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2468 ms
+2026-01-14 07:52:20 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-14 07:52:21 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@5e0c7379
+2026-01-14 07:52:21 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-14 07:52:21 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-14 07:52:21 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-01-14 07:52:21 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-01-14 07:52:22 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-14 07:52:23 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-14 07:52:23 [restartedMain] DEBUG org.hibernate.SQL - 
+    alter table bitacora_mensual 
+       drop constraint UK3tkp1kl2g6ev772qpv4o645eg
+2026-01-14 07:52:23 [restartedMain] DEBUG org.hibernate.SQL - 
+    alter table proyecto_capacidad_semestre 
+       drop constraint UKopxl41i9nw7hjf4hrsh40u5hi
+2026-01-14 07:52:23 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 07:52:24 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-14 07:52:25 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-01-14 07:52:25 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 59f95a9c-de3e-44c4-b6dd-c94272c1d517
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-01-14 07:52:25 [restartedMain] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@702da689, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@214580da, org.springframework.security.web.context.SecurityContextHolderFilter@72b756c4, org.springframework.security.web.header.HeaderWriterFilter@6e3f0b3, org.springframework.web.filter.CorsFilter@3337f40f, org.springframework.security.web.authentication.logout.LogoutFilter@438b65a8, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@5e41074e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@772b20d2, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@797091a6, org.springframework.security.web.session.SessionManagementFilter@5db9be58, org.springframework.security.web.access.ExceptionTranslationFilter@ce857d3, org.springframework.security.web.access.intercept.AuthorizationFilter@687739d7]
+2026-01-14 07:52:26 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2026-01-14 07:52:26 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-01-14 07:52:26 [restartedMain] INFO  com.epn.dicc.DICCApplication - Started DICCApplication in 8.633 seconds (process running for 9.215)
+2026-01-14 07:53:39 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-14 07:53:39 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-01-14 07:53:39 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-01-14 07:54:23 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 07:54:23 [http-nio-8080-exec-2] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.epn.dicc.exception.UnauthorizedException: Credenciales inválidas]
+2026-01-14 07:55:46 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=? 
+    limit
+        ?
+2026-01-14 07:55:46 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.codigo_epn=? 
+    limit
+        ?
+2026-01-14 07:55:46 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.cedula=? 
+    limit
+        ?
+2026-01-14 07:55:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    insert 
+    into
+        usuario
+        (activo, apellidos, cedula, codigo_epn, correo_institucional, creado_por, email_verificado, fecha_creacion, fecha_modificacion, fecha_registro, modificado_por, nombres, password_hash, rol, carrera, facultad, promedio_general, quintil, semestre_actual, tipo_usuario) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AYUDANTE')
+2026-01-14 07:55:47 [http-nio-8080-exec-4] DEBUG org.hibernate.SQL - 
+    select
+        last_insert_rowid()
+2026-01-14 07:56:05 [http-nio-8080-exec-5] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 07:56:05 [http-nio-8080-exec-5] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [io.jsonwebtoken.security.WeakKeyException: The signing key's size is 360 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.]
+2026-01-14 07:56:41 [http-nio-8080-exec-6] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 07:56:41 [http-nio-8080-exec-6] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [io.jsonwebtoken.security.WeakKeyException: The signing key's size is 360 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.]
+2026-01-14 07:58:15 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=? 
+    limit
+        ?
+2026-01-14 07:58:15 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.codigo_epn=? 
+    limit
+        ?
+2026-01-14 07:58:15 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id 
+    from
+        usuario u1_0 
+    where
+        u1_0.cedula=? 
+    limit
+        ?
+2026-01-14 07:58:15 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    insert 
+    into
+        usuario
+        (activo, apellidos, cedula, codigo_epn, correo_institucional, creado_por, email_verificado, fecha_creacion, fecha_modificacion, fecha_registro, modificado_por, nombres, password_hash, rol, carrera, facultad, promedio_general, quintil, semestre_actual, tipo_usuario) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'AYUDANTE')
+2026-01-14 07:58:15 [http-nio-8080-exec-8] DEBUG org.hibernate.SQL - 
+    select
+        last_insert_rowid()
+2026-01-14 07:58:42 [http-nio-8080-exec-9] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 07:58:43 [http-nio-8080-exec-9] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [io.jsonwebtoken.security.WeakKeyException: The signing key's size is 360 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.]
+2026-01-14 08:00:05 [http-nio-8080-exec-1] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 08:00:05 [http-nio-8080-exec-1] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.epn.dicc.exception.UnauthorizedException: Credenciales inválidas]
+2026-01-14 08:00:08 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 08:00:09 [http-nio-8080-exec-2] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [com.epn.dicc.exception.UnauthorizedException: Credenciales inválidas]
+2026-01-14 08:00:47 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 08:00:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-01-14 08:00:47 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-01-14 17:59:54 [restartedMain] INFO  com.epn.dicc.DICCApplication - Starting DICCApplication using Java 21.0.9 with PID 592 (C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes started by JOHN in C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend)
+2026-01-14 17:59:54 [restartedMain] DEBUG com.epn.dicc.DICCApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-01-14 17:59:54 [restartedMain] INFO  com.epn.dicc.DICCApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-14 17:59:54 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-14 17:59:54 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-14 17:59:55 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-14 17:59:55 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 239 ms. Found 16 JPA repository interfaces.
+2026-01-14 17:59:56 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-01-14 17:59:56 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-14 17:59:56 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-01-14 17:59:56 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-01-14 17:59:56 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2217 ms
+2026-01-14 17:59:56 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-14 17:59:56 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@3dc5498b
+2026-01-14 17:59:56 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-14 17:59:57 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-14 17:59:57 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-01-14 17:59:57 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-01-14 17:59:57 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-14 17:59:59 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists actividad
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists articulo
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_articulo
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_externo
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists bitacora_mensual
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists configuracion_sistema
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists contrato
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists evento_auditoria
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists laboratorio
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists notificacion
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_autorizado
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_capacidad_semestre
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists usuario
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table actividad (
+        activo boolean,
+        fecha_ejecucion date not null,
+        numero_actividad integer not null,
+        tiempo_dedicado_horas numeric(5,2) not null,
+        bitacora_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        categoria varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        evidencia_url varchar(500),
+        descripcion TEXT not null,
+        objetivo_actividad TEXT,
+        resultado_obtenido TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table articulo (
+        activo boolean,
+        fecha_publicacion date,
+        pagina_fin integer,
+        pagina_inicio integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        cuartil varchar(10),
+        estado_publicacion varchar(50),
+        numero varchar(50),
+        volumen varchar(50),
+        creado_por varchar(100),
+        indexacion varchar(100),
+        modificado_por varchar(100),
+        doi varchar(200) not null unique,
+        revista varchar(200),
+        titulo varchar(500) not null,
+        url_acceso varchar(500),
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_articulo (
+        es_autor_correspondiente boolean,
+        orden_autoria integer not null,
+        articulo_id bigint not null,
+        autor_externo_id bigint,
+        id integer,
+        usuario_id bigint,
+        contribucion TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_externo (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        orcid varchar(50),
+        apellidos varchar(100) not null,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        pais_afiliacion varchar(100),
+        email varchar(150),
+        afiliacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table bitacora_mensual (
+        activo boolean,
+        anio integer not null,
+        horas_totales numeric(6,2),
+        mes integer not null check ((mes<=12) and (mes>=1)),
+        contrato_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_modificacion timestamp,
+        fecha_revision timestamp,
+        id integer,
+        revisada_por_id bigint,
+        estado varchar(30) not null check (estado in ('BORRADOR','ENVIADA_REVISION','APROBADA','RECHAZADA','REQUIERE_MODIFICACION')),
+        codigo_bitacora varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        comentarios_ayudante TEXT,
+        comentarios_director TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table configuracion_sistema (
+        activo boolean,
+        editable_por_jefatura boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        clave_configuracion varchar(100) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        descripcion TEXT,
+        valor_configuracion TEXT not null,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table contrato (
+        activo boolean,
+        fecha_fin_contrato date,
+        fecha_inicio_contrato date,
+        fecha_renuncia date,
+        horas_semanales_pactadas integer,
+        meses_pactados integer,
+        meses_trabajados integer,
+        remuneracion_mensual numeric(10,2),
+        semestre_asignado integer,
+        aprobado_por_id bigint,
+        ayudante_id bigint not null,
+        fecha_aprobacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_rechazo timestamp,
+        fecha_solicitud timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        estado varchar(40) not null check (estado in ('PENDIENTE_APROBACION_DIRECTOR','ACTIVO','FINALIZADO_NORMAL','FINALIZADO_RENUNCIA','RECHAZADO')),
+        numero_contrato varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        motivo_rechazo TEXT,
+        motivo_renuncia TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table evento_auditoria (
+        fecha_evento timestamp,
+        id integer,
+        id_entidad_afectada bigint,
+        usuario_id bigint,
+        accion varchar(50) not null,
+        ip_origen varchar(50),
+        entidad_afectada varchar(100) not null,
+        tipo_evento varchar(100) not null,
+        detalles TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table laboratorio (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        extension varchar(20),
+        codigo_laboratorio varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombre varchar(200) not null,
+        responsable varchar(200),
+        ubicacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table notificacion (
+        activo boolean,
+        leida boolean,
+        destinatario_id bigint not null,
+        emisor_id bigint,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_lectura timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        tipo varchar(50) not null check (tipo in ('PROYECTO_CREADO','SOLICITUD_INGRESO_AYUDANTE','CONTRATO_APROBADO','CONTRATO_RECHAZADO','RENUNCIA_AYUDANTE','FINALIZACION_PROYECTO','BITACORA_ENVIADA','BITACORA_APROBADA','BITACORA_RECHAZADA')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(200) not null,
+        url_referencia varchar(300),
+        datos_adicionales TEXT,
+        mensaje TEXT not null,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto (
+        activo boolean,
+        duracion_semestres integer not null,
+        fecha_fin_estimada date,
+        fecha_fin_real date,
+        fecha_inicio_real date,
+        semestre_actual integer,
+        director_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        laboratorio_id bigint not null,
+        estado varchar(30) not null check (estado in ('AUTORIZADO_PENDIENTE','ACTIVO','FINALIZADO','SUSPENDIDO','CANCELADO')),
+        codigo_proyecto varchar(50) not null unique,
+        tipo_proyecto varchar(50) not null check (tipo_proyecto in ('INVESTIGACION','TRANSFERENCIA_TECNOLOGICA','VINCULACION')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(300) not null,
+        descripcion TEXT,
+        objetivo_general TEXT,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_autorizado (
+        activo boolean,
+        utilizado boolean,
+        fecha_autorizacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_utilizacion timestamp,
+        id integer,
+        codigo_proyecto varchar(50) not null unique,
+        autorizado_por varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_capacidad_semestre (
+        numero_ayudantes integer not null,
+        numero_meses_por_ayudante integer not null,
+        numero_semestre integer not null,
+        id integer,
+        proyecto_id bigint not null,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table usuario (
+        activo boolean,
+        email_verificado boolean,
+        promedio_general numeric(4,2),
+        quintil integer check ((quintil>=1) and (quintil<=5)),
+        semestre_actual integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_registro timestamp,
+        id integer,
+        cedula varchar(10) not null unique,
+        extension varchar(20),
+        rol varchar(30) not null check (rol in ('JEFATURA_DICC','DIRECTOR_PROYECTO','AYUDANTE_PROYECTO')),
+        tipo_usuario varchar(31) not null,
+        codigo_epn varchar(50) not null unique,
+        cubiculo varchar(50),
+        apellidos varchar(100) not null,
+        cargo varchar(100),
+        codigo_registro_especial varchar(100),
+        creado_por varchar(100),
+        departamento varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        carrera varchar(150),
+        correo_institucional varchar(150) not null unique,
+        facultad varchar(150),
+        area_investigacion varchar(200),
+        password_hash varchar(255) not null,
+        primary key (id)
+    )
+2026-01-14 17:59:59 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:00:00 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-14 18:00:01 [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'authController' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\controller\AuthController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'autenticacionServiceImpl' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\service\AutenticacionServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 2: No qualifying bean of type 'org.springframework.security.crypto.password.PasswordEncoder' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2026-01-14 18:00:01 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:00:01 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-01-14 18:00:01 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-01-14 18:00:01 [restartedMain] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2026-01-14 18:00:01 [restartedMain] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-01-14 18:00:01 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 2 of constructor in com.epn.dicc.service.AutenticacionServiceImpl required a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' in your configuration.
+
+2026-01-14 18:03:47 [restartedMain] INFO  com.epn.dicc.DICCApplication - Starting DICCApplication using Java 21.0.9 with PID 9756 (C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes started by JOHN in C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend)
+2026-01-14 18:03:47 [restartedMain] DEBUG com.epn.dicc.DICCApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-01-14 18:03:47 [restartedMain] INFO  com.epn.dicc.DICCApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-14 18:03:47 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-14 18:03:47 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-14 18:03:48 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-14 18:03:48 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 141 ms. Found 16 JPA repository interfaces.
+2026-01-14 18:03:49 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-01-14 18:03:49 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-14 18:03:49 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-01-14 18:03:49 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-01-14 18:03:49 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1839 ms
+2026-01-14 18:03:49 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-14 18:03:49 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@1a3abb08
+2026-01-14 18:03:49 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-14 18:03:49 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-14 18:03:49 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-01-14 18:03:50 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-01-14 18:03:50 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-14 18:03:51 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-14 18:03:51 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists actividad
+2026-01-14 18:03:51 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists articulo
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_articulo
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_externo
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists bitacora_mensual
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists configuracion_sistema
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists contrato
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists evento_auditoria
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists laboratorio
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists notificacion
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_autorizado
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_capacidad_semestre
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists usuario
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table actividad (
+        activo boolean,
+        fecha_ejecucion date not null,
+        numero_actividad integer not null,
+        tiempo_dedicado_horas numeric(5,2) not null,
+        bitacora_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        categoria varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        evidencia_url varchar(500),
+        descripcion TEXT not null,
+        objetivo_actividad TEXT,
+        resultado_obtenido TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table articulo (
+        activo boolean,
+        fecha_publicacion date,
+        pagina_fin integer,
+        pagina_inicio integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        cuartil varchar(10),
+        estado_publicacion varchar(50),
+        numero varchar(50),
+        volumen varchar(50),
+        creado_por varchar(100),
+        indexacion varchar(100),
+        modificado_por varchar(100),
+        doi varchar(200) not null unique,
+        revista varchar(200),
+        titulo varchar(500) not null,
+        url_acceso varchar(500),
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_articulo (
+        es_autor_correspondiente boolean,
+        orden_autoria integer not null,
+        articulo_id bigint not null,
+        autor_externo_id bigint,
+        id integer,
+        usuario_id bigint,
+        contribucion TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_externo (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        orcid varchar(50),
+        apellidos varchar(100) not null,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        pais_afiliacion varchar(100),
+        email varchar(150),
+        afiliacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table bitacora_mensual (
+        activo boolean,
+        anio integer not null,
+        horas_totales numeric(6,2),
+        mes integer not null check ((mes<=12) and (mes>=1)),
+        contrato_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_modificacion timestamp,
+        fecha_revision timestamp,
+        id integer,
+        revisada_por_id bigint,
+        estado varchar(30) not null check (estado in ('BORRADOR','ENVIADA_REVISION','APROBADA','RECHAZADA','REQUIERE_MODIFICACION')),
+        codigo_bitacora varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        comentarios_ayudante TEXT,
+        comentarios_director TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table configuracion_sistema (
+        activo boolean,
+        editable_por_jefatura boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        clave_configuracion varchar(100) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        descripcion TEXT,
+        valor_configuracion TEXT not null,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table contrato (
+        activo boolean,
+        fecha_fin_contrato date,
+        fecha_inicio_contrato date,
+        fecha_renuncia date,
+        horas_semanales_pactadas integer,
+        meses_pactados integer,
+        meses_trabajados integer,
+        remuneracion_mensual numeric(10,2),
+        semestre_asignado integer,
+        aprobado_por_id bigint,
+        ayudante_id bigint not null,
+        fecha_aprobacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_rechazo timestamp,
+        fecha_solicitud timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        estado varchar(40) not null check (estado in ('PENDIENTE_APROBACION_DIRECTOR','ACTIVO','FINALIZADO_NORMAL','FINALIZADO_RENUNCIA','RECHAZADO')),
+        numero_contrato varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        motivo_rechazo TEXT,
+        motivo_renuncia TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table evento_auditoria (
+        fecha_evento timestamp,
+        id integer,
+        id_entidad_afectada bigint,
+        usuario_id bigint,
+        accion varchar(50) not null,
+        ip_origen varchar(50),
+        entidad_afectada varchar(100) not null,
+        tipo_evento varchar(100) not null,
+        detalles TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table laboratorio (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        extension varchar(20),
+        codigo_laboratorio varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombre varchar(200) not null,
+        responsable varchar(200),
+        ubicacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table notificacion (
+        activo boolean,
+        leida boolean,
+        destinatario_id bigint not null,
+        emisor_id bigint,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_lectura timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        tipo varchar(50) not null check (tipo in ('PROYECTO_CREADO','SOLICITUD_INGRESO_AYUDANTE','CONTRATO_APROBADO','CONTRATO_RECHAZADO','RENUNCIA_AYUDANTE','FINALIZACION_PROYECTO','BITACORA_ENVIADA','BITACORA_APROBADA','BITACORA_RECHAZADA')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(200) not null,
+        url_referencia varchar(300),
+        datos_adicionales TEXT,
+        mensaje TEXT not null,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto (
+        activo boolean,
+        duracion_semestres integer not null,
+        fecha_fin_estimada date,
+        fecha_fin_real date,
+        fecha_inicio_real date,
+        semestre_actual integer,
+        director_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        laboratorio_id bigint not null,
+        estado varchar(30) not null check (estado in ('AUTORIZADO_PENDIENTE','ACTIVO','FINALIZADO','SUSPENDIDO','CANCELADO')),
+        codigo_proyecto varchar(50) not null unique,
+        tipo_proyecto varchar(50) not null check (tipo_proyecto in ('INVESTIGACION','TRANSFERENCIA_TECNOLOGICA','VINCULACION')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(300) not null,
+        descripcion TEXT,
+        objetivo_general TEXT,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_autorizado (
+        activo boolean,
+        utilizado boolean,
+        fecha_autorizacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_utilizacion timestamp,
+        id integer,
+        codigo_proyecto varchar(50) not null unique,
+        autorizado_por varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_capacidad_semestre (
+        numero_ayudantes integer not null,
+        numero_meses_por_ayudante integer not null,
+        numero_semestre integer not null,
+        id integer,
+        proyecto_id bigint not null,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table usuario (
+        activo boolean,
+        email_verificado boolean,
+        promedio_general numeric(4,2),
+        quintil integer check ((quintil>=1) and (quintil<=5)),
+        semestre_actual integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_registro timestamp,
+        id integer,
+        cedula varchar(10) not null unique,
+        extension varchar(20),
+        rol varchar(30) not null check (rol in ('JEFATURA_DICC','DIRECTOR_PROYECTO','AYUDANTE_PROYECTO')),
+        tipo_usuario varchar(31) not null,
+        codigo_epn varchar(50) not null unique,
+        cubiculo varchar(50),
+        apellidos varchar(100) not null,
+        cargo varchar(100),
+        codigo_registro_especial varchar(100),
+        creado_por varchar(100),
+        departamento varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        carrera varchar(150),
+        correo_institucional varchar(150) not null unique,
+        facultad varchar(150),
+        area_investigacion varchar(200),
+        password_hash varchar(255) not null,
+        primary key (id)
+    )
+2026-01-14 18:03:52 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:03:52 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-14 18:03:53 [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'authController' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\controller\AuthController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'autenticacionServiceImpl' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\service\AutenticacionServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 2: No qualifying bean of type 'org.springframework.security.crypto.password.PasswordEncoder' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2026-01-14 18:03:53 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:03:53 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-01-14 18:03:53 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-01-14 18:03:53 [restartedMain] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2026-01-14 18:03:53 [restartedMain] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-01-14 18:03:53 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 2 of constructor in com.epn.dicc.service.AutenticacionServiceImpl required a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' in your configuration.
+
+2026-01-14 18:04:42 [restartedMain] INFO  com.epn.dicc.DICCApplication - Starting DICCApplication using Java 21.0.9 with PID 5184 (C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes started by JOHN in C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend)
+2026-01-14 18:04:42 [restartedMain] DEBUG com.epn.dicc.DICCApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-01-14 18:04:42 [restartedMain] INFO  com.epn.dicc.DICCApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-14 18:04:42 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-14 18:04:42 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-14 18:04:43 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-14 18:04:44 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 150 ms. Found 16 JPA repository interfaces.
+2026-01-14 18:04:44 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-01-14 18:04:44 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-14 18:04:44 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-01-14 18:04:44 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-01-14 18:04:44 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1832 ms
+2026-01-14 18:04:44 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-14 18:04:45 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@1a3abb08
+2026-01-14 18:04:45 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-14 18:04:45 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-14 18:04:45 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-01-14 18:04:45 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-01-14 18:04:45 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-14 18:04:47 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists actividad
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists articulo
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_articulo
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists autor_externo
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists bitacora_mensual
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists configuracion_sistema
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists contrato
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists evento_auditoria
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists laboratorio
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists notificacion
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_autorizado
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists proyecto_capacidad_semestre
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    drop table if exists usuario
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table actividad (
+        activo boolean,
+        fecha_ejecucion date not null,
+        numero_actividad integer not null,
+        tiempo_dedicado_horas numeric(5,2) not null,
+        bitacora_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        categoria varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        evidencia_url varchar(500),
+        descripcion TEXT not null,
+        objetivo_actividad TEXT,
+        resultado_obtenido TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table articulo (
+        activo boolean,
+        fecha_publicacion date,
+        pagina_fin integer,
+        pagina_inicio integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        cuartil varchar(10),
+        estado_publicacion varchar(50),
+        numero varchar(50),
+        volumen varchar(50),
+        creado_por varchar(100),
+        indexacion varchar(100),
+        modificado_por varchar(100),
+        doi varchar(200) not null unique,
+        revista varchar(200),
+        titulo varchar(500) not null,
+        url_acceso varchar(500),
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_articulo (
+        es_autor_correspondiente boolean,
+        orden_autoria integer not null,
+        articulo_id bigint not null,
+        autor_externo_id bigint,
+        id integer,
+        usuario_id bigint,
+        contribucion TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table autor_externo (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        orcid varchar(50),
+        apellidos varchar(100) not null,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        pais_afiliacion varchar(100),
+        email varchar(150),
+        afiliacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table bitacora_mensual (
+        activo boolean,
+        anio integer not null,
+        horas_totales numeric(6,2),
+        mes integer not null check ((mes<=12) and (mes>=1)),
+        contrato_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_modificacion timestamp,
+        fecha_revision timestamp,
+        id integer,
+        revisada_por_id bigint,
+        estado varchar(30) not null check (estado in ('BORRADOR','ENVIADA_REVISION','APROBADA','RECHAZADA','REQUIERE_MODIFICACION')),
+        codigo_bitacora varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        comentarios_ayudante TEXT,
+        comentarios_director TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table configuracion_sistema (
+        activo boolean,
+        editable_por_jefatura boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        clave_configuracion varchar(100) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        descripcion TEXT,
+        valor_configuracion TEXT not null,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table contrato (
+        activo boolean,
+        fecha_fin_contrato date,
+        fecha_inicio_contrato date,
+        fecha_renuncia date,
+        horas_semanales_pactadas integer,
+        meses_pactados integer,
+        meses_trabajados integer,
+        remuneracion_mensual numeric(10,2),
+        semestre_asignado integer,
+        aprobado_por_id bigint,
+        ayudante_id bigint not null,
+        fecha_aprobacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_rechazo timestamp,
+        fecha_solicitud timestamp,
+        id integer,
+        proyecto_id bigint not null,
+        estado varchar(40) not null check (estado in ('PENDIENTE_APROBACION_DIRECTOR','ACTIVO','FINALIZADO_NORMAL','FINALIZADO_RENUNCIA','RECHAZADO')),
+        numero_contrato varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        motivo_rechazo TEXT,
+        motivo_renuncia TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table evento_auditoria (
+        fecha_evento timestamp,
+        id integer,
+        id_entidad_afectada bigint,
+        usuario_id bigint,
+        accion varchar(50) not null,
+        ip_origen varchar(50),
+        entidad_afectada varchar(100) not null,
+        tipo_evento varchar(100) not null,
+        detalles TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table laboratorio (
+        activo boolean,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        extension varchar(20),
+        codigo_laboratorio varchar(50) not null unique,
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        nombre varchar(200) not null,
+        responsable varchar(200),
+        ubicacion varchar(200),
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table notificacion (
+        activo boolean,
+        leida boolean,
+        destinatario_id bigint not null,
+        emisor_id bigint,
+        fecha_creacion timestamp,
+        fecha_envio timestamp,
+        fecha_lectura timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        tipo varchar(50) not null check (tipo in ('PROYECTO_CREADO','SOLICITUD_INGRESO_AYUDANTE','CONTRATO_APROBADO','CONTRATO_RECHAZADO','RENUNCIA_AYUDANTE','FINALIZACION_PROYECTO','BITACORA_ENVIADA','BITACORA_APROBADA','BITACORA_RECHAZADA')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(200) not null,
+        url_referencia varchar(300),
+        datos_adicionales TEXT,
+        mensaje TEXT not null,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto (
+        activo boolean,
+        duracion_semestres integer not null,
+        fecha_fin_estimada date,
+        fecha_fin_real date,
+        fecha_inicio_real date,
+        semestre_actual integer,
+        director_id bigint not null,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        id integer,
+        laboratorio_id bigint not null,
+        estado varchar(30) not null check (estado in ('AUTORIZADO_PENDIENTE','ACTIVO','FINALIZADO','SUSPENDIDO','CANCELADO')),
+        codigo_proyecto varchar(50) not null unique,
+        tipo_proyecto varchar(50) not null check (tipo_proyecto in ('INVESTIGACION','TRANSFERENCIA_TECNOLOGICA','VINCULACION')),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        titulo varchar(300) not null,
+        descripcion TEXT,
+        objetivo_general TEXT,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_autorizado (
+        activo boolean,
+        utilizado boolean,
+        fecha_autorizacion timestamp,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_utilizacion timestamp,
+        id integer,
+        codigo_proyecto varchar(50) not null unique,
+        autorizado_por varchar(100),
+        creado_por varchar(100),
+        modificado_por varchar(100),
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table proyecto_capacidad_semestre (
+        numero_ayudantes integer not null,
+        numero_meses_por_ayudante integer not null,
+        numero_semestre integer not null,
+        id integer,
+        proyecto_id bigint not null,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] DEBUG org.hibernate.SQL - 
+    create table usuario (
+        activo boolean,
+        email_verificado boolean,
+        promedio_general numeric(4,2),
+        quintil integer check ((quintil>=1) and (quintil<=5)),
+        semestre_actual integer,
+        fecha_creacion timestamp,
+        fecha_modificacion timestamp,
+        fecha_registro timestamp,
+        id integer,
+        cedula varchar(10) not null unique,
+        extension varchar(20),
+        rol varchar(30) not null check (rol in ('JEFATURA_DICC','DIRECTOR_PROYECTO','AYUDANTE_PROYECTO')),
+        tipo_usuario varchar(31) not null,
+        codigo_epn varchar(50) not null unique,
+        cubiculo varchar(50),
+        apellidos varchar(100) not null,
+        cargo varchar(100),
+        codigo_registro_especial varchar(100),
+        creado_por varchar(100),
+        departamento varchar(100),
+        modificado_por varchar(100),
+        nombres varchar(100) not null,
+        carrera varchar(150),
+        correo_institucional varchar(150) not null unique,
+        facultad varchar(150),
+        area_investigacion varchar(200),
+        password_hash varchar(255) not null,
+        primary key (id)
+    )
+2026-01-14 18:04:47 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:04:48 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-14 18:04:48 [restartedMain] WARN  o.s.b.w.s.c.AnnotationConfigServletWebServerApplicationContext - Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'authController' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\controller\AuthController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'autenticacionServiceImpl' defined in file [C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes\com\epn\dicc\service\AutenticacionServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 2: No qualifying bean of type 'org.springframework.security.crypto.password.PasswordEncoder' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2026-01-14 18:04:48 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:04:48 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-01-14 18:04:48 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-01-14 18:04:48 [restartedMain] INFO  o.a.catalina.core.StandardService - Stopping service [Tomcat]
+2026-01-14 18:04:48 [restartedMain] INFO  o.s.b.a.l.ConditionEvaluationReportLogger - 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-01-14 18:04:48 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 2 of constructor in com.epn.dicc.service.AutenticacionServiceImpl required a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'org.springframework.security.crypto.password.PasswordEncoder' in your configuration.
+
+2026-01-14 18:19:45 [restartedMain] INFO  com.epn.dicc.DICCApplication - Starting DICCApplication using Java 21.0.9 with PID 8076 (C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend\target\classes started by JOHN in C:\Users\JOHN\Documents\GitHub\Sistema-de-Visibilidad-y-Trazabilidad-de-Investigaci-n-DICC\Supervision\proyecto-dicc\backend)
+2026-01-14 18:19:45 [restartedMain] DEBUG com.epn.dicc.DICCApplication - Running with Spring Boot v3.2.1, Spring v6.1.2
+2026-01-14 18:19:45 [restartedMain] INFO  com.epn.dicc.DICCApplication - No active profile set, falling back to 1 default profile: "default"
+2026-01-14 18:19:45 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-01-14 18:19:45 [restartedMain] INFO  o.s.b.d.e.DevToolsPropertyDefaultsPostProcessor - For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-01-14 18:19:46 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-01-14 18:19:46 [restartedMain] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 141 ms. Found 16 JPA repository interfaces.
+2026-01-14 18:19:47 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-01-14 18:19:47 [restartedMain] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-01-14 18:19:47 [restartedMain] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.17]
+2026-01-14 18:19:47 [restartedMain] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-01-14 18:19:47 [restartedMain] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1830 ms
+2026-01-14 18:19:47 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-01-14 18:19:47 [restartedMain] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.sqlite.jdbc4.JDBC4Connection@3e5a07fc
+2026-01-14 18:19:47 [restartedMain] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-01-14 18:19:48 [restartedMain] INFO  o.h.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-01-14 18:19:48 [restartedMain] INFO  org.hibernate.Version - HHH000412: Hibernate ORM core version 6.4.1.Final
+2026-01-14 18:19:48 [restartedMain] INFO  o.h.c.i.RegionFactoryInitiator - HHH000026: Second-level cache disabled
+2026-01-14 18:19:48 [restartedMain] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-01-14 18:19:50 [restartedMain] INFO  o.h.e.t.j.p.i.JtaPlatformInitiator - HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-01-14 18:19:50 [restartedMain] DEBUG org.hibernate.SQL - 
+    alter table bitacora_mensual 
+       drop constraint UK3tkp1kl2g6ev772qpv4o645eg
+2026-01-14 18:19:50 [restartedMain] DEBUG org.hibernate.SQL - 
+    alter table proyecto_capacidad_semestre 
+       drop constraint UKopxl41i9nw7hjf4hrsh40u5hi
+2026-01-14 18:19:50 [restartedMain] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-01-14 18:19:50 [restartedMain] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-01-14 18:19:51 [restartedMain] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-01-14 18:19:51 [restartedMain] WARN  o.s.b.a.s.s.UserDetailsServiceAutoConfiguration - 
+
+Using generated security password: 226806fc-714b-4f4e-a47e-6b9ce12faa4e
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-01-14 18:19:52 [restartedMain] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@759aa40b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1000427a, org.springframework.security.web.context.SecurityContextHolderFilter@532aebd0, org.springframework.security.web.header.HeaderWriterFilter@3f624985, org.springframework.web.filter.CorsFilter@6779b8d7, org.springframework.security.web.authentication.logout.LogoutFilter@ba78652, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@144252ee, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@22f4a73d, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@63070ad, org.springframework.security.web.session.SessionManagementFilter@645caa3c, org.springframework.security.web.access.ExceptionTranslationFilter@5e41074e, org.springframework.security.web.access.intercept.AuthorizationFilter@4805af45]
+2026-01-14 18:19:52 [restartedMain] INFO  o.s.b.d.a.OptionalLiveReloadServer - LiveReload server is running on port 35729
+2026-01-14 18:19:52 [restartedMain] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path ''
+2026-01-14 18:19:52 [restartedMain] INFO  com.epn.dicc.DICCApplication - Started DICCApplication in 7.38 seconds (process running for 7.904)
+2026-01-14 18:22:53 [http-nio-8080-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-01-14 18:22:53 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-01-14 18:22:53 [http-nio-8080-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-01-14 18:23:05 [http-nio-8080-exec-2] DEBUG org.hibernate.SQL - 
+    select
+        u1_0.id,
+        u1_0.tipo_usuario,
+        u1_0.activo,
+        u1_0.apellidos,
+        u1_0.cedula,
+        u1_0.codigo_epn,
+        u1_0.correo_institucional,
+        u1_0.creado_por,
+        u1_0.email_verificado,
+        u1_0.fecha_creacion,
+        u1_0.fecha_modificacion,
+        u1_0.fecha_registro,
+        u1_0.modificado_por,
+        u1_0.nombres,
+        u1_0.password_hash,
+        u1_0.rol,
+        u1_0.carrera,
+        u1_0.facultad,
+        u1_0.promedio_general,
+        u1_0.quintil,
+        u1_0.semestre_actual,
+        u1_0.area_investigacion,
+        u1_0.cubiculo,
+        u1_0.departamento,
+        u1_0.extension,
+        u1_0.cargo,
+        u1_0.codigo_registro_especial 
+    from
+        usuario u1_0 
+    where
+        u1_0.correo_institucional=?
+2026-01-14 18:23:05 [http-nio-8080-exec-2] WARN  o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Resolved [io.jsonwebtoken.security.WeakKeyException: The signing key's size is 360 bits which is not secure enough for the HS512 algorithm.  The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HS512 MUST have a size >= 512 bits (the key size must be greater than or equal to the hash output size).  Consider using the io.jsonwebtoken.security.Keys class's 'secretKeyFor(SignatureAlgorithm.HS512)' method to create a key guaranteed to be secure enough for HS512.  See https://tools.ietf.org/html/rfc7518#section-3.2 for more information.]

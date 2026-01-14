@@ -36,8 +36,8 @@ public class AutenticacionServiceImpl implements IAutenticacionService {
         Usuario usuario = usuarioRepository.findByCorreoInstitucional(request.getCorreoInstitucional())
                 .orElseThrow(() -> new UnauthorizedException("Credenciales inválidas"));
 
-        // Verificar contraseña
-        if (!passwordEncoder.matches(request.getPassword(), usuario.getPasswordHash())) {
+        // CAMBIO: Verificar contraseña SIN hash (comparación directa)
+        if (!request.getPassword().equals(usuario.getPasswordHash())) {
             throw new UnauthorizedException("Credenciales inválidas");
         }
 
@@ -96,8 +96,8 @@ public class AutenticacionServiceImpl implements IAutenticacionService {
                 throw new BusinessException("Rol no válido");
         }
 
-        // Encriptar contraseña
-        usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        // CAMBIO: Guardar contraseña SIN hash (solo para prototipo)
+        usuario.setPasswordHash(request.getPassword()); // ← SIN passwordEncoder
         usuario.setFechaRegistro(LocalDateTime.now());
 
         // Guardar

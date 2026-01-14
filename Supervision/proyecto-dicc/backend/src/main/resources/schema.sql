@@ -25,18 +25,18 @@ CREATE TABLE IF NOT EXISTS laboratorio (
 -- ============================================
 CREATE TABLE IF NOT EXISTS usuario (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tipo_usuario VARCHAR(20) NOT NULL, -- 'DOCENTE', 'AYUDANTE', 'JEFATURA'
+    tipo_usuario VARCHAR(20) NOT NULL,
     codigo_epn VARCHAR(50) UNIQUE NOT NULL,
     cedula VARCHAR(10) UNIQUE NOT NULL,
     nombres VARCHAR(100) NOT NULL,
     apellidos VARCHAR(100) NOT NULL,
     correo_institucional VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    rol VARCHAR(30) NOT NULL, -- 'JEFATURA_DICC', 'DIRECTOR_PROYECTO', 'AYUDANTE_PROYECTO'
+    rol VARCHAR(30) NOT NULL,
     email_verificado BOOLEAN DEFAULT 0,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    fecha_modificacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    fecha_registro TEXT,  -- ← CAMBIO: TEXT en lugar de DATETIME
+    fecha_creacion TEXT DEFAULT (datetime('now', 'localtime')),  -- ← CAMBIO
+    fecha_modificacion TEXT DEFAULT (datetime('now', 'localtime')),  -- ← CAMBIO
     creado_por VARCHAR(100),
     modificado_por VARCHAR(100),
     activo BOOLEAN DEFAULT 1,

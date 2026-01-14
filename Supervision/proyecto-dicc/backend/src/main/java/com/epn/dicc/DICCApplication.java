@@ -46,8 +46,10 @@ public class DICCApplication {
     /**
      * Bean para encriptar contraseñas con BCrypt
      */
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+    
 }

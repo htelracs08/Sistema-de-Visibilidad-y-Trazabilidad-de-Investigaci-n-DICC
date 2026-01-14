@@ -52,6 +52,7 @@ proyecto-dicc/
 │   │   │   │               │   ├── IProyectoRepository.java
 │   │   │   │               │   ├── IProyectoAutorizadoRepository.java
 │   │   │   │               │   ├── IContratoRepository.java
+│   │   │   │               │   ├── IProyectoCapacidadRepository.java
 │   │   │   │               │   ├── IBitacoraRepository.java
 │   │   │   │               │   ├── IActividadRepository.java
 │   │   │   │               │   ├── IArticuloRepository.java
