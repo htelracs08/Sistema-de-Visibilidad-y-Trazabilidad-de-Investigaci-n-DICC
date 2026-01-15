@@ -99,7 +99,7 @@ public class AutenticacionServiceImpl implements IAutenticacionService {
         // CAMBIO: Guardar contraseña SIN hash (solo para prototipo)
         usuario.setPasswordHash(request.getPassword()); // ← SIN passwordEncoder
         usuario.setFechaRegistro(LocalDateTime.now());
-
+        
         // Guardar
         usuario = usuarioRepository.save(usuario);
 
