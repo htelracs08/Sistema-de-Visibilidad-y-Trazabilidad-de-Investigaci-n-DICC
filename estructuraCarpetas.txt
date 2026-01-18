@@ -1,0 +1,80 @@
+dicc-proyectos/
+│  pom.xml                        # POM padre (packaging=pom)
+│  README.md
+│  .gitignore
+│
+├─ backend/                        # Spring Boot 3.5.10 + Spring JDBC + SQLite
+│  ├─ pom.xml
+│  └─ src/
+│     ├─ main/
+│     │  ├─ java/ec/epn/dicc/
+│     │  │  ├─ BackendApp.java
+│     │  │  ├─ config/
+│     │  │  │  ├─ SecurityConfig.java        # Basic Auth + roles
+│     │  │  │  ├─ CorsConfig.java            # (si lo necesitas)
+│     │  │  │  └─ SchedulerConfig.java       # @EnableScheduling
+│     │  │  ├─ controller/
+│     │  │  │  ├─ CommonController.java      # /me, /notificaciones
+│     │  │  │  ├─ JefaturaController.java
+│     │  │  │  ├─ DirectorController.java
+│     │  │  │  └─ AyudanteController.java
+│     │  │  ├─ service/
+│     │  │  │  ├─ ProyectoService.java
+│     │  │  │  ├─ ContratoService.java
+│     │  │  │  ├─ BitacoraService.java
+│     │  │  │  ├─ ArticuloService.java
+│     │  │  │  ├─ ReporteService.java        # semáforo + inconsistencias
+│     │  │  │  └─ MailService.java           # Outlook SMTP
+│     │  │  ├─ repository/
+│     │  │  │  ├─ ProyectoRepo.java          # JdbcTemplate
+│     │  │  │  ├─ UsuarioRepo.java
+│     │  │  │  ├─ ContratoRepo.java
+│     │  │  │  ├─ BitacoraRepo.java
+│     │  │  │  ├─ InformeRepo.java
+│     │  │  │  ├─ ActividadRepo.java
+│     │  │  │  └─ ArticuloRepo.java
+│     │  │  ├─ domain/                       # clases del dominio
+│     │  │  ├─ dto/                          # request/response JSON
+│     │  │  └─ util/
+│     │  └─ resources/
+│     │     ├─ application.yml               # server.address=0.0.0.0, mail, sqlite
+│     │     └─ db/
+│     │        ├─ schema.sql
+│     │        └─ seed.sql                   # usuarios base/roles, etc.
+│     └─ test/
+│
+├─ client-jefatura/                # Java Swing -> Jefatura.jar
+│  ├─ pom.xml
+│  └─ src/main/
+│     ├─ java/ec/epn/dicc/jefatura/
+│     │  ├─ MainJefatura.java
+│     │  ├─ ui/                    # pantallas
+│     │  ├─ api/                   # HttpClient + BasicAuth
+│     │  ├─ dto/                   # modelos JSON
+│     │  └─ util/
+│     └─ resources/
+│        └─ client.properties       # api.baseUrl=http://IP_SERVIDOR:8080/api/v1
+│
+├─ client-director/                # Java Swing -> Director.jar
+│  ├─ pom.xml
+│  └─ src/main/
+│     ├─ java/ec/epn/dicc/director/
+│     │  ├─ MainDirector.java
+│     │  ├─ ui/
+│     │  ├─ api/
+│     │  ├─ dto/
+│     │  └─ util/
+│     └─ resources/
+│        └─ client.properties
+│
+└─ client-ayudante/                # Java Swing -> Ayudante.jar
+   ├─ pom.xml
+   └─ src/main/
+      ├─ java/ec/epn/dicc/ayudante/
+      │  ├─ MainAyudante.java
+      │  ├─ ui/
+      │  ├─ api/
+      │  ├─ dto/
+      │  └─ util/
+      └─ resources/
+         └─ client.properties
