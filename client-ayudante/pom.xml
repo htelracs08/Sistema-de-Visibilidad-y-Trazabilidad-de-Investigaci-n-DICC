@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>ec.epn</groupId>
-  <artifactId>client-jefatura</artifactId>
+  <artifactId>client-ayudante</artifactId>
   <version>1.0.0</version>
 
   <properties>
