@@ -1,4 +1,4 @@
-package ec.epn.dicc.jefatura;
+package ec.epn.dicc.director;
 
 public class MainDirector {
   public static void main(String[] args) {
