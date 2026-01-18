@@ -4,3 +4,5 @@ mvn -pl backend spring-boot:run
 
 Compilar 
 mvn clean compile
+
+CONTRASEÑA JEFATURA: Jefatura123*
