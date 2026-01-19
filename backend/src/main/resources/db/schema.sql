@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   nombres TEXT NOT NULL,
   apellidos TEXT NOT NULL,
   correo TEXT NOT NULL UNIQUE,
-  password_hash TEXT NOT NULL,
+  password TEXT NOT NULL,
   rol TEXT NOT NULL,
   debe_cambiar_password INTEGER NOT NULL DEFAULT 1,
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))

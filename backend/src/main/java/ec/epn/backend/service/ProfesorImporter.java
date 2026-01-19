@@ -29,7 +29,7 @@ public class ProfesorImporter implements CommandLineRunner {
       while ((line = br.readLine()) != null) {
         if (first) { first = false; continue; } // salta header
 
-        var parts = line.split(",", -1);
+        var parts = line.split(";", -1);
         if (parts.length < 3) continue;
 
         var nombres = parts[0].trim();

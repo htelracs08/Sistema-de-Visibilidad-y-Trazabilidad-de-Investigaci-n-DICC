@@ -15,7 +15,7 @@ public class UsuarioRepo {
 
   public Optional<Usuario> findByCorreo(String correo) {
     var sql = """
-      SELECT id, nombres, apellidos, correo, password_hash, rol, debe_cambiar_password
+      SELECT id, nombres, apellidos, correo, password, rol, debe_cambiar_password
       FROM usuario
       WHERE correo = ?
       """;
@@ -25,7 +25,7 @@ public class UsuarioRepo {
         rs.getString("nombres"),
         rs.getString("apellidos"),
         rs.getString("correo"),
-        rs.getString("password_hash"),
+        rs.getString("password"),          // <-- AQUI
         rs.getString("rol"),
         rs.getInt("debe_cambiar_password") == 1
     ), correo);

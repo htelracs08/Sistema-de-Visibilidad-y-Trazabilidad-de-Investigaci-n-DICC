@@ -5,7 +5,7 @@ public record Usuario(
     String nombres,
     String apellidos,
     String correo,
-    String passwordHash,
+    String password,
     String rol,
     boolean debeCambiarPassword
 ) {}
