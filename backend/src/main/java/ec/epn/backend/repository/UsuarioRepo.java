@@ -54,4 +54,14 @@ public class UsuarioRepo {
       nombres, apellidos, correo, password, rol
     );
   }
+
+  public void cambiarPassword(String correo, String nuevaPassword) {
+    jdbc.update("""
+      UPDATE usuario
+      SET password = ?, debe_cambiar_password = 0
+      WHERE correo = ?
+      """, nuevaPassword, correo);
+  }
+
+
 }
