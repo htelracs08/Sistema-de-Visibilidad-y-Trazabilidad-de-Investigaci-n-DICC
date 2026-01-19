@@ -1,7 +1,7 @@
 Comando para iniciar el servidor 
 mvn -pl backend spring-boot:run
 mvn -pl backend -DskipTests spring-boot:run -e
-
+mvn -pl backend -DskipTests spring-boot:run
 
 Compilar 
 mvn clean compile
