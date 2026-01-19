@@ -1,56 +1,77 @@
-// Acceso de Jefatura
-curl -v -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/api/v1/me
+levanta el backend
 
-// Ingreso del Director y Proyecto
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* -H "Content-Type: application/json" -d "{\"codigo\":\"PRJ-001\",\"nombre\":\"Proyecto IA\",\"correoDirector\":\"ariel.guana@epn.edu.ec\"}" http://localhost:8080/api/v1/jefatura/proyectos
-
-// Ingreso del Director (select)
-curl -u ariel.guana@epn.edu.ec:Temp123* http://localhost:8080/api/v1/director/mis-proyectos
-
-// Cambio de Contrasenia
-curl -u ariel.guana@epn.edu.ec:Temp123* -H "Content-Type: application/json" -d "{\"nuevaPassword\":\"Director2026*\"}" http://localhost:8080/api/v1/auth/cambiar-password
-
-// Registro del ayudante ()
-curl -u ariel.guana@epn.edu.ec:Director2026* -H "Content-Type: application/json" -d "{\"nombres\":\"Juan\",\"apellidos\":\"Perez\",\"correoInstitucional\":\"juan.perez@epn.edu.ec\",\"facultad\":\"FIS\",\"quintil\":2,\"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",\"fechaInicioContrato\":\"2026-01-01\",\"fechaFinContrato\":\"2026-03-31\"}" http://localhost:8080/api/v1/director/proyectos/ID_DE_TU_PROYECTO/ayudantes
-
-// Comprobar (select)
-curl -u ariel.guana@epn.edu.ec:Director2026* http://localhost:8080/api/v1/director/mis-proyectos
-
-//
-curl -u ariel.guana@epn.edu.ec:Director2026* -H "Content-Type: application/json" \
--d "{\"nombres\":\"Juan\",\"apellidos\":\"Perez\",\"correoInstitucional\":\"juan.perez@epn.edu.ec\",\"facultad\":\"FIS\",\"quintil\":2,\"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",\"fechaInicioContrato\":\"2026-01-01\",\"fechaFinContrato\":\"2026-03-31\"}" \
-http://localhost:8080/api/v1/director/proyectos/820488cf-f343-4bda-8ad7-f13ffa57ec4a/ayudantes
-
-//
-curl -u ariel.guana@epn.edu.ec:Director2026* \
--H "Content-Type: application/json" \
--d "{
-  \"nombres\":\"Juan\",
-  \"apellidos\":\"Perez\",
-  \"correoInstitucional\":\"juan.perez@epn.edu.ec\",
-  \"facultad\":\"FIS\",
-  \"quintil\":2,
-  \"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",
-  \"fechaInicioContrato\":\"2026-01-01\",
-  \"fechaFinContrato\":\"2026-03-31\"
-}" \
-http://localhost:8080/api/v1/director/proyectos/820488cf-f343-4bda-8ad7-f13ffa57ec4a/ayudantes
+mvn -pl backend -DskipTests clean spring-boot:run
 
 
 
+Login Jefatura
+
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/api/v1/me
 
 
+
+Crear proyecto
+
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+  -H "Content-Type: application/json" \
+  -d "{\"codigo\":\"PRJ-001\",\"nombre\":\"Proyecto IA\",\"correoDirector\":\"ariel.guana@epn.edu.ec\"}" \
+  http://localhost:8080/api/v1/jefatura/proyectos
+
+(copiar el proyecto id)
+
+
+
+Cambiar password Director
+
+curl -u ariel.guana@epn.edu.ec:Temp123* \
+  -H "Content-Type: application/json" \
+  -d "{\"nuevaPassword\":\"Director2026*\"}" \
+  http://localhost:8080/api/v1/auth/cambiar-password
+
+
+(opcional)
+
+curl -u ariel.guana@epn.edu.ec:Director2026* http://localhost:8080/api/v1/me
+
+
+
+Registrar ayudante + contrato (Director) Uitilizar el PEGAR_AQUI_PROYECTO_ID
 
 curl -u ariel.guana@epn.edu.ec:Director2026* \
-   -H "Content-Type: application/json" \
-   -d "{
-     \"nombres\":\"Juan\",
-     \"apellidos\":\"Perez\",
-     \"correoInstitucional\":\"juan.perez@epn.edu.ec\",
-     \"facultad\":\"FIS\",
-     \"quintil\":2,
-     \"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",
-     \"fechaInicioContrato\":\"2026-01-01\",
-     \"fechaFinContrato\":\"2026-03-31\"
-   }" \
-   http://localhost:8080/api/v1/director/proyectos/c677aab9-d960-4dbf-adc9-64501829531c/ayudantes
+  -H "Content-Type: application/json" \
+  -d "{
+    \"nombres\":\"Juan\",
+    \"apellidos\":\"Perez\",
+    \"correoInstitucional\":\"juan.perez@epn.edu.ec\",
+    \"facultad\":\"FIS\",
+    \"quintil\":2,
+    \"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",
+    \"fechaInicioContrato\":\"2026-01-01\",
+    \"fechaFinContrato\":\"2026-03-31\"
+  }" \
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes
+
+  f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
+
+
+Ayudante como usuario
+
+curl -u juan.perez@epn.edu.ec:Temp123* http://localhost:8080/api/v1/me
+
+
+
+Recontratacion
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"nombres\":\"Juan\",
+    \"apellidos\":\"Perez\",
+    \"correoInstitucional\":\"juan.perez@epn.edu.ec\",
+    \"facultad\":\"FIS\",
+    \"quintil\":2,
+    \"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",
+    \"fechaInicioContrato\":\"2026-04-01\",
+    \"fechaFinContrato\":\"2026-06-30\"
+  }" \
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes

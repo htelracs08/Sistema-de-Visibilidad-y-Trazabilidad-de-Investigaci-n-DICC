@@ -37,23 +37,25 @@ public class UsuarioRepo {
   }
 
   public boolean existsByCorreo(String correo) {
-    Integer count = jdbc.queryForObject(
-      "SELECT COUNT(1) FROM usuario WHERE correo = ?",
-      Integer.class,
-      correo
-    );
-    return count != null && count > 0;
-  }
+  Integer n = jdbc.queryForObject("SELECT COUNT(1) FROM usuario WHERE correo = ?", Integer.class, correo);
+  return n != null && n > 0;
+}
+
 
   public void crearUsuario(String nombres, String apellidos, String correo, String password, String rol) {
-    jdbc.update("""
-      INSERT INTO usuario (id, nombres, apellidos, correo, password, rol, debe_cambiar_password)
-      VALUES (?, ?, ?, ?, ?, ?, 1)
-      """,
-      UUID.randomUUID().toString(),
-      nombres, apellidos, correo, password, rol
-    );
-  }
+  jdbc.update("""
+    INSERT INTO usuario (id, nombres, apellidos, correo, password, rol, debe_cambiar_password)
+    VALUES (?, ?, ?, ?, ?, ?, 1)
+  """,
+    java.util.UUID.randomUUID().toString(),
+    nombres,
+    apellidos,
+    correo,
+    password,
+    rol
+  );
+}
+
 
   public void cambiarPassword(String correo, String nuevaPassword) {
     jdbc.update("""

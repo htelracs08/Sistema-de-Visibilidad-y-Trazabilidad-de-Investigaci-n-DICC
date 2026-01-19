@@ -40,5 +40,38 @@ public class ProyectoRepo {
     );
   }
 
+  public java.util.List<java.util.Map<String, Object>> listarResumen() {
+    return jdbc.query("""
+      SELECT
+        p.id AS proyecto_id,
+        p.codigo,
+        p.nombre,
+        p.director_correo AS correo_director,
+        p.activo,
+
+        -- ayudantes activos
+        (SELECT COUNT(1)
+        FROM contrato c
+        WHERE c.proyecto_id = p.id AND c.estado = 'ACTIVO') AS ayudantes_activos,
+
+        -- contratos totales (histórico)
+        (SELECT COUNT(1)
+        FROM contrato c
+        WHERE c.proyecto_id = p.id) AS contratos_total
+
+      FROM proyecto p
+      ORDER BY p.creado_en DESC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("proyectoId", rs.getString("proyecto_id"));
+      m.put("codigo", rs.getString("codigo"));
+      m.put("nombre", rs.getString("nombre"));
+      m.put("correoDirector", rs.getString("correo_director"));
+      m.put("activo", rs.getInt("activo") == 1);
+      m.put("ayudantesActivos", rs.getInt("ayudantes_activos"));
+      m.put("contratosTotal", rs.getInt("contratos_total"));
+      return m;
+    });
+  }
 
 }

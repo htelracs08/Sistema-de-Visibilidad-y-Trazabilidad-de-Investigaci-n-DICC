@@ -16,21 +16,78 @@ public class ContratoRepo {
 
   public int contarActivosPorProyecto(String proyectoId) {
     Integer count = jdbc.queryForObject("""
-      SELECT COUNT(1)
-      FROM contrato
-      WHERE proyecto_id = ? AND estado = 'ACTIVO'
-      """, Integer.class, proyectoId);
+        SELECT COUNT(1)
+        FROM contrato
+        WHERE proyecto_id = ? AND estado = 'ACTIVO'
+        """, Integer.class, proyectoId);
     return count == null ? 0 : count;
   }
 
   public String crear(String proyectoId, String ayudanteId, String fechaInicio, String fechaFin) {
     String id = UUID.randomUUID().toString();
     jdbc.update("""
-      INSERT INTO contrato (id, proyecto_id, ayudante_id, fecha_inicio, fecha_fin, estado)
-      VALUES (?, ?, ?, ?, ?, 'ACTIVO')
-      """,
-      id, proyectoId, ayudanteId, fechaInicio, fechaFin
-    );
+        INSERT INTO contrato (id, proyecto_id, ayudante_id, fecha_inicio, fecha_fin, estado)
+        VALUES (?, ?, ?, ?, ?, 'ACTIVO')
+        """,
+        id, proyectoId, ayudanteId, fechaInicio, fechaFin);
     return id;
   }
+
+  public java.util.List<java.util.Map<String, Object>> listarPorProyecto(String proyectoId) {
+    return jdbc.query("""
+          SELECT
+            c.id AS contrato_id,
+            c.proyecto_id,
+            c.fecha_inicio,
+            c.fecha_fin,
+            c.estado,
+            c.motivo_inactivo,
+            a.id AS ayudante_id,
+            a.nombres,
+            a.apellidos,
+            a.correo_institucional,
+            a.facultad,
+            a.quintil,
+            a.tipo_ayudante
+          FROM contrato c
+          JOIN ayudante a ON a.id = c.ayudante_id
+          WHERE c.proyecto_id = ?
+          ORDER BY c.creado_en DESC
+        """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("contratoId", rs.getString("contrato_id"));
+      m.put("proyectoId", rs.getString("proyecto_id"));
+      m.put("fechaInicio", rs.getString("fecha_inicio"));
+      m.put("fechaFin", rs.getString("fecha_fin"));
+      m.put("estado", rs.getString("estado"));
+      m.put("motivoInactivo", rs.getString("motivo_inactivo"));
+      m.put("ayudanteId", rs.getString("ayudante_id"));
+      m.put("nombres", rs.getString("nombres"));
+      m.put("apellidos", rs.getString("apellidos"));
+      m.put("correoInstitucional", rs.getString("correo_institucional"));
+      m.put("facultad", rs.getString("facultad"));
+      m.put("quintil", rs.getInt("quintil"));
+      m.put("tipoAyudante", rs.getString("tipo_ayudante"));
+      return m;
+    },
+        proyectoId);
+  }
+
+  public void finalizar(String contratoId, String motivo) {
+    jdbc.update("""
+      UPDATE contrato
+      SET estado = 'INACTIVO', motivo_inactivo = ?
+      WHERE id = ?
+    """, motivo, contratoId);
+  }
+
+  public int contarActivosGlobal() {
+    Integer n = jdbc.queryForObject("""
+      SELECT COUNT(1)
+      FROM contrato
+      WHERE estado='ACTIVO'
+    """, Integer.class);
+    return n == null ? 0 : n;
+  }
+
 }
