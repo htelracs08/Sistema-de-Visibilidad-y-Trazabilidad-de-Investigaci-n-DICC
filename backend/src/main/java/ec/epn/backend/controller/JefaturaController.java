@@ -62,7 +62,10 @@ public class JefaturaController {
     return java.util.Map.of("ok", true, "proyectoId", proyectoId);
   }
 
-  
+  @GetMapping("/proyectos")
+  public Object listarProyectos() {
+    return proyectoRepo.findAll();
+  }
 
 
 }

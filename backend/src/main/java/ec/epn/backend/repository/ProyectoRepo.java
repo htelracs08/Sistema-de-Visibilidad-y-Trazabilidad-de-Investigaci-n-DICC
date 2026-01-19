@@ -22,4 +22,23 @@ public class ProyectoRepo {
       """, id, codigo, nombre, correoDirector);
     return id;
   }
+
+  public java.util.List<java.util.Map<String, Object>> findAll() {
+    return jdbc.query("""
+        SELECT id, codigo, nombre, director_correo, activo, creado_en
+        FROM proyecto
+        ORDER BY creado_en DESC
+        """,
+      (rs, rowNum) -> java.util.Map.<String, Object>of(
+        "id", rs.getString("id"),
+        "codigo", rs.getString("codigo"),
+        "nombre", rs.getString("nombre"),
+        "correoDirector", rs.getString("director_correo"),
+        "activo", rs.getInt("activo") == 1,
+        "creadoEn", rs.getString("creado_en")
+      )
+    );
+  }
+
+
 }
