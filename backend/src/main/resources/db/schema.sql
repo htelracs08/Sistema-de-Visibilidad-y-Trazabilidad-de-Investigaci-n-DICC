@@ -1,5 +1,6 @@
 PRAGMA foreign_keys = ON;
 
+-- Tabla usuario
 CREATE TABLE IF NOT EXISTS usuario (
   id TEXT PRIMARY KEY,
   nombres TEXT NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE IF NOT EXISTS usuario (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Tabla profesor
 CREATE TABLE IF NOT EXISTS profesor (
   id TEXT PRIMARY KEY,
   nombres TEXT NOT NULL,
@@ -18,24 +20,23 @@ CREATE TABLE IF NOT EXISTS profesor (
   correo TEXT NOT NULL UNIQUE
 );
 
+-- Tabla proyecto (CON TODAS LAS COLUMNAS)
 CREATE TABLE IF NOT EXISTS proyecto (
   id TEXT PRIMARY KEY,
   codigo TEXT NOT NULL UNIQUE,
   nombre TEXT NOT NULL,
   director_correo TEXT NOT NULL,
   activo INTEGER NOT NULL DEFAULT 1,
+  max_ayudantes INTEGER NOT NULL DEFAULT 0,
+  max_articulos INTEGER NOT NULL DEFAULT 0,
+  fecha_inicio TEXT,
+  fecha_fin TEXT,
+  tipo TEXT,
+  subtipo TEXT,
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-ALTER TABLE proyecto ADD COLUMN max_ayudantes INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE proyecto ADD COLUMN max_articulos INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE proyecto ADD COLUMN fecha_inicio TEXT;
-ALTER TABLE proyecto ADD COLUMN fecha_fin TEXT;
-ALTER TABLE proyecto ADD COLUMN tipo TEXT;
-ALTER TABLE proyecto ADD COLUMN subtipo TEXT;
-
-PRAGMA foreign_keys = ON;
-
+-- Tabla ayudante
 CREATE TABLE IF NOT EXISTS ayudante (
   id TEXT PRIMARY KEY,
   nombres TEXT NOT NULL,
@@ -47,6 +48,7 @@ CREATE TABLE IF NOT EXISTS ayudante (
   creado_en TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Tabla contrato
 CREATE TABLE IF NOT EXISTS contrato (
   id TEXT PRIMARY KEY,
   proyecto_id TEXT NOT NULL,
