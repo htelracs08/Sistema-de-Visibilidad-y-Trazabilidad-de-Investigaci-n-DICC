@@ -66,3 +66,20 @@ CREATE TABLE IF NOT EXISTS contrato (
 CREATE INDEX IF NOT EXISTS idx_contrato_proyecto ON contrato(proyecto_id);
 CREATE INDEX IF NOT EXISTS idx_contrato_ayudante ON contrato(ayudante_id);
 CREATE INDEX IF NOT EXISTS idx_contrato_estado ON contrato(estado);
+
+-- Tabla bitácora mensual (mínima para semáforo)
+CREATE TABLE IF NOT EXISTS bitacora_mensual (
+  id TEXT PRIMARY KEY,
+  contrato_id TEXT NOT NULL,
+  anio INTEGER NOT NULL,
+  mes INTEGER NOT NULL, -- 1..12
+  estado TEXT NOT NULL, -- BORRADOR | ENVIADA | APROBADA | RECHAZADA
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  actualizado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (contrato_id, anio, mes),
+  FOREIGN KEY (contrato_id) REFERENCES contrato(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bitacora_contrato ON bitacora_mensual(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_bitacora_anio_mes ON bitacora_mensual(anio, mes);
+CREATE INDEX IF NOT EXISTS idx_bitacora_estado ON bitacora_mensual(estado);

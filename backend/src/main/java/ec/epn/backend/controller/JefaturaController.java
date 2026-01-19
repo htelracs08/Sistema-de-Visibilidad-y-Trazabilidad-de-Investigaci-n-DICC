@@ -1,5 +1,6 @@
 package ec.epn.backend.controller;
 
+import ec.epn.backend.repository.BitacoraRepo;
 import ec.epn.backend.repository.ContratoRepo;
 import ec.epn.backend.repository.ProfesorRepo;
 import ec.epn.backend.repository.ProyectoRepo;
@@ -17,12 +18,14 @@ public class JefaturaController {
   private final UsuarioRepo usuarioRepo;
   private final ProfesorRepo profesorRepo;
   private final ContratoRepo contratoRepo;
+  private final BitacoraRepo bitacoraRepo;
 
-  public JefaturaController(ProfesorRepo profesorRepo, ProyectoRepo proyectoRepo, UsuarioRepo usuarioRepo, ContratoRepo contratoRepo) {
+  public JefaturaController(ProfesorRepo profesorRepo, ProyectoRepo proyectoRepo, UsuarioRepo usuarioRepo, ContratoRepo contratoRepo, BitacoraRepo bitacoraRepo) {
     this.profesorRepo = profesorRepo;
     this.proyectoRepo = proyectoRepo;
     this.usuarioRepo = usuarioRepo;
     this.contratoRepo = contratoRepo;
+    this.bitacoraRepo = bitacoraRepo;
   }
 
   @GetMapping("/ayudantes/activos")
@@ -44,6 +47,48 @@ public class JefaturaController {
   @GetMapping("/proyectos/{proyectoId}/ayudantes")
   public Object listarAyudantesProyecto(@PathVariable String proyectoId) {
     return contratoRepo.listarPorProyecto(proyectoId.trim());
+  }
+
+  @GetMapping("/semaforo")
+  public Object semaforo() {
+    var contratos = contratoRepo.listarActivosDetallado();
+    var hoy = java.time.LocalDate.now();
+
+    var out = new java.util.ArrayList<java.util.Map<String, Object>>();
+
+    for (var c : contratos) {
+      String contratoId = (String) c.get("contratoId");
+      var fechaInicio = java.time.LocalDate.parse((String) c.get("fechaInicio"));
+
+      // meses esperados: desde (anio/mes de inicio) hasta (anio/mes de hoy), inclusive
+      int anioDesde = fechaInicio.getYear();
+      int mesDesde = fechaInicio.getMonthValue();
+      int anioHasta = hoy.getYear();
+      int mesHasta = hoy.getMonthValue();
+
+      int mesesEsperados = ((anioHasta - anioDesde) * 12) + (mesHasta - mesDesde) + 1;
+      if (mesesEsperados < 0) mesesEsperados = 0;
+
+      int mesesAprobados = bitacoraRepo.contarAprobadasEnRango(contratoId, anioDesde, mesDesde, anioHasta, mesHasta);
+      int faltantes = Math.max(0, mesesEsperados - mesesAprobados);
+
+      String color = (faltantes == 0) ? "VERDE" : (faltantes == 1 ? "AMARILLO" : "ROJO");
+
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.putAll(c);
+      m.put("anioDesde", anioDesde);
+      m.put("mesDesde", mesDesde);
+      m.put("anioHasta", anioHasta);
+      m.put("mesHasta", mesHasta);
+      m.put("mesesEsperados", mesesEsperados);
+      m.put("mesesAprobados", mesesAprobados);
+      m.put("faltantes", faltantes);
+      m.put("color", color);
+
+      out.add(m);
+    }
+
+    return out;
   }
 
 

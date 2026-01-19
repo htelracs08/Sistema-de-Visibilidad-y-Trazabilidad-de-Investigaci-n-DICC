@@ -51,7 +51,7 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
   }" \
   http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes
 
-  f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
+  PEGAR_AQUI_PROYECTO_ID:  f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
 
 
 Ayudante como usuario
@@ -75,3 +75,48 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
     \"fechaFinContrato\":\"2026-06-30\"
   }" \
   http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes
+
+(consultas del director)
+Debe devolver lista con:
+datos del ayudante
+datos del contrato activo (o contratos)
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+http://localhost:8080/api/v1/director/proyectos/PEGAR_ID/ayudantes
+
+
+Finalizar contrato (renuncia / fin / despido)
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+-H "Content-Type: application/json" \
+-d "{\"motivo\":\"RENUNCIA\"}" \
+http://localhost:8080/api/v1/director/contratos/PEGAR_CONTRATO_ID/finalizar
+
+1e5567be-9ecc-44c5-b654-25704d1ba650
+
+------------------------------------------------------------- Jefatura -------------------------------------------------------------  
+Jefatura ve lista de proyectos
+Jefatura ve por cada proyecto:
+  ayudantes ACTIVOS
+  ayudantes TOTAL (contratos históricos)
+Jefatura puede abrir un proyecto y ver su “detalle”:
+  lista de ayudantes/contratos (reutilizando tu query de 2.6)
+
+  Resumen de proyectos con conteo de ayudantes activos
+
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/proyectos/resumen
+
+  ver ayudantes de un proyecto (vista Jefatura) (id_proyecto)
+
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/proyectos/PEGAR_ID/ayudantes
+
+f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
+
+  total ayudantes activos global
+
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/ayudantes/activos
+
+------------------------------------------------------------- ------------------------------------------------------------- 

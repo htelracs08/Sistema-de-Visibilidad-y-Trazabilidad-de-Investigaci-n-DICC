@@ -90,4 +90,38 @@ public class ContratoRepo {
     return n == null ? 0 : n;
   }
 
+  public java.util.List<java.util.Map<String, Object>> listarActivosDetallado() {
+    return jdbc.query("""
+      SELECT
+        c.id AS contrato_id,
+        c.proyecto_id,
+        c.ayudante_id,
+        c.fecha_inicio,
+        c.fecha_fin,
+        p.codigo AS proyecto_codigo,
+        p.nombre AS proyecto_nombre,
+        a.nombres AS ayudante_nombres,
+        a.apellidos AS ayudante_apellidos,
+        a.correo_institucional
+      FROM contrato c
+      JOIN proyecto p ON p.id = c.proyecto_id
+      JOIN ayudante a ON a.id = c.ayudante_id
+      WHERE c.estado = 'ACTIVO'
+      ORDER BY p.creado_en DESC, a.apellidos ASC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("contratoId", rs.getString("contrato_id"));
+      m.put("proyectoId", rs.getString("proyecto_id"));
+      m.put("ayudanteId", rs.getString("ayudante_id"));
+      m.put("fechaInicio", rs.getString("fecha_inicio"));
+      m.put("fechaFin", rs.getString("fecha_fin"));
+      m.put("proyectoCodigo", rs.getString("proyecto_codigo"));
+      m.put("proyectoNombre", rs.getString("proyecto_nombre"));
+      m.put("ayudanteNombres", rs.getString("ayudante_nombres"));
+      m.put("ayudanteApellidos", rs.getString("ayudante_apellidos"));
+      m.put("correoInstitucional", rs.getString("correo_institucional"));
+      return m;
+    });
+  }
+
 }
