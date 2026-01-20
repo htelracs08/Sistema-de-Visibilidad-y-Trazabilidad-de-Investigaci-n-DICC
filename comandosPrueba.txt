@@ -150,3 +150,75 @@ curl -X POST \
 17) Ver semáforo de nuevo
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
 http://localhost:8080/api/v1/jefatura/semaforo
+
+
+obtener/crear bitácora actual:
+
+curl -u juan.perez@epn.edu.ec:Temp123* \
+  -X POST \
+  http://localhost:8080/api/v1/ayudante/bitacoras/actual
+
+
+Crear semana:
+
+curl -v -u juan.perez@epn.edu.ec:Temp123* \
+  -H "Content-Type: application/json" \
+  -X POST \
+  --data-binary @- \
+  "http://localhost:8080/api/v1/ayudante/bitacoras/id_bitacora/semanas" <<'JSON'
+{
+  "fechaInicioSemana":"2026-01-05",
+  "fechaFinSemana":"2026-01-09",
+  "actividadesRealizadas":"Avance del módulo de bitácoras",
+  "observaciones":"Sin novedades",
+  "anexos":"-"
+}
+JSON
+
+
+Crear actividades dentro de la semana
+
+curl -u juan.perez@epn.edu.ec:Temp123* \
+  -H "Content-Type: application/json" \
+  -X POST \
+  --data-binary @- \
+  "http://localhost:8080/api/v1/ayudante/semanas/id_semana/actividades?trace=true" <<'JSON'
+{
+  "horaInicio":"08:00",
+  "horaSalida":"10:00",
+  "descripcion":"Reunión con director para revisión de avances"
+}
+JSON
+
+Listar semanas de una bitácora
+
+curl -u juan.perez@epn.edu.ec:Temp123* \
+  "http://localhost:8080/api/v1/ayudante/bitacoras/id_bitacora/semanas"
+
+
+Listar actividades de una semana
+
+curl -u juan.perez@epn.edu.ec:Temp123* \
+  "http://localhost:8080/api/v1/ayudante/semanas/id_semana/actividades"
+
+
+Enviar bitácora (pasar a ENVIADA / PENDIENTE_REVISION)
+
+curl -u juan.perez@epn.edu.ec:Temp123* \
+  -H "Content-Type: application/json" \
+  -X POST \
+  "http://localhost:8080/api/v1/ayudante/bitacoras/55b3f6e0-3501-48e4-823e-23550fe7721b/enviar"
+
+
+Director lista bitácoras pendientes por proyecto
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+  "http://localhost:8080/api/v1/director/proyectos/PEGAR_ID_PROYECTO/bitacoras/pendientes"
+
+Director aprueba bitácora
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"decision":"APROBAR","observacion":"OK"}' \
+  "http://localhost:8080/api/v1/director/bitacoras/55b3f6e0-3501-48e4-823e-23550fe7721b/revisar"

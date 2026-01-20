@@ -142,4 +142,35 @@ public class ContratoRepo {
     });
   }
 
+  public String obtenerContratoActivoIdPorCorreo(String correoInstitucional) {
+    return jdbc.query("""
+        SELECT c.id
+        FROM contrato c
+        JOIN ayudante a ON a.id = c.ayudante_id
+        WHERE a.correo_institucional = ?
+          AND c.estado = 'ACTIVO'
+        ORDER BY c.creado_en DESC
+        LIMIT 1
+      """,
+      (rs) -> rs.next() ? rs.getString("id") : null,
+      correoInstitucional
+    );
+  }
+
+  public String obtenerContratoActivoPorCorreo(String correoInstitucional) {
+    return jdbc.query("""
+        SELECT c.id
+        FROM contrato c
+        JOIN ayudante a ON a.id = c.ayudante_id
+        WHERE a.correo_institucional = ?
+          AND c.estado = 'ACTIVO'
+        ORDER BY c.creado_en DESC
+        LIMIT 1
+      """,
+      rs -> rs.next() ? rs.getString("id") : null,
+      correoInstitucional.trim().toLowerCase()
+    );
+  }
+
+
 }

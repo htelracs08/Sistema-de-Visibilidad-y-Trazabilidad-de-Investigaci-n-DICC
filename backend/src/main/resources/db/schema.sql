@@ -83,3 +83,45 @@ CREATE TABLE IF NOT EXISTS bitacora_mensual (
 CREATE INDEX IF NOT EXISTS idx_bitacora_contrato ON bitacora_mensual(contrato_id);
 CREATE INDEX IF NOT EXISTS idx_bitacora_anio_mes ON bitacora_mensual(anio, mes);
 CREATE INDEX IF NOT EXISTS idx_bitacora_estado ON bitacora_mensual(estado);
+
+-- Tabla bitacora_mensual
+CREATE TABLE IF NOT EXISTS bitacora_mensual (
+  id TEXT PRIMARY KEY,
+  contrato_id TEXT NOT NULL,
+  anio INTEGER NOT NULL,
+  mes INTEGER NOT NULL,
+  estado TEXT NOT NULL DEFAULT 'BORRADOR', -- BORRADOR | ENVIADA | APROBADA | RECHAZADA
+  comentario_revision TEXT,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  UNIQUE (contrato_id, anio, mes),
+  FOREIGN KEY (contrato_id) REFERENCES contrato(id)
+);
+
+-- Tabla informe_semanal
+CREATE TABLE IF NOT EXISTS informe_semanal (
+  id TEXT PRIMARY KEY,
+  bitacora_id TEXT NOT NULL,
+  fecha_inicio_semana TEXT NOT NULL,
+  fecha_fin_semana TEXT NOT NULL,
+  actividades_realizadas TEXT NOT NULL,
+  observaciones TEXT,
+  anexos TEXT,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (bitacora_id) REFERENCES bitacora_mensual(id)
+);
+
+-- Tabla actividad
+CREATE TABLE IF NOT EXISTS actividad (
+  id TEXT PRIMARY KEY,
+  semana_id TEXT NOT NULL,
+  hora_inicio TEXT NOT NULL, -- HH:mm
+  hora_salida TEXT NOT NULL, -- HH:mm
+  total_horas REAL NOT NULL, -- horas en decimal
+  descripcion TEXT NOT NULL,
+  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
+  FOREIGN KEY (semana_id) REFERENCES informe_semanal(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_bitacora_contrato ON bitacora_mensual(contrato_id);
+CREATE INDEX IF NOT EXISTS idx_semanal_bitacora ON informe_semanal(bitacora_id);
+CREATE INDEX IF NOT EXISTS idx_actividad_semana ON actividad(semana_id);
