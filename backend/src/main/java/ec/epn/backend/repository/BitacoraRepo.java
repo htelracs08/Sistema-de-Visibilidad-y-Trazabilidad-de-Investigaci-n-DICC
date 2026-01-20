@@ -17,7 +17,7 @@ public class BitacoraRepo {
     this.jdbc = jdbc;
   }
 
-  // ✅ (TU METODO) para el semáforo: cuenta solo APROBADAS
+  //  para el semáforo: cuenta solo APROBADAS
   public int contarAprobadasEnRango(String contratoId, int anioDesde, int mesDesde, int anioHasta, int mesHasta) {
     Integer n = jdbc.queryForObject("""
       SELECT COUNT(1)
@@ -34,7 +34,7 @@ public class BitacoraRepo {
     return n == null ? 0 : n;
   }
 
-  // ✅ (NUEVO) obtener o crear la bitácora mensual del mes actual para un contrato
+  //  obtener o crear la bitácora mensual del mes actual para un contrato
   public String obtenerOCrearActual(String contratoId) {
     LocalDate hoy = LocalDate.now();
     int anio = hoy.getYear();
@@ -61,7 +61,7 @@ public class BitacoraRepo {
     return id;
   }
 
-  // ✅ (NUEVO) obtener cabecera/detalle de bitácora (para ver bitácora completa)
+  //  obtener cabecera/detalle de bitácora (para ver bitácora completa)
   public java.util.Map<String, Object> obtenerDetalle(String bitacoraId) {
     return jdbc.query("""
       SELECT id, contrato_id, anio, mes, estado, comentario_revision, creado_en
@@ -130,7 +130,7 @@ public class BitacoraRepo {
     }, proyectoId);
   }
 
-  // ✅ NUEVO: obtener estado actual
+  //  obtener estado actual
   public String obtenerEstado(String bitacoraId) {
     return jdbc.queryForObject("""
       SELECT estado
@@ -139,7 +139,7 @@ public class BitacoraRepo {
     """, String.class, bitacoraId);
   }
 
-  // ✅ NUEVO: aprobar/rechazar + comentario_revision (tu columna real)
+  // aprobar/rechazar + comentario_revision (tu columna real)
   public int revisar(String bitacoraId, String nuevoEstado, String comentarioRevision) {
     return jdbc.update("""
       UPDATE bitacora_mensual
@@ -232,5 +232,42 @@ public class BitacoraRepo {
 
     return rows.isEmpty() ? null : rows.get(0);
   }
+
+  public java.util.List<java.util.Map<String, Object>> listarPendientesPorProyectoParaDirector(String proyectoId, String correoDirector) {
+    return jdbc.query("""
+      SELECT
+        b.id AS bitacora_id,
+        b.contrato_id,
+        b.anio,
+        b.mes,
+        b.estado,
+        b.creado_en,
+        a.nombres,
+        a.apellidos,
+        a.correo_institucional
+      FROM bitacora_mensual b
+      JOIN contrato c ON c.id = b.contrato_id
+      JOIN proyecto p ON p.id = c.proyecto_id
+      JOIN ayudante a ON a.id = c.ayudante_id
+      WHERE p.id = ?
+        AND p.director_correo = ?
+        AND b.estado = 'ENVIADA'
+      ORDER BY b.creado_en DESC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("bitacoraId", rs.getString("bitacora_id"));
+      m.put("contratoId", rs.getString("contrato_id"));
+      m.put("anio", rs.getInt("anio"));
+      m.put("mes", rs.getInt("mes"));
+      m.put("estado", rs.getString("estado"));
+      m.put("creadoEn", rs.getString("creado_en"));
+      m.put("nombres", rs.getString("nombres"));
+      m.put("apellidos", rs.getString("apellidos"));
+      m.put("correoInstitucional", rs.getString("correo_institucional"));
+      return m;
+    }, proyectoId, correoDirector);
+  }
+
+
 
 }

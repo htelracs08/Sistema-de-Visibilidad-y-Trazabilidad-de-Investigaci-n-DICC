@@ -84,4 +84,13 @@ public class DirectorBitacoraController {
 
     return Map.of("ok", true, "nuevoEstado", nuevoEstado);
   }
+
+  @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
+  public Object pendientes(@PathVariable String proyectoId, Principal principal) {
+    String correoDirector = principal.getName();
+    return bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
+  }
+
+
+
 }
