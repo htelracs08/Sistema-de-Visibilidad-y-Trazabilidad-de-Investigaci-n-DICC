@@ -56,7 +56,16 @@ public class AyudanteBitacoraController {
 
   // 2) Crear informe semanal dentro de una bitácora
   @PostMapping("/bitacoras/{bitacoraId}/semanas")
-  public Object crearSemana(@PathVariable String bitacoraId, @RequestBody CrearInformeSemanalReq req) {
+  public Object crearSemana(@PathVariable String bitacoraId, @RequestBody CrearInformeSemanalReq req, Principal principal) {
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+    if (contratoId == null) return Map.of("ok", false, "msg", "No existe contrato activo");
+
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId.trim(), contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado: bitácora no pertenece a tu contrato activo");
+    }
+
+
 
     if (req == null) return Map.of("ok", false, "msg", "body requerido");
     if (req.fechaInicioSemana() == null || req.fechaInicioSemana().isBlank()) {
@@ -96,7 +105,18 @@ public class AyudanteBitacoraController {
 
   // 3) Crear actividad dentro de una semana (VALIDACION CORRECTA)
   @PostMapping("/semanas/{semanaId}/actividades")
-  public Object crearActividad(@PathVariable String semanaId, @RequestBody CrearActividadReq req) {
+  public Object crearActividad(@PathVariable String semanaId, @RequestBody CrearActividadReq req, Principal principal) {
+
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+    if (contratoId == null) return Map.of("ok", false, "msg", "No existe contrato activo");
+
+    String bitacoraId = informeRepo.obtenerBitacoraIdPorSemana(semanaId.trim());
+    if (bitacoraId == null) return Map.of("ok", false, "msg", "Semana no encontrada");
+
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId, contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado");
+    }
 
     if (req == null) return Map.of("ok", false, "msg", "body requerido");
     if (req.horaInicio() == null || req.horaInicio().isBlank()) {
@@ -138,7 +158,18 @@ public class AyudanteBitacoraController {
 
   // 4) Consultar bitácora completa (detalle + semanas + actividades)
   @GetMapping("/bitacoras/{bitacoraId}")
-  public Object verBitacora(@PathVariable String bitacoraId) {
+  public Object verBitacora(@PathVariable String bitacoraId, Principal principal) {
+
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+
+    if (contratoId == null) {
+      return Map.of("ok", false, "msg", "No existe contrato activo para este usuario");
+    }
+
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId.trim(), contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado: bitácora no pertenece a tu contrato activo");
+    }
 
     var cabecera = bitacoraRepo.obtenerDetalle(bitacoraId.trim());
     if (cabecera == null) return Map.of("ok", false, "msg", "Bitácora no encontrada");
@@ -152,44 +183,69 @@ public class AyudanteBitacoraController {
     return Map.of("ok", true, "bitacora", cabecera, "semanas", semanas);
   }
 
+
   // ✅ 3.A.4 LISTAR SEMANAS DE UNA BITÁCORA
   @GetMapping("/bitacoras/{bitacoraId}/semanas")
-  public Object listarSemanas(@PathVariable String bitacoraId) {
-    if (bitacoraId == null || bitacoraId.isBlank()) {
-      return Map.of("ok", false, "msg", "bitacoraId requerido");
+  public Object listarSemanas(@PathVariable String bitacoraId, Principal principal) {
+
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+
+    if (contratoId == null) return Map.of("ok", false, "msg", "No existe contrato activo");
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId.trim(), contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado");
     }
-    return informeRepo.listarPorBitacora(bitacoraId.trim());
+
+    return Map.of("ok", true, "items", informeRepo.listarPorBitacora(bitacoraId.trim()));
   }
+
 
   // ✅ 3.A.5 LISTAR ACTIVIDADES DE UNA SEMANA
   @GetMapping("/semanas/{semanaId}/actividades")
-  public Object listarActividades(@PathVariable String semanaId) {
-    if (semanaId == null || semanaId.isBlank()) {
-      return Map.of("ok", false, "msg", "semanaId requerido");
+  public Object listarActividades(@PathVariable String semanaId, Principal principal) {
+
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+    if (contratoId == null) return Map.of("ok", false, "msg", "No existe contrato activo");
+
+    String bitacoraId = informeRepo.obtenerBitacoraIdPorSemana(semanaId.trim());
+    if (bitacoraId == null) return Map.of("ok", false, "msg", "Semana no encontrada");
+
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId, contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado");
     }
-    return actividadRepo.listarPorSemana(semanaId.trim());
+
+    return Map.of("ok", true, "items", actividadRepo.listarPorSemana(semanaId.trim()));
   }
 
   @PostMapping("/bitacoras/{bitacoraId}/enviar")
-  public Object enviar(@PathVariable String bitacoraId) {
+  public Object enviar(@PathVariable String bitacoraId, Principal principal) {
 
-    String id = bitacoraId.trim();
+    String correo = principal.getName();
+    String contratoId = contratoRepo.obtenerContratoActivoPorCorreo(correo);
+    if (contratoId == null) return Map.of("ok", false, "msg", "No existe contrato activo");
 
-    String estado = bitacoraRepo.obtenerEstado(id);
-    if (!"BORRADOR".equalsIgnoreCase(estado)) {
-      return Map.of("ok", false, "msg", "Solo puedes enviar bitácoras en BORRADOR", "estadoActual", estado);
+    if (!bitacoraRepo.perteneceAContrato(bitacoraId.trim(), contratoId)) {
+      return Map.of("ok", false, "msg", "No autorizado");
     }
 
-    int semanas = informeRepo.contarPorBitacora(id);
+    String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
+    if (!"BORRADOR".equalsIgnoreCase(estado)) {
+      return Map.of("ok", false, "msg", "Solo puedes enviar si está en BORRADOR", "estadoActual", estado);
+    }
+
+    int semanas = informeRepo.contarPorBitacora(bitacoraId.trim());
     if (semanas <= 0) {
       return Map.of("ok", false, "msg", "No puedes enviar: la bitácora no tiene semanas");
     }
 
-    int n = bitacoraRepo.enviar(id);
+    int n = bitacoraRepo.enviar(bitacoraId.trim());
     if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     return Map.of("ok", true);
   }
 
-
+  private String contratoActivoOrNull(String correo) {
+    return contratoRepo.obtenerContratoActivoPorCorreo(correo);
+  }
 }

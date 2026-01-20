@@ -1,42 +1,25 @@
-0) Reset + levantar backend
-
-Borra el archivo:
-
-backend/data/sistema_dicc.db
-
-Levanta backend:
-
+0) Levantar backend
 mvn -pl backend -DskipTests clean spring-boot:run
 
-1) Login Jefatura (sanity)
+1) Login Jefatura
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/api/v1/me
 
-
-✅ Debe dar 200 y tu correo/rol.
-
-2) Jefatura crea proyecto (capturar PROYECTO_ID)
+2) Crear proyecto (Jefatura) — guarda proyectoId
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
   -H "Content-Type: application/json" \
   -d "{\"codigo\":\"PRJ-001\",\"nombre\":\"Proyecto IA\",\"correoDirector\":\"ariel.guana@epn.edu.ec\"}" \
   http://localhost:8080/api/v1/jefatura/proyectos
 
 
-📌 Del response copia:
+📌 Copia proyectoId.
 
-PROYECTO_ID=... 1fad049c-f394-4fbe-bda8-ee7a494b4a86
-
-3) Director cambia password inicial
+3) Cambiar password Director (porque nace Temp123*)
 curl -u ariel.guana@epn.edu.ec:Temp123* \
   -H "Content-Type: application/json" \
   -d "{\"nuevaPassword\":\"Director2026*\"}" \
   http://localhost:8080/api/v1/auth/cambiar-password
 
-
-(opcional check)
-
-curl -u ariel.guana@epn.edu.ec:Director2026* http://localhost:8080/api/v1/me
-
-4) Director configura el proyecto (OBLIGATORIO si maxAyudantes arranca en 0)
+4) Director completa detalles del proyecto (para maxAyudantes > 0)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
   -X PUT \
   -H "Content-Type: application/json" \
@@ -48,133 +31,37 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
     "maxAyudantes":2,
     "maxArticulos":3
   }' \
-  http://localhost:8080/api/v1/director/proyectos/PROYECTO_ID
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID
 
-
-✅ Si esto está bien, ya permite registrar ayudantes.
-
-5) Director registra ayudante + contrato (capturar AYUDANTE_ID y CONTRATO_ID)
+5) Director registra ayudante + contrato — guarda contratoId
 curl -u ariel.guana@epn.edu.ec:Director2026* \
   -H "Content-Type: application/json" \
-  -d '{
-    "nombres":"Juan",
-    "apellidos":"Perez",
-    "correoInstitucional":"juan.perez@epn.edu.ec",
-    "facultad":"FIS",
-    "quintil":2,
-    "tipoAyudante":"AYUDANTE_INVESTIGACION",
-    "fechaInicioContrato":"2026-01-01",
-    "fechaFinContrato":"2026-03-31"
-  }' \
-  http://localhost:8080/api/v1/director/proyectos/PROYECTO_ID/ayudantes
+  -d "{
+    \"nombres\":\"Juan\",
+    \"apellidos\":\"Perez\",
+    \"correoInstitucional\":\"juan.perez@epn.edu.ec\",
+    \"facultad\":\"FIS\",
+    \"quintil\":2,
+    \"tipoAyudante\":\"AYUDANTE_INVESTIGACION\",
+    \"fechaInicioContrato\":\"2026-01-01\",
+    \"fechaFinContrato\":\"2026-03-31\"
+  }" \
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/ayudantes
 
 
-📌 Guarda del response:
+📌 Copia contratoId y ayudanteId.
 
-CONTRATO_ID=... 372ba141-ddd2-41d0-9d17-1f784829fa13
-
-AYUDANTE_ID=... 6de45785-3d7c-45ed-abf6-19cd36381853
-
-6) Login Ayudante (debe existir con Temp123*)
-curl -u juan.perez@epn.edu.ec:Temp123* http://localhost:8080/api/v1/me
-
-7) (Recomendado) Director finaliza el contrato actual antes de “recontratar”
-
-Si intentas recontratar sin finalizar, puede fallar por cupo si tu lógica cuenta contratos activos.
-
-curl -u ariel.guana@epn.edu.ec:Director2026* \
-  -H "Content-Type: application/json" \
-  -d "{\"motivo\":\"FIN_CONTRATO\"}" \
-  http://localhost:8080/api/v1/director/contratos/CONTRATO_ID/finalizar
-
-
-✅ Con esto ya liberaste cupo.
-
-8) Recontratación (mismo correo)
-curl -u ariel.guana@epn.edu.ec:Director2026* \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombres":"Juan",
-    "apellidos":"Perez",
-    "correoInstitucional":"juan.perez@epn.edu.ec",
-    "facultad":"FIS",
-    "quintil":2,
-    "tipoAyudante":"AYUDANTE_INVESTIGACION",
-    "fechaInicioContrato":"2026-04-01",
-    "fechaFinContrato":"2026-06-30"
-  }' \
-  http://localhost:8080/api/v1/director/proyectos/PROYECTO_ID/ayudantes
-
-
-✅ Esperado:
-
-nuevo CONTRATO_ID
-
-mismo AYUDANTE_ID
-
-no debería crear usuario otra vez
-
-9) Director lista contratos/ayudantes del proyecto
-curl -u ariel.guana@epn.edu.ec:Director2026* \
-  http://localhost:8080/api/v1/director/proyectos/PROYECTO_ID/ayudantes
-
-10) Consultas Jefatura (control Fase 2)
-10.1 Resumen de proyectos
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/proyectos/resumen
-
-10.2 Detalle contratos/ayudantes por proyecto
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/proyectos/PROYECTO_ID/ayudantes
-
-10.3 Total ayudantes activos global
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/ayudantes/activos
-
-10.4 Estadísticas proyectos por tipo y estado
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/proyectos/estadisticas
-
-10.5 Estadísticas ayudantes activos total + por tipo
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/ayudantes/estadisticas
-
-11) Semáforo (Fase 2.9)
-11.1 Ver semáforo
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/semaforo
-
-11.2 Insertar bitácora APROBADA (debug) usando CONTRATO_ID
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{
-    "contratoId": "CONTRATO_ID",
-    "anio": 2026,
-    "mes": 1
-  }' \
-  http://localhost:8080/debug/bitacora/aprobar
-
-11.3 Ver semáforo otra vez
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-  http://localhost:8080/api/v1/jefatura/semaforo
-
-12) Bitácoras Ayudante (Fase 3.A)
-12.1 Obtener/crear bitácora actual (capturar BITACORA_ID)
+6) Ayudante obtiene/crea bitácora actual — guarda bitacoraId
 curl -u juan.perez@epn.edu.ec:Temp123* \
   -X POST \
   http://localhost:8080/api/v1/ayudante/bitacoras/actual
 
-
-📌 Guarda:
-
-BITACORA_ID=... 5387ea06-c49e-4b75-b1a3-2b7f2d608192
-
-12.2 Crear semana (capturar SEMANA_ID)
+7) Ayudante crea semana — guarda semanaId
 curl -u juan.perez@epn.edu.ec:Temp123* \
   -H "Content-Type: application/json" \
   -X POST \
   --data-binary @- \
-  "http://localhost:8080/api/v1/ayudante/bitacoras/BITACORA_ID/semanas" <<'JSON'
+  "http://localhost:8080/api/v1/ayudante/bitacoras/PEGAR_BITACORA_ID/semanas" <<'JSON'
 {
   "fechaInicioSemana":"2026-01-05",
   "fechaFinSemana":"2026-01-09",
@@ -184,17 +71,12 @@ curl -u juan.perez@epn.edu.ec:Temp123* \
 }
 JSON
 
-
-📌 Guarda:
-
-SEMANA_ID=... d3d77ce1-8a00-4959-bb84-ff168ffc1874
-
-12.3 Crear actividad dentro de la semana
+8) Ayudante crea actividad
 curl -u juan.perez@epn.edu.ec:Temp123* \
   -H "Content-Type: application/json" \
   -X POST \
   --data-binary @- \
-  "http://localhost:8080/api/v1/ayudante/semanas/d3d77ce1-8a00-4959-bb84-ff168ffc1874/actividades?trace=true" <<'JSON'
+  "http://localhost:8080/api/v1/ayudante/semanas/PEGAR_SEMANA_ID/actividades" <<'JSON'
 {
   "horaInicio":"08:00",
   "horaSalida":"10:00",
@@ -202,42 +84,26 @@ curl -u juan.perez@epn.edu.ec:Temp123* \
 }
 JSON
 
-12.4 Listar semanas de la bitácora (GET)
-curl -u juan.perez@epn.edu.ec:Temp123* \
-  "http://localhost:8080/api/v1/ayudante/bitacoras/BITACORA_ID/semanas"
-
-12.5 Listar actividades de la semana (GET)
-curl -u juan.perez@epn.edu.ec:Temp123* \
-  "http://localhost:8080/api/v1/ayudante/semanas/SEMANA_ID/actividades"
-
-13) Flujo Enviar → Revisar (si ya implementaste esos endpoints)
-13.1 Ayudante envía bitácora
+9) Ayudante envía bitácora
 curl -u juan.perez@epn.edu.ec:Temp123* \
   -X POST \
-  "http://localhost:8080/api/v1/ayudante/bitacoras/BITACORA_ID/enviar"
+  "http://localhost:8080/api/v1/ayudante/bitacoras/PEGAR_BITACORA_ID/enviar"
 
-13.2 Director lista pendientes del proyecto
+10) Director lista pendientes (debe aparecer esa bitácora)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
-  "http://localhost:8080/api/v1/director/proyectos/PROYECTO_ID/bitacoras/pendientes"
+  "http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/bitacoras/pendientes"
 
-13.3 Director revisa bitácora (aprobar)
+✅ 11) NUEVO (FASE 3.C.1): Director ve bitácora completa
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+  "http://localhost:8080/api/v1/director/bitacoras/PEGAR_BITACORA_ID"
+
+12) Director aprueba bitácora
 curl -u ariel.guana@epn.edu.ec:Director2026* \
   -H "Content-Type: application/json" \
   -X POST \
   -d '{"decision":"APROBAR","observacion":"OK"}' \
   "http://localhost:8080/api/v1/director/bitacoras/PEGAR_BITACORA_ID/revisar"
 
-
-Ayudante: enviar
-curl -u juan.perez@epn.edu.ec:Temp123* -X POST \
-"http://localhost:8080/api/v1/ayudante/bitacoras/PEGAR_BITACORA_ID/enviar"
-
-Director: pendientes
-curl -u ariel.guana@epn.edu.ec:Director2026* \
-"http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/bitacoras/pendientes"
-
-Director: revisar
-curl -u ariel.guana@epn.edu.ec:Director2026* \
--H "Content-Type: application/json" -X POST \
--d '{"decision":"APROBAR","observacion":"OK"}' \
-"http://localhost:8080/api/v1/director/bitacoras/PEGAR_BITACORA_ID/revisar"
+13) Jefatura semáforo (ya debe contar APROBADA)
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+  http://localhost:8080/api/v1/jefatura/semaforo

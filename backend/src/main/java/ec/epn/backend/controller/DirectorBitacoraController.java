@@ -1,39 +1,59 @@
 package ec.epn.backend.controller;
 
+import ec.epn.backend.repository.ActividadRepo;
 import ec.epn.backend.repository.BitacoraRepo;
+import ec.epn.backend.repository.InformeSemanalRepo;
+import org.springframework.web.bind.annotation.*;
+
 import java.security.Principal;
 import java.util.Map;
-import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/director")
 public class DirectorBitacoraController {
 
   private final BitacoraRepo bitacoraRepo;
+  private final InformeSemanalRepo informeRepo;
+  private final ActividadRepo actividadRepo;
 
-  public DirectorBitacoraController(BitacoraRepo bitacoraRepo) {
+  public DirectorBitacoraController(BitacoraRepo bitacoraRepo, InformeSemanalRepo informeRepo, ActividadRepo actividadRepo) {
     this.bitacoraRepo = bitacoraRepo;
+    this.informeRepo = informeRepo;
+    this.actividadRepo = actividadRepo;
   }
 
-  // ✅ LISTAR PENDIENTES POR PROYECTO
-  @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
-  public Object pendientes(@PathVariable String proyectoId, Principal principal) {
-    if (proyectoId == null || proyectoId.isBlank()) {
-      return Map.of("ok", false, "msg", "proyectoId requerido");
+  @GetMapping("/bitacoras/{bitacoraId}")
+  public Object verBitacora(@PathVariable String bitacoraId, Principal principal) {
+    String correoDirector = principal.getName();
+
+    var cabecera = bitacoraRepo.obtenerDetalleParaDirector(bitacoraId.trim(), correoDirector);
+    if (cabecera == null) {
+      return Map.of("ok", false, "msg", "Bitácora no encontrada o no autorizada");
     }
 
-    // Si quieres, aquí luego validamos que principal.getName() sea el director de ese proyecto.
-    // Por ahora, solo listamos:
-    return Map.of("ok", true, "items", bitacoraRepo.listarPendientesPorProyecto(proyectoId.trim()));
+    var semanas = informeRepo.listarPorBitacora(bitacoraId.trim());
+    for (var s : semanas) {
+      String semanaId = (String) s.get("semanaId");
+      s.put("actividades", actividadRepo.listarPorSemana(semanaId));
+    }
+
+    return Map.of("ok", true, "bitacora", cabecera, "semanas", semanas);
   }
 
   public record RevisarBitacoraReq(String decision, String observacion) {}
 
   @PostMapping("/bitacoras/{bitacoraId}/revisar")
-  public Object revisar(@PathVariable String bitacoraId, @RequestBody RevisarBitacoraReq req) {
+  public Object revisar(@PathVariable String bitacoraId, @RequestBody RevisarBitacoraReq req, Principal principal) {
 
     if (req == null || req.decision() == null || req.decision().isBlank()) {
       return Map.of("ok", false, "msg", "decision es requerido (APROBAR | RECHAZAR)");
+    }
+
+    String correoDirector = principal.getName();
+
+    // Seguridad: solo si pertenece a su proyecto
+    if (!bitacoraRepo.directorPuedeRevisarBitacora(bitacoraId.trim(), correoDirector)) {
+      return Map.of("ok", false, "msg", "No autorizado: no puedes revisar esta bitácora");
     }
 
     String decision = req.decision().trim().toUpperCase();

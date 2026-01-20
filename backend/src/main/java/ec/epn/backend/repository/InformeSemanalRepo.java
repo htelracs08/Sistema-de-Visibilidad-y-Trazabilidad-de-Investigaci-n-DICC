@@ -59,4 +59,14 @@ public class InformeSemanalRepo {
     return n == null ? 0 : n;
   }
 
+  public String obtenerBitacoraIdPorSemana(String semanaId) {
+    return jdbc.queryForObject("""
+      SELECT bitacora_id
+      FROM informe_semanal
+      WHERE id = ?
+    """, String.class, semanaId);
+  }
+
+
+
 }
