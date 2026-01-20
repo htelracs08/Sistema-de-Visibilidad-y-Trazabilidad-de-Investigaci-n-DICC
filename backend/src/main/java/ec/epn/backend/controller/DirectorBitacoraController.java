@@ -1,9 +1,9 @@
 package ec.epn.backend.controller;
 
 import ec.epn.backend.repository.BitacoraRepo;
-import org.springframework.web.bind.annotation.*;
-
+import java.security.Principal;
 import java.util.Map;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/v1/director")
@@ -13,6 +13,18 @@ public class DirectorBitacoraController {
 
   public DirectorBitacoraController(BitacoraRepo bitacoraRepo) {
     this.bitacoraRepo = bitacoraRepo;
+  }
+
+  // ✅ LISTAR PENDIENTES POR PROYECTO
+  @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
+  public Object pendientes(@PathVariable String proyectoId, Principal principal) {
+    if (proyectoId == null || proyectoId.isBlank()) {
+      return Map.of("ok", false, "msg", "proyectoId requerido");
+    }
+
+    // Si quieres, aquí luego validamos que principal.getName() sea el director de ese proyecto.
+    // Por ahora, solo listamos:
+    return Map.of("ok", true, "items", bitacoraRepo.listarPendientesPorProyecto(proyectoId.trim()));
   }
 
   public record RevisarBitacoraReq(String decision, String observacion) {}
@@ -31,7 +43,6 @@ public class DirectorBitacoraController {
     else if ("RECHAZAR".equals(decision)) nuevoEstado = "RECHAZADA";
     else return Map.of("ok", false, "msg", "decision inválida (APROBAR | RECHAZAR)");
 
-    // ✅ Regla recomendada: solo se revisa si está ENVIADA
     String estadoActual;
     try {
       estadoActual = bitacoraRepo.obtenerEstado(bitacoraId.trim());

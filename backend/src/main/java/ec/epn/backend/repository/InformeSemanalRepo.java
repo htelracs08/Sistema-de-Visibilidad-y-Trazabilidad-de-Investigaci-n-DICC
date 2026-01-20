@@ -49,4 +49,14 @@ public class InformeSemanalRepo {
       return m;
     }, bitacoraId);
   }
+
+  public int contarPorBitacora(String bitacoraId) {
+    Integer n = jdbc.queryForObject("""
+      SELECT COUNT(1)
+      FROM informe_semanal
+      WHERE bitacora_id = ?
+    """, Integer.class, bitacoraId);
+    return n == null ? 0 : n;
+  }
+
 }

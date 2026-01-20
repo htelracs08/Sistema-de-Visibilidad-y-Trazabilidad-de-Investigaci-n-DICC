@@ -95,33 +95,37 @@ public class BitacoraRepo {
     """, String.class, bitacoraId);
   }
 
-  public List<Map<String,Object>> listarPendientesPorProyecto(String proyectoId) {
+  public java.util.List<java.util.Map<String, Object>> listarPendientesPorProyecto(String proyectoId) {
     return jdbc.query("""
       SELECT
-        b.id AS bitacoraId,
-        b.contrato_id AS contratoId,
+        b.id AS bitacora_id,
+        b.contrato_id,
         b.anio,
         b.mes,
         b.estado,
+        b.creado_en,
+        a.id AS ayudante_id,
         a.nombres,
         a.apellidos,
-        a.correo_institucional AS correoInstitucional
+        a.correo_institucional
       FROM bitacora_mensual b
       JOIN contrato c ON c.id = b.contrato_id
       JOIN ayudante a ON a.id = c.ayudante_id
       WHERE c.proyecto_id = ?
         AND b.estado = 'ENVIADA'
-      ORDER BY b.anio DESC, b.mes DESC
+      ORDER BY b.creado_en DESC
     """, (rs, rowNum) -> {
-      var m = new java.util.LinkedHashMap<String,Object>();
-      m.put("bitacoraId", rs.getString("bitacoraId"));
-      m.put("contratoId", rs.getString("contratoId"));
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("bitacoraId", rs.getString("bitacora_id"));
+      m.put("contratoId", rs.getString("contrato_id"));
       m.put("anio", rs.getInt("anio"));
       m.put("mes", rs.getInt("mes"));
       m.put("estado", rs.getString("estado"));
+      m.put("creadoEn", rs.getString("creado_en"));
+      m.put("ayudanteId", rs.getString("ayudante_id"));
       m.put("nombres", rs.getString("nombres"));
       m.put("apellidos", rs.getString("apellidos"));
-      m.put("correoInstitucional", rs.getString("correoInstitucional"));
+      m.put("correoInstitucional", rs.getString("correo_institucional"));
       return m;
     }, proyectoId);
   }

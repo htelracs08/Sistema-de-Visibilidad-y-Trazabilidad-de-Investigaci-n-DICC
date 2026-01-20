@@ -226,3 +226,18 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
   -X POST \
   -d '{"decision":"APROBAR","observacion":"OK"}' \
   "http://localhost:8080/api/v1/director/bitacoras/PEGAR_BITACORA_ID/revisar"
+
+
+Ayudante: enviar
+curl -u juan.perez@epn.edu.ec:Temp123* -X POST \
+"http://localhost:8080/api/v1/ayudante/bitacoras/PEGAR_BITACORA_ID/enviar"
+
+Director: pendientes
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+"http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/bitacoras/pendientes"
+
+Director: revisar
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+-H "Content-Type: application/json" -X POST \
+-d '{"decision":"APROBAR","observacion":"OK"}' \
+"http://localhost:8080/api/v1/director/bitacoras/PEGAR_BITACORA_ID/revisar"

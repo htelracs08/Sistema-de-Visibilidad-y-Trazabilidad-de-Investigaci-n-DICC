@@ -172,9 +172,24 @@ public class AyudanteBitacoraController {
 
   @PostMapping("/bitacoras/{bitacoraId}/enviar")
   public Object enviar(@PathVariable String bitacoraId) {
-    int n = bitacoraRepo.enviar(bitacoraId.trim());
+
+    String id = bitacoraId.trim();
+
+    String estado = bitacoraRepo.obtenerEstado(id);
+    if (!"BORRADOR".equalsIgnoreCase(estado)) {
+      return Map.of("ok", false, "msg", "Solo puedes enviar bitácoras en BORRADOR", "estadoActual", estado);
+    }
+
+    int semanas = informeRepo.contarPorBitacora(id);
+    if (semanas <= 0) {
+      return Map.of("ok", false, "msg", "No puedes enviar: la bitácora no tiene semanas");
+    }
+
+    int n = bitacoraRepo.enviar(id);
     if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
+
     return Map.of("ok", true);
   }
+
 
 }

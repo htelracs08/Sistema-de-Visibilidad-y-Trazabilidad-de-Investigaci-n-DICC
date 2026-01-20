@@ -74,8 +74,8 @@ CREATE TABLE IF NOT EXISTS bitacora_mensual (
   anio INTEGER NOT NULL,
   mes INTEGER NOT NULL, -- 1..12
   estado TEXT NOT NULL, -- BORRADOR | ENVIADA | APROBADA | RECHAZADA
+  comentario_revision TEXT,
   creado_en TEXT NOT NULL DEFAULT (datetime('now')),
-  actualizado_en TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE (contrato_id, anio, mes),
   FOREIGN KEY (contrato_id) REFERENCES contrato(id)
 );
@@ -83,19 +83,6 @@ CREATE TABLE IF NOT EXISTS bitacora_mensual (
 CREATE INDEX IF NOT EXISTS idx_bitacora_contrato ON bitacora_mensual(contrato_id);
 CREATE INDEX IF NOT EXISTS idx_bitacora_anio_mes ON bitacora_mensual(anio, mes);
 CREATE INDEX IF NOT EXISTS idx_bitacora_estado ON bitacora_mensual(estado);
-
--- Tabla bitacora_mensual
-CREATE TABLE IF NOT EXISTS bitacora_mensual (
-  id TEXT PRIMARY KEY,
-  contrato_id TEXT NOT NULL,
-  anio INTEGER NOT NULL,
-  mes INTEGER NOT NULL,
-  estado TEXT NOT NULL DEFAULT 'BORRADOR', -- BORRADOR | ENVIADA | APROBADA | RECHAZADA
-  comentario_revision TEXT,
-  creado_en TEXT NOT NULL DEFAULT (datetime('now')),
-  UNIQUE (contrato_id, anio, mes),
-  FOREIGN KEY (contrato_id) REFERENCES contrato(id)
-);
 
 -- Tabla informe_semanal
 CREATE TABLE IF NOT EXISTS informe_semanal (
