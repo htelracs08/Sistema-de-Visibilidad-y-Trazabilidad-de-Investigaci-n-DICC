@@ -90,6 +90,24 @@ public class ContratoRepo {
     return n == null ? 0 : n;
   }
 
+  public java.util.List<java.util.Map<String, Object>> contarActivosPorTipoAyudante() {
+    return jdbc.query("""
+      SELECT
+        a.tipo_ayudante AS tipo,
+        COUNT(1) AS total
+      FROM contrato c
+      JOIN ayudante a ON a.id = c.ayudante_id
+      WHERE c.estado = 'ACTIVO'
+      GROUP BY a.tipo_ayudante
+      ORDER BY total DESC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("tipo", rs.getString("tipo"));
+      m.put("total", rs.getInt("total"));
+      return m;
+    });
+  }
+
   public java.util.List<java.util.Map<String, Object>> listarActivosDetallado() {
     return jdbc.query("""
       SELECT

@@ -48,6 +48,8 @@ public class ProyectoRepo {
         p.nombre,
         p.director_correo AS correo_director,
         p.activo,
+        p.tipo,
+        p.subtipo,
 
         -- ayudantes activos
         (SELECT COUNT(1)
@@ -68,10 +70,58 @@ public class ProyectoRepo {
       m.put("nombre", rs.getString("nombre"));
       m.put("correoDirector", rs.getString("correo_director"));
       m.put("activo", rs.getInt("activo") == 1);
+      m.put("tipoProyecto", rs.getString("tipo"));
+      m.put("subtipoProyecto", rs.getString("subtipo"));
       m.put("ayudantesActivos", rs.getInt("ayudantes_activos"));
       m.put("contratosTotal", rs.getInt("contratos_total"));
       return m;
     });
+  }
+
+  public java.util.List<java.util.Map<String, Object>> estadisticasPorTipoYEstado() {
+    return jdbc.query("""
+      SELECT
+        COALESCE(tipo, 'SIN_TIPO') AS tipo,
+        activo,
+        COUNT(1) AS total
+      FROM proyecto
+      GROUP BY COALESCE(tipo, 'SIN_TIPO'), activo
+      ORDER BY tipo, activo DESC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("tipo", rs.getString("tipo"));
+      m.put("activo", rs.getInt("activo") == 1);
+      m.put("total", rs.getInt("total"));
+      return m;
+    });
+  }
+
+  public int actualizarDetalles(String proyectoId,
+                                String fechaInicio,
+                                String fechaFin,
+                                String tipo,
+                                String subtipo,
+                                Integer maxAyudantes,
+                                Integer maxArticulos) {
+    return jdbc.update("""
+      UPDATE proyecto
+      SET
+        fecha_inicio = ?,
+        fecha_fin = ?,
+        tipo = ?,
+        subtipo = ?,
+        max_ayudantes = ?,
+        max_articulos = ?
+      WHERE id = ?
+    """, fechaInicio, fechaFin, tipo, subtipo, maxAyudantes, maxArticulos, proyectoId);
+  }
+  
+  public Integer obtenerMaxAyudantes(String proyectoId) {
+    return jdbc.queryForObject("""
+      SELECT max_ayudantes
+      FROM proyecto
+      WHERE id = ?
+    """, Integer.class, proyectoId);
   }
 
 }

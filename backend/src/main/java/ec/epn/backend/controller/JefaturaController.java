@@ -44,9 +44,24 @@ public class JefaturaController {
     return proyectoRepo.listarResumen();
   }
 
+  @GetMapping("/ayudantes/estadisticas")
+  public Object estadisticasAyudantes() {
+    int activosTotal = contratoRepo.contarActivosGlobal();
+    var porTipo = contratoRepo.contarActivosPorTipoAyudante();
+    return java.util.Map.of(
+      "activosTotal", activosTotal,
+      "porTipo", porTipo
+    );
+  }
+
   @GetMapping("/proyectos/{proyectoId}/ayudantes")
   public Object listarAyudantesProyecto(@PathVariable String proyectoId) {
     return contratoRepo.listarPorProyecto(proyectoId.trim());
+  }
+
+  @GetMapping("/proyectos/estadisticas")
+  public Object estadisticasProyectos() {
+    return proyectoRepo.estadisticasPorTipoYEstado();
   }
 
   @GetMapping("/semaforo")

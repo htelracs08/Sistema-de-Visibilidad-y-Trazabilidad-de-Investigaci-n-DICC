@@ -4,9 +4,11 @@ import ec.epn.backend.domain.Ayudante;
 import ec.epn.backend.dto.RegistrarAyudanteReq;
 import ec.epn.backend.repository.AyudanteRepo;
 import ec.epn.backend.repository.ContratoRepo;
+import ec.epn.backend.repository.ProyectoRepo;
 import ec.epn.backend.repository.UsuarioRepo;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -16,14 +18,18 @@ public class DirectorAyudantesController {
   private final AyudanteRepo ayudanteRepo;
   private final ContratoRepo contratoRepo;
   private final UsuarioRepo usuarioRepo;
+  private final ProyectoRepo proyectoRepo;
 
-  // POR AHORA: límite fijo (luego lo tomamos del proyecto: max_ayudantes)
-  private static final int LIMITE_AYUDANTES_ACTIVOS = 2;
-
-  public DirectorAyudantesController(AyudanteRepo ayudanteRepo, ContratoRepo contratoRepo, UsuarioRepo usuarioRepo) {
+  public DirectorAyudantesController(
+      AyudanteRepo ayudanteRepo,
+      ContratoRepo contratoRepo,
+      UsuarioRepo usuarioRepo,
+      ProyectoRepo proyectoRepo
+  ) {
     this.ayudanteRepo = ayudanteRepo;
     this.contratoRepo = contratoRepo;
     this.usuarioRepo = usuarioRepo;
+    this.proyectoRepo = proyectoRepo;
   }
 
   @GetMapping("/proyectos/{proyectoId}/ayudantes")
@@ -41,7 +47,6 @@ public class DirectorAyudantesController {
     contratoRepo.finalizar(contratoId.trim(), req.motivo().trim());
     return Map.of("ok", true);
   }
-
 
   @PostMapping("/proyectos/{proyectoId}/ayudantes")
   public Object registrar(@PathVariable String proyectoId, @RequestBody RegistrarAyudanteReq req) {
@@ -76,10 +81,32 @@ public class DirectorAyudantesController {
     String pid = proyectoId.trim();
     String correo = req.correoInstitucional().trim().toLowerCase();
 
-    // Validar cupo (por ahora fijo)
+    // ✅ Validar fechas del contrato (formato + orden)
+    LocalDate fci;
+    LocalDate fcf;
+    try {
+      fci = LocalDate.parse(req.fechaInicioContrato().trim());
+      fcf = LocalDate.parse(req.fechaFinContrato().trim());
+    } catch (Exception e) {
+      return Map.of("ok", false, "msg", "Fechas del contrato deben estar en formato YYYY-MM-DD");
+    }
+
+    if (fcf.isBefore(fci)) {
+      return Map.of("ok", false, "msg", "fechaFinContrato no puede ser antes que fechaInicioContrato");
+    }
+
+    // ✅ Validar cupo por max_ayudantes real del proyecto
+    Integer max = proyectoRepo.obtenerMaxAyudantes(pid);
+    if (max == null) {
+      return Map.of("ok", false, "msg", "Proyecto no existe");
+    }
+    if (max <= 0) {
+      return Map.of("ok", false, "msg", "El proyecto aún no tiene maxAyudantes definido. Complete los detalles del proyecto primero.");
+    }
+
     int activos = contratoRepo.contarActivosPorProyecto(pid);
-    if (activos >= LIMITE_AYUDANTES_ACTIVOS) {
-      return Map.of("ok", false, "msg", "No se puede: cupo de ayudantes activos alcanzado", "activos", activos);
+    if (activos >= max) {
+      return Map.of("ok", false, "msg", "No se puede: cupo de ayudantes activos alcanzado", "activos", activos, "max", max);
     }
 
     // Crear o reutilizar Ayudante
@@ -91,33 +118,30 @@ public class DirectorAyudantesController {
 
     if (existente == null) {
       ayudanteId = ayudanteRepo.crear(new Ayudante(
-        null,
-        nombres,
-        apellidos,
-        correo,
-        req.facultad().trim(),
-        req.quintil(),
-        req.tipoAyudante().trim()
+          null,
+          nombres,
+          apellidos,
+          correo,
+          req.facultad().trim(),
+          req.quintil(),
+          req.tipoAyudante().trim()
       ));
     } else {
       ayudanteId = existente.id();
-      // si ya existe en BD, igual nos quedamos con los nombres/apellidos del request para crear usuario si falta
     }
 
     // Crear contrato ACTIVO
     String contratoId = contratoRepo.crear(
-      pid,
-      ayudanteId,
-      req.fechaInicioContrato().trim(),
-      req.fechaFinContrato().trim()
+        pid,
+        ayudanteId,
+        req.fechaInicioContrato().trim(),
+        req.fechaFinContrato().trim()
     );
 
-    // ✅ NUEVO: crear usuario AYUDANTE solo si NO existe (recontratación)
+    // Crear usuario AYUDANTE si NO existe (recontratación)
     if (!usuarioRepo.existsByCorreo(correo)) {
-      String tempPass = "Temp123*"; // luego lo hacemos random
+      String tempPass = "Temp123*"; // luego random
       usuarioRepo.crearUsuario(nombres, apellidos, correo, tempPass, "AYUDANTE");
-
-      // por ahora solo log (luego Outlook SMTP)
       System.out.println("[CREDENCIALES AYUDANTE] correo=" + correo + " pass=" + tempPass);
     }
 

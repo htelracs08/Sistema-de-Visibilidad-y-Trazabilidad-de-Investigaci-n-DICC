@@ -1,28 +1,25 @@
-levanta el backend
+✅ ORDEN RECOMENDADO (RESET → FLUJO COMPLETO)
+0) Reset + levantar backend
+
+Borra backend/data/sistema_dicc.db
+
+Levanta:
 
 mvn -pl backend -DskipTests clean spring-boot:run
 
-
-
-Login Jefatura
-
+1) Sanity check: login Jefatura
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/api/v1/me
 
-
-
-Crear proyecto
-
+2) Crear proyecto (Jefatura) ✅ (guarda el proyectoId)
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
   -H "Content-Type: application/json" \
   -d "{\"codigo\":\"PRJ-001\",\"nombre\":\"Proyecto IA\",\"correoDirector\":\"ariel.guana@epn.edu.ec\"}" \
   http://localhost:8080/api/v1/jefatura/proyectos
 
-(copiar el proyecto id)
 
+📌 Copia proyectoId del response y úsalo en TODO lo siguiente.
 
-
-Cambiar password Director
-
+3) Cambiar password Director (porque nace con Temp123*)
 curl -u ariel.guana@epn.edu.ec:Temp123* \
   -H "Content-Type: application/json" \
   -d "{\"nuevaPassword\":\"Director2026*\"}" \
@@ -33,10 +30,27 @@ curl -u ariel.guana@epn.edu.ec:Temp123* \
 
 curl -u ariel.guana@epn.edu.ec:Director2026* http://localhost:8080/api/v1/me
 
+4) ✅ NUEVO OBLIGATORIO: Director completa detalles del proyecto (define tipo/subtipo y maxAyudantes)
+
+(Sin esto, maxAyudantes=0 y no podrás registrar ayudantes)
+
+curl -u ariel.guana@epn.edu.ec:Director2026* \
+  -X PUT \
+  -H "Content-Type: application/json" \
+  -d '{
+    "fechaInicio":"2026-01-01",
+    "fechaFin":"2026-12-31",
+    "tipo":"INVESTIGACION",
+    "subtipo":"INTERNO",
+    "maxAyudantes":2,
+    "maxArticulos":3
+  }' \
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID
 
 
-Registrar ayudante + contrato (Director) Uitilizar el PEGAR_AQUI_PROYECTO_ID
+✅ Si este paso funciona, ya puedes registrar ayudantes.
 
+5) Registrar ayudante + contrato (Director) ✅ (guarda contratoId)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
   -H "Content-Type: application/json" \
   -d "{
@@ -49,19 +63,15 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
     \"fechaInicioContrato\":\"2026-01-01\",
     \"fechaFinContrato\":\"2026-03-31\"
   }" \
-  http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes
-
-  PEGAR_AQUI_PROYECTO_ID:  f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/ayudantes
 
 
-Ayudante como usuario
+📌 Copia contratoId y ayudanteId.
 
+6) Login Ayudante (debe existir si NO existía antes)
 curl -u juan.perez@epn.edu.ec:Temp123* http://localhost:8080/api/v1/me
 
-
-
-Recontratacion
-
+7) Recontratación (mismo correo → NO debe crear usuario, solo nuevo contrato)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
   -H "Content-Type: application/json" \
   -d "{
@@ -74,49 +84,69 @@ curl -u ariel.guana@epn.edu.ec:Director2026* \
     \"fechaInicioContrato\":\"2026-04-01\",
     \"fechaFinContrato\":\"2026-06-30\"
   }" \
-  http://localhost:8080/api/v1/director/proyectos/PEGAR_AQUI_PROYECTO_ID/ayudantes
+  http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/ayudantes
 
-(consultas del director)
-Debe devolver lista con:
-datos del ayudante
-datos del contrato activo (o contratos)
 
+✅ Aquí debes ver:
+
+nuevo contratoId
+
+mismo ayudanteId
+
+NO debe imprimir credenciales otra vez
+
+⚠️ OJO: si maxAyudantes=2, y ya tienes 2 contratos ACTIVOS, este puede bloquearse si ambos quedan activos.
+(idealmente en recontratación, el contrato anterior debería estar INACTIVO, o el cupo se te llena)
+
+8) Listar ayudantes/contratos del proyecto (Director)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
-http://localhost:8080/api/v1/director/proyectos/PEGAR_ID/ayudantes
+http://localhost:8080/api/v1/director/proyectos/PEGAR_PROYECTO_ID/ayudantes
 
-
-Finalizar contrato (renuncia / fin / despido)
-
+9) Finalizar contrato (Director) (usa contratoId)
 curl -u ariel.guana@epn.edu.ec:Director2026* \
--H "Content-Type: application/json" \
--d "{\"motivo\":\"RENUNCIA\"}" \
-http://localhost:8080/api/v1/director/contratos/PEGAR_CONTRATO_ID/finalizar
+  -H "Content-Type: application/json" \
+  -d "{\"motivo\":\"RENUNCIA\"}" \
+  http://localhost:8080/api/v1/director/contratos/PEGAR_CONTRATO_ID/finalizar
 
-1e5567be-9ecc-44c5-b654-25704d1ba650
 
-------------------------------------------------------------- Jefatura -------------------------------------------------------------  
-Jefatura ve lista de proyectos
-Jefatura ve por cada proyecto:
-  ayudantes ACTIVOS
-  ayudantes TOTAL (contratos históricos)
-Jefatura puede abrir un proyecto y ver su “detalle”:
-  lista de ayudantes/contratos (reutilizando tu query de 2.6)
+✅ Luego, el conteo de activos baja.
 
-  Resumen de proyectos con conteo de ayudantes activos
-
+✅ CONSULTAS DE JEFATURA (control)
+10) Resumen de proyectos (incluye tipo/subtipo + conteos)
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
 http://localhost:8080/api/v1/jefatura/proyectos/resumen
 
-  ver ayudantes de un proyecto (vista Jefatura) (id_proyecto)
-
+11) Detalle de ayudantes/contratos por proyecto (Jefatura)
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
-http://localhost:8080/api/v1/jefatura/proyectos/PEGAR_ID/ayudantes
+http://localhost:8080/api/v1/jefatura/proyectos/PEGAR_PROYECTO_ID/ayudantes
 
-f4f9e10b-f3b0-4a59-b549-2bd5e1c1dcc6
-
-  total ayudantes activos global
-
+12) Total ayudantes activos global
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
 http://localhost:8080/api/v1/jefatura/ayudantes/activos
 
-------------------------------------------------------------- ------------------------------------------------------------- 
+13) Estadísticas de proyectos por tipo y estado
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/proyectos/estadisticas
+
+14) Estadísticas ayudantes activos total + por tipo
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/ayudantes/estadisticas
+
+✅ SEMÁFORO (FASE 2.9)
+15) Semáforo (antes de aprobar bitácoras)
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/semaforo
+
+16) Insertar bitácora APROBADA (debug)
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{
+    "contratoId": "PEGAR_CONTRATO_ID",
+    "anio": 2026,
+    "mes": 1
+  }' \
+  http://localhost:8080/debug/bitacora/aprobar
+
+17) Ver semáforo de nuevo
+curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+http://localhost:8080/api/v1/jefatura/semaforo
