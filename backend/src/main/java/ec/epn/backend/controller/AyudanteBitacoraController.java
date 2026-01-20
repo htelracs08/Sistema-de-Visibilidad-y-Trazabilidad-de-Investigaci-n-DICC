@@ -99,6 +99,12 @@ public class AyudanteBitacoraController {
       req.observaciones(),
       req.anexos()
     );
+ 
+    //bloqueo
+    String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
+    if (!"BORRADOR".equalsIgnoreCase(estado)) {
+      return Map.of("ok", false, "msg", "Solo puedes editar si está en BORRADOR", "estadoActual", estado);
+    }
 
     return Map.of("ok", true, "semanaId", semanaId);
   }
@@ -136,6 +142,14 @@ public class AyudanteBitacoraController {
     } catch (Exception e) {
       return Map.of("ok", false, "msg", "Formato de hora inválido. Usa HH:mm (ej: 08:30)");
     }
+
+
+    //BLOQUEO
+    String estado = bitacoraRepo.obtenerEstadoPorSemana(semanaId.trim());
+    if (!"BORRADOR".equalsIgnoreCase(estado)) {
+      return Map.of("ok", false, "msg", "Solo puedes editar si la bitácora está en BORRADOR", "estadoActual", estado);
+    }
+
 
     // ✅ VALIDACION CORRECTA
     if (!hs.isAfter(hi)) {
@@ -242,9 +256,15 @@ public class AyudanteBitacoraController {
     int n = bitacoraRepo.enviar(bitacoraId.trim());
     if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
+
+    int actividades = actividadRepo.contarPorBitacora(bitacoraId.trim());
+    if (actividades == 0) {
+      return Map.of("ok", false, "msg", "No puedes enviar una bitácora sin actividades");
+    }
+
     return Map.of("ok", true);
   }
-
+  
   private String contratoActivoOrNull(String correo) {
     return contratoRepo.obtenerContratoActivoPorCorreo(correo);
   }

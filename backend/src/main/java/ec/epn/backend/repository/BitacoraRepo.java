@@ -139,6 +139,16 @@ public class BitacoraRepo {
     """, String.class, bitacoraId);
   }
 
+  // ✅ NUEVO: obtener estado de bitácora a partir de una semanaId
+  public String obtenerEstadoPorSemana(String semanaId) {
+    return jdbc.queryForObject("""
+      SELECT b.estado
+      FROM informe_semanal s
+      JOIN bitacora_mensual b ON b.id = s.bitacora_id
+      WHERE s.id = ?
+    """, String.class, semanaId);
+  }
+
   // aprobar/rechazar + comentario_revision (tu columna real)
   public int revisar(String bitacoraId, String nuevoEstado, String comentarioRevision) {
     return jdbc.update("""

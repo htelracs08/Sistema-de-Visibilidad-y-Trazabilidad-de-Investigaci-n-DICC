@@ -46,4 +46,16 @@ public class ActividadRepo {
       return m;
     }, semanaId);
   }
+  
+  //bloqueo
+  public int contarPorBitacora(String bitacoraId) {
+    Integer n = jdbc.queryForObject("""
+      SELECT COUNT(1)
+      FROM actividad a
+      JOIN informe_semanal s ON s.id = a.semana_id
+      WHERE s.bitacora_id = ?
+    """, Integer.class, bitacoraId);
+    return n == null ? 0 : n;
+  }
+
 }
