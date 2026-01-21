@@ -6,6 +6,7 @@ import ec.epn.backend.repository.AyudanteRepo;
 import ec.epn.backend.repository.ContratoRepo;
 import ec.epn.backend.repository.ProyectoRepo;
 import ec.epn.backend.repository.UsuarioRepo;
+import ec.epn.backend.service.NotificacionPort;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -19,17 +20,20 @@ public class DirectorAyudantesController {
   private final ContratoRepo contratoRepo;
   private final UsuarioRepo usuarioRepo;
   private final ProyectoRepo proyectoRepo;
+  private final NotificacionPort notificacion;
 
   public DirectorAyudantesController(
       AyudanteRepo ayudanteRepo,
       ContratoRepo contratoRepo,
       UsuarioRepo usuarioRepo,
-      ProyectoRepo proyectoRepo
+      ProyectoRepo proyectoRepo,
+      NotificacionPort notificacion
   ) {
     this.ayudanteRepo = ayudanteRepo;
     this.contratoRepo = contratoRepo;
     this.usuarioRepo = usuarioRepo;
     this.proyectoRepo = proyectoRepo;
+    this.notificacion = notificacion;
   }
 
   @GetMapping("/proyectos/{proyectoId}/ayudantes")
@@ -48,10 +52,12 @@ public class DirectorAyudantesController {
     return Map.of("ok", true);
   }
 
+  // ✅ REGISTRAR AYUDANTE + CONTRATO + CREAR USUARIO (si no existe) + ENVIAR CORREO
   @PostMapping("/proyectos/{proyectoId}/ayudantes")
   public Object registrar(@PathVariable String proyectoId, @RequestBody RegistrarAyudanteReq req) {
 
-    // Validaciones mínimas
+    if (req == null) return Map.of("ok", false, "msg", "body requerido");
+
     if (req.correoInstitucional() == null || req.correoInstitucional().isBlank()) {
       return Map.of("ok", false, "msg", "correoInstitucional es requerido");
     }
@@ -77,11 +83,11 @@ public class DirectorAyudantesController {
       return Map.of("ok", false, "msg", "fechaFinContrato es requerido (YYYY-MM-DD)");
     }
 
-    // Normalizar
     String pid = proyectoId.trim();
     String correo = req.correoInstitucional().trim().toLowerCase();
+    String nombres = req.nombres().trim();
+    String apellidos = req.apellidos().trim();
 
-    // ✅ Validar fechas del contrato (formato + orden)
     LocalDate fci;
     LocalDate fcf;
     try {
@@ -95,11 +101,8 @@ public class DirectorAyudantesController {
       return Map.of("ok", false, "msg", "fechaFinContrato no puede ser antes que fechaInicioContrato");
     }
 
-    // ✅ Validar cupo por max_ayudantes real del proyecto
     Integer max = proyectoRepo.obtenerMaxAyudantes(pid);
-    if (max == null) {
-      return Map.of("ok", false, "msg", "Proyecto no existe");
-    }
+    if (max == null) return Map.of("ok", false, "msg", "Proyecto no existe");
     if (max <= 0) {
       return Map.of("ok", false, "msg", "El proyecto aún no tiene maxAyudantes definido. Complete los detalles del proyecto primero.");
     }
@@ -109,12 +112,8 @@ public class DirectorAyudantesController {
       return Map.of("ok", false, "msg", "No se puede: cupo de ayudantes activos alcanzado", "activos", activos, "max", max);
     }
 
-    // Crear o reutilizar Ayudante
     var existente = ayudanteRepo.findByCorreoInstitucional(correo).orElse(null);
     String ayudanteId;
-
-    String nombres = req.nombres().trim();
-    String apellidos = req.apellidos().trim();
 
     if (existente == null) {
       ayudanteId = ayudanteRepo.crear(new Ayudante(
@@ -130,24 +129,36 @@ public class DirectorAyudantesController {
       ayudanteId = existente.id();
     }
 
-    // Crear contrato ACTIVO
-    String contratoId = contratoRepo.crear(
-        pid,
-        ayudanteId,
-        req.fechaInicioContrato().trim(),
-        req.fechaFinContrato().trim()
-    );
+    String contratoId = contratoRepo.crear(pid, ayudanteId, fci.toString(), fcf.toString());
 
-    // Crear usuario AYUDANTE si NO existe (recontratación)
+    boolean seCreoUsuarioAyudante = false;
+    String tempPass = "Temp123*";
+
     if (!usuarioRepo.existsByCorreo(correo)) {
-      String tempPass = "Temp123*"; // luego random
       usuarioRepo.crearUsuario(nombres, apellidos, correo, tempPass, "AYUDANTE");
-      System.out.println("[CREDENCIALES AYUDANTE] correo=" + correo + " pass=" + tempPass);
+      seCreoUsuarioAyudante = true;
+
+      try {
+        notificacion.enviarCredencialesTemporalesAyudante(
+            correo,
+            nombres,
+            apellidos,
+            tempPass,
+            pid,
+            fci.toString(),
+            fcf.toString()
+        );
+      } catch (Exception e) {
+        System.out.println("[MAIL ERROR] No se pudo enviar correo a AYUDANTE: " + e.getMessage());
+      }
     }
 
-    return Map.of("ok", true, "ayudanteId", ayudanteId, "contratoId", contratoId);
+    return Map.of(
+        "ok", true,
+        "ayudanteId", ayudanteId,
+        "contratoId", contratoId,
+        "ayudanteCreado", (existente == null),
+        "usuarioAyudanteCreado", seCreoUsuarioAyudante
+    );
   }
-
-
-  
 }

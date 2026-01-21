@@ -124,4 +124,20 @@ public class ProyectoRepo {
     """, Integer.class, proyectoId);
   }
 
+  public java.util.Map<String, Object> obtenerBasicoPorId(String proyectoId) {
+    return jdbc.query("""
+      SELECT id, codigo, nombre
+      FROM proyecto
+      WHERE id = ?
+      LIMIT 1
+    """, rs -> {
+      if (!rs.next()) return null;
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("id", rs.getString("id"));
+      m.put("codigo", rs.getString("codigo"));
+      m.put("nombre", rs.getString("nombre"));
+      return m;
+    }, proyectoId);
+  }
+
 }

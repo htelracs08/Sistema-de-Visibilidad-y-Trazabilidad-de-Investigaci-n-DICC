@@ -1,3 +1,9 @@
+En Powershell
+
+$env:GMAIL_APP_PASSWORD="prtf twzm vwhe erij"
+mvn -pl backend -DskipTests clean spring-boot:run
+
+
 Comando para iniciar el servidor 
 mvn -pl backend spring-boot:run
 mvn -pl backend -DskipTests spring-boot:run -e

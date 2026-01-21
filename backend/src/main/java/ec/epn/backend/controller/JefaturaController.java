@@ -1,14 +1,16 @@
 package ec.epn.backend.controller;
 
+import ec.epn.backend.dto.CrearProyectoReq;
 import ec.epn.backend.repository.BitacoraRepo;
 import ec.epn.backend.repository.ContratoRepo;
 import ec.epn.backend.repository.ProfesorRepo;
 import ec.epn.backend.repository.ProyectoRepo;
 import ec.epn.backend.repository.UsuarioRepo;
-
+import ec.epn.backend.service.NotificacionPort;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/jefatura")
@@ -19,26 +21,34 @@ public class JefaturaController {
   private final ProfesorRepo profesorRepo;
   private final ContratoRepo contratoRepo;
   private final BitacoraRepo bitacoraRepo;
+  private final NotificacionPort notificacion;
 
-  public JefaturaController(ProfesorRepo profesorRepo, ProyectoRepo proyectoRepo, UsuarioRepo usuarioRepo, ContratoRepo contratoRepo, BitacoraRepo bitacoraRepo) {
+  public JefaturaController(
+      ProfesorRepo profesorRepo,
+      ProyectoRepo proyectoRepo,
+      UsuarioRepo usuarioRepo,
+      ContratoRepo contratoRepo,
+      BitacoraRepo bitacoraRepo,
+      NotificacionPort notificacion
+  ) {
     this.profesorRepo = profesorRepo;
     this.proyectoRepo = proyectoRepo;
     this.usuarioRepo = usuarioRepo;
     this.contratoRepo = contratoRepo;
     this.bitacoraRepo = bitacoraRepo;
+    this.notificacion = notificacion;
   }
 
   @GetMapping("/ayudantes/activos")
   public Object totalActivos() {
-    return java.util.Map.of("activos", contratoRepo.contarActivosGlobal());
+    return Map.of("activos", contratoRepo.contarActivosGlobal());
   }
-
 
   @GetMapping("/profesores")
   public List<?> listarProfesores() {
     return profesorRepo.findAll();
   }
-  
+
   @GetMapping("/proyectos/resumen")
   public Object resumenProyectos() {
     return proyectoRepo.listarResumen();
@@ -48,10 +58,7 @@ public class JefaturaController {
   public Object estadisticasAyudantes() {
     int activosTotal = contratoRepo.contarActivosGlobal();
     var porTipo = contratoRepo.contarActivosPorTipoAyudante();
-    return java.util.Map.of(
-      "activosTotal", activosTotal,
-      "porTipo", porTipo
-    );
+    return Map.of("activosTotal", activosTotal, "porTipo", porTipo);
   }
 
   @GetMapping("/proyectos/{proyectoId}/ayudantes")
@@ -69,13 +76,12 @@ public class JefaturaController {
     var contratos = contratoRepo.listarActivosDetallado();
     var hoy = java.time.LocalDate.now();
 
-    var out = new java.util.ArrayList<java.util.Map<String, Object>>();
+    var out = new java.util.ArrayList<Map<String, Object>>();
 
     for (var c : contratos) {
       String contratoId = (String) c.get("contratoId");
       var fechaInicio = java.time.LocalDate.parse((String) c.get("fechaInicio"));
 
-      // meses esperados: desde (anio/mes de inicio) hasta (anio/mes de hoy), inclusive
       int anioDesde = fechaInicio.getYear();
       int mesDesde = fechaInicio.getMonthValue();
       int anioHasta = hoy.getYear();
@@ -106,47 +112,64 @@ public class JefaturaController {
     return out;
   }
 
-
+  // ✅ CREA PROYECTO + CREA USUARIO DIRECTOR (si no existe) + ENVÍA CORREO
   @PostMapping("/proyectos")
-  public Object crearProyecto(@RequestBody ec.epn.backend.dto.CrearProyectoReq req) {
+  public Object crearProyecto(@RequestBody CrearProyectoReq req) {
+
+    if (req == null) return Map.of("ok", false, "msg", "body requerido");
+
     if (req.codigo() == null || req.codigo().isBlank()) {
-      return java.util.Map.of("ok", false, "msg", "codigo es requerido");
+      return Map.of("ok", false, "msg", "codigo es requerido");
     }
     if (req.nombre() == null || req.nombre().isBlank()) {
-      return java.util.Map.of("ok", false, "msg", "nombre es requerido");
+      return Map.of("ok", false, "msg", "nombre es requerido");
     }
     if (req.correoDirector() == null || req.correoDirector().isBlank()) {
-      return java.util.Map.of("ok", false, "msg", "correoDirector es requerido");
+      return Map.of("ok", false, "msg", "correoDirector es requerido");
     }
 
+    String codigo = req.codigo().trim();
+    String nombre = req.nombre().trim();
+    String correoDirector = req.correoDirector().trim().toLowerCase();
+
     // 1) crear proyecto
-    var proyectoId = proyectoRepo.crear(req.codigo().trim(), req.nombre().trim(), req.correoDirector().trim().toLowerCase());
+    String proyectoId = proyectoRepo.crear(codigo, nombre, correoDirector);
 
     // 2) crear usuario director si no existe
-    var correo = req.correoDirector().trim().toLowerCase();
-    if (!usuarioRepo.existsByCorreo(correo)) {
-      // buscamos datos del profesor para nombres/apellidos (si existe)
-      var prof = profesorRepo.findByCorreo(correo).orElse(null);
+    boolean seCreoUsuarioDirector = false;
+    String tempPass = "Temp123*";
+
+    if (!usuarioRepo.existsByCorreo(correoDirector)) {
+      var prof = profesorRepo.findByCorreo(correoDirector).orElse(null);
 
       String nombres = (prof != null) ? prof.nombres() : "DIRECTOR";
       String apellidos = (prof != null) ? prof.apellidos() : "PROYECTO";
 
-      String tempPass = "Temp123*"; // luego lo hacemos random
-      usuarioRepo.crearUsuario(nombres, apellidos, correo, tempPass, "DIRECTOR");
+      usuarioRepo.crearUsuario(nombres, apellidos, correoDirector, tempPass, "DIRECTOR");
+      seCreoUsuarioDirector = true;
 
-      // por ahora solo lo logueamos (luego Outlook SMTP)
-      System.out.println("[CREDENCIALES DIRECTOR] correo=" + correo + " pass=" + tempPass);
+      try {
+        notificacion.enviarCredencialesTemporalesDirector(
+            correoDirector,
+            nombres,
+            apellidos,
+            tempPass,
+            proyectoId
+        );
+      } catch (Exception e) {
+        System.out.println("[MAIL ERROR] No se pudo enviar correo a DIRECTOR: " + e.getMessage());
+      }
     }
 
-    return java.util.Map.of("ok", true, "proyectoId", proyectoId);
+    return Map.of(
+        "ok", true,
+        "proyectoId", proyectoId,
+        "directorCreado", seCreoUsuarioDirector
+    );
   }
 
   @GetMapping("/proyectos")
   public Object listarProyectos() {
     return proyectoRepo.findAll();
   }
-
-
 }
-
-
