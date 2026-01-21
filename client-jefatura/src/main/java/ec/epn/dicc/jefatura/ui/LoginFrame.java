@@ -42,6 +42,9 @@ public class LoginFrame extends JFrame {
     p.add(lblStatus);
 
     btnLogin.addActionListener(e -> doLogin());
+    
+    // Permitir login con Enter
+    txtPass.addActionListener(e -> doLogin());
 
     setContentPane(p);
   }
@@ -49,35 +52,85 @@ public class LoginFrame extends JFrame {
   private void doLogin() {
     btnLogin.setEnabled(false);
     lblStatus.setText("Validando...");
+    lblStatus.setForeground(Color.BLUE);
 
     SwingWorker<Void, Void> worker = new SwingWorker<>() {
+      String errorMsg = null;
+      
       @Override protected Void doInBackground() throws Exception {
         String correo = txtCorreo.getText().trim().toLowerCase();
         String pass = new String(txtPass.getPassword());
 
-        api.setBasicAuth(correo, pass);
-        String body = api.get(Endpoints.ME);
-
-        JsonObject me = JsonParser.parseString(body).getAsJsonObject();
-        String rol = me.has("rol") ? me.get("rol").getAsString() : "";
-
-        if (!"JEFATURA".equalsIgnoreCase(rol)) {
-          throw new RuntimeException("No autorizado. Rol=" + rol);
+        if (correo.isEmpty()) {
+          throw new RuntimeException("Correo requerido");
         }
+        if (pass.isEmpty()) {
+          throw new RuntimeException("Password requerida");
+        }
+
+        // Configurar autenticación
+        api.setBasicAuth(correo, pass);
+        
+        // Llamar al endpoint /me
+        String body = api.get(Endpoints.ME);
+        
+        // Parsear respuesta
+        JsonObject me = JsonParser.parseString(body).getAsJsonObject();
+        
+        // Verificar que la respuesta sea exitosa
+        if (me.has("ok") && !me.get("ok").getAsBoolean()) {
+          String msg = me.has("msg") ? me.get("msg").getAsString() : "Error de autenticación";
+          throw new RuntimeException(msg);
+        }
+        
+        // Verificar que tenga el rol
+        if (!me.has("rol")) {
+          throw new RuntimeException("El servidor no retornó el rol del usuario");
+        }
+        
+        String rol = me.get("rol").getAsString();
+
+        // Validar que sea JEFATURA
+        if (!"JEFATURA".equalsIgnoreCase(rol)) {
+          throw new RuntimeException("Acceso denegado. Este cliente es solo para JEFATURA. Tu rol: " + rol);
+        }
+        
         return null;
       }
 
       @Override protected void done() {
         try {
-          get();
-          lblStatus.setText("OK");
-          dispose();
-          new MainFrame(api).setVisible(true);
+          get(); // Lanza excepción si hubo error
+          
+          // Login exitoso
+          lblStatus.setText("✓ Login exitoso");
+          lblStatus.setForeground(new Color(0, 128, 0));
+          
+          // Esperar un momento antes de cambiar de ventana
+          Timer timer = new Timer(500, e -> {
+            dispose();
+            new MainFrame(api).setVisible(true);
+          });
+          timer.setRepeats(false);
+          timer.start();
+          
         } catch (Exception ex) {
-          lblStatus.setText("Error");
-          JOptionPane.showMessageDialog(LoginFrame.this,
-              ex.getMessage(), "Login falló", JOptionPane.ERROR_MESSAGE);
+          // Login fallido
+          String msg = ex.getCause() != null ? ex.getCause().getMessage() : ex.getMessage();
+          
+          lblStatus.setText("✗ Error");
+          lblStatus.setForeground(Color.RED);
+          
+          JOptionPane.showMessageDialog(
+              LoginFrame.this,
+              msg,
+              "Login Falló",
+              JOptionPane.ERROR_MESSAGE
+          );
+          
           btnLogin.setEnabled(true);
+          txtPass.setText(""); // Limpiar password
+          txtPass.requestFocus();
         }
       }
     };
