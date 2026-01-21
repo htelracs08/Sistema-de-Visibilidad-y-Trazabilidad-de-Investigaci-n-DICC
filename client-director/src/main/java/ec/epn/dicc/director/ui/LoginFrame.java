@@ -38,6 +38,9 @@ public class LoginFrame extends JFrame {
     JButton btnLogin = new JButton("Ingresar");
     btnLogin.addActionListener(e -> login());
 
+    // Permitir login con Enter
+    txtPass.addActionListener(e -> login());
+
     JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     actions.add(btnLogin);
 
@@ -53,19 +56,21 @@ public class LoginFrame extends JFrame {
 
     setContentPane(root);
 
-    // Defaults para pruebas rápidas (puedes borrar)
+    // Defaults para pruebas rápidas (puedes borrar o comentar)
     txtCorreo.setText("ariel.guana@epn.edu.ec");
     txtPass.setText("Director2026*");
   }
 
   private void login() {
     lblEstado.setText("Validando...");
+    lblEstado.setForeground(new Color(0, 0, 180));
 
     String correo = txtCorreo.getText().trim().toLowerCase();
     String pass = new String(txtPass.getPassword());
 
     if (correo.isBlank() || pass.isBlank()) {
       lblEstado.setText("Correo y contraseña son requeridos");
+      lblEstado.setForeground(new Color(180, 0, 0));
       return;
     }
 
@@ -81,32 +86,67 @@ public class LoginFrame extends JFrame {
 
       if (code != 200) {
         lblEstado.setText("Login falló. HTTP " + code);
+        lblEstado.setForeground(new Color(180, 0, 0));
+        
+        String errorMsg = "Login falló. HTTP " + code;
+        if (resp.has("error")) {
+          errorMsg += "\n" + resp.get("error").getAsString();
+        }
+        JOptionPane.showMessageDialog(this, errorMsg, "Error", JOptionPane.ERROR_MESSAGE);
+        return;
+      }
+
+      // Acceder a los datos directamente desde resp.get("data")
+      JsonObject data = resp.has("data") && resp.get("data").isJsonObject() 
+          ? resp.get("data").getAsJsonObject() 
+          : null;
+
+      if (data == null) {
+        lblEstado.setText("Respuesta inválida del servidor");
+        lblEstado.setForeground(new Color(180, 0, 0));
+        JOptionPane.showMessageDialog(this, "El servidor no retornó datos válidos", "Error", JOptionPane.ERROR_MESSAGE);
         return;
       }
 
       // Validar ok
-      boolean ok = resp.has("ok") && resp.get("ok").getAsBoolean();
+      boolean ok = data.has("ok") && data.get("ok").getAsBoolean();
       if (!ok) {
-        lblEstado.setText("Login falló");
+        String msg = data.has("msg") ? data.get("msg").getAsString() : "Login falló";
+        lblEstado.setText(msg);
+        lblEstado.setForeground(new Color(180, 0, 0));
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
         return;
       }
 
-      // 🔑 LEER ROL DIRECTAMENTE (NO data)
-      String rol = resp.has("rol") ? resp.get("rol").getAsString() : "";
-      rol = rol == null ? "" : rol.trim().toUpperCase();
+      // Leer rol
+      String rol = data.has("rol") && !data.get("rol").isJsonNull() 
+          ? data.get("rol").getAsString() 
+          : "";
+      rol = rol.trim().toUpperCase();
 
       if (!"DIRECTOR".equals(rol)) {
         lblEstado.setText("No autorizado. Rol=" + rol);
+        lblEstado.setForeground(new Color(180, 0, 0));
+        JOptionPane.showMessageDialog(this, 
+            "Este cliente es solo para usuarios con rol DIRECTOR.\nTu rol: " + rol, 
+            "Acceso Denegado", JOptionPane.WARNING_MESSAGE);
         return;
       }
 
       // Todo OK → entrar al sistema
+      lblEstado.setText("Login exitoso");
+      lblEstado.setForeground(new Color(0, 120, 0));
+      
       dispose();
       new DirectorFrame(api).setVisible(true);
 
     } catch (Exception ex) {
       lblEstado.setText("Error: " + ex.getMessage());
+      lblEstado.setForeground(new Color(180, 0, 0));
       ex.printStackTrace();
+      JOptionPane.showMessageDialog(this, 
+          "Error al conectar con el servidor:\n" + ex.getMessage(), 
+          "Error de Conexión", JOptionPane.ERROR_MESSAGE);
     }
   }
 }

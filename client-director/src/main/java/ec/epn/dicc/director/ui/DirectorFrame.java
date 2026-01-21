@@ -14,17 +14,23 @@ public class DirectorFrame extends JFrame {
   // Tab Proyectos
   private final DefaultTableModel proyectosModel = new DefaultTableModel(
       new Object[]{"proyectoId", "codigo", "nombre", "directorCorreo", "tipo", "subtipo", "maxAyudantes", "maxArticulos"}, 0
-  );
+  ) {
+    @Override public boolean isCellEditable(int r, int c) { return false; }
+  };
 
   // Tab Ayudantes
   private final DefaultTableModel ayudantesModel = new DefaultTableModel(
       new Object[]{"contratoId", "ayudanteId", "correoInstitucional", "nombres", "apellidos", "estado", "fechaInicio", "fechaFin"}, 0
-  );
+  ) {
+    @Override public boolean isCellEditable(int r, int c) { return false; }
+  };
 
   // Tab Bitácoras
   private final DefaultTableModel pendientesModel = new DefaultTableModel(
       new Object[]{"bitacoraId", "contratoId", "anio", "mes", "estado", "correoInstitucional", "nombres", "apellidos"}, 0
-  );
+  ) {
+    @Override public boolean isCellEditable(int r, int c) { return false; }
+  };
 
   // Selección actual
   private String proyectoIdSeleccionado = null;
@@ -58,9 +64,11 @@ public class DirectorFrame extends JFrame {
     JTable table = new JTable(proyectosModel);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     table.getSelectionModel().addListSelectionListener(e -> {
-      int row = table.getSelectedRow();
-      if (row >= 0) {
-        proyectoIdSeleccionado = String.valueOf(proyectosModel.getValueAt(row, 0));
+      if (!e.getValueIsAdjusting()) {
+        int row = table.getSelectedRow();
+        if (row >= 0) {
+          proyectoIdSeleccionado = String.valueOf(proyectosModel.getValueAt(row, 0));
+        }
       }
     });
 
@@ -87,15 +95,16 @@ public class DirectorFrame extends JFrame {
   private void cargarProyectos() {
     proyectosModel.setRowCount(0);
 
-    // Si tienes endpoint propio de director, cámbialo aquí.
-    JsonObject resp = api.get("/api/v1/jefatura/proyectos");
-    if (resp.get("_httpStatus").getAsInt() != 200) {
-      showError("No pude cargar proyectos. HTTP " + resp.get("_httpStatus").getAsInt());
+    JsonObject resp = api.get("/api/v1/director/mis-proyectos");
+    int httpStatus = resp.get("_httpStatus").getAsInt();
+    
+    if (httpStatus != 200) {
+      showError("No pude cargar proyectos. HTTP " + httpStatus);
       return;
     }
 
     JsonElement data = resp.get("data");
-    if (!data.isJsonArray()) {
+    if (data == null || !data.isJsonArray()) {
       showError("Respuesta inesperada al listar proyectos.");
       return;
     }
@@ -117,7 +126,7 @@ public class DirectorFrame extends JFrame {
   }
 
   private void actualizarDetallesProyecto() {
-    if (proyectoIdSeleccionado == null) {
+    if (proyectoIdSeleccionado == null || proyectoIdSeleccionado.isEmpty()) {
       showError("Selecciona un proyecto primero.");
       return;
     }
@@ -133,12 +142,31 @@ public class DirectorFrame extends JFrame {
     form.add(new JLabel("fechaInicio (YYYY-MM-DD)")); form.add(fIni);
     form.add(new JLabel("fechaFin (YYYY-MM-DD)")); form.add(fFin);
     form.add(new JLabel("tipo")); form.add(tipo);
-    form.add(new JLabel("subtipo")); form.add(subtipo);
+    form.add(new JLabel("subtipo (o vacío)")); form.add(subtipo);
     form.add(new JLabel("maxAyudantes")); form.add(maxAyu);
     form.add(new JLabel("maxArticulos")); form.add(maxArt);
 
     int ok = JOptionPane.showConfirmDialog(this, form, "Actualizar Proyecto", JOptionPane.OK_CANCEL_OPTION);
     if (ok != JOptionPane.OK_OPTION) return;
+
+    // Validaciones
+    if (fIni.getText().trim().isEmpty() || fFin.getText().trim().isEmpty()) {
+      showError("Las fechas son requeridas");
+      return;
+    }
+    
+    if (tipo.getText().trim().isEmpty()) {
+      showError("El tipo es requerido");
+      return;
+    }
+
+    try {
+      Integer.parseInt(maxAyu.getText().trim());
+      Integer.parseInt(maxArt.getText().trim());
+    } catch (NumberFormatException e) {
+      showError("maxAyudantes y maxArticulos deben ser números válidos");
+      return;
+    }
 
     JsonObject body = new JsonObject();
     body.addProperty("fechaInicio", fIni.getText().trim());
@@ -150,12 +178,21 @@ public class DirectorFrame extends JFrame {
 
     JsonObject resp = api.putJson("/api/v1/director/proyectos/" + proyectoIdSeleccionado, body);
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
-      showError("Error al actualizar. HTTP " + code);
+      JsonElement data = resp.get("data");
+      String msg = "Error al actualizar. HTTP " + code;
+      if (data != null && data.isJsonObject()) {
+        JsonObject dataObj = data.getAsJsonObject();
+        if (dataObj.has("msg")) {
+          msg += ": " + dataObj.get("msg").getAsString();
+        }
+      }
+      showError(msg);
       return;
     }
 
-    JOptionPane.showMessageDialog(this, "Proyecto actualizado.");
+    JOptionPane.showMessageDialog(this, "Proyecto actualizado correctamente.");
     cargarProyectos();
   }
 
@@ -194,7 +231,7 @@ public class DirectorFrame extends JFrame {
   }
 
   private void listarAyudantes() {
-    if (proyectoIdSeleccionado == null) {
+    if (proyectoIdSeleccionado == null || proyectoIdSeleccionado.isEmpty()) {
       showError("Selecciona un proyecto primero (pestaña Proyectos).");
       return;
     }
@@ -203,13 +240,14 @@ public class DirectorFrame extends JFrame {
 
     JsonObject resp = api.get("/api/v1/director/proyectos/" + proyectoIdSeleccionado + "/ayudantes");
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
       showError("No pude listar ayudantes. HTTP " + code);
       return;
     }
 
     JsonElement data = resp.get("data");
-    if (!data.isJsonArray()) {
+    if (data == null || !data.isJsonArray()) {
       showError("Respuesta inesperada al listar ayudantes.");
       return;
     }
@@ -230,14 +268,14 @@ public class DirectorFrame extends JFrame {
   }
 
   private void registrarAyudante() {
-    if (proyectoIdSeleccionado == null) {
+    if (proyectoIdSeleccionado == null || proyectoIdSeleccionado.isEmpty()) {
       showError("Selecciona un proyecto primero (pestaña Proyectos).");
       return;
     }
 
-    JTextField nombres = new JTextField("Juan");
-    JTextField apellidos = new JTextField("Perez");
-    JTextField correo = new JTextField("juan.perez@epn.edu.ec");
+    JTextField nombres = new JTextField();
+    JTextField apellidos = new JTextField();
+    JTextField correo = new JTextField();
     JTextField facultad = new JTextField("FIS");
     JTextField quintil = new JTextField("2");
     JTextField tipoAyudante = new JTextField("AYUDANTE_INVESTIGACION");
@@ -245,36 +283,66 @@ public class DirectorFrame extends JFrame {
     JTextField fcf = new JTextField("2026-03-31");
 
     JPanel form = new JPanel(new GridLayout(8, 2, 10, 10));
-    form.add(new JLabel("nombres")); form.add(nombres);
-    form.add(new JLabel("apellidos")); form.add(apellidos);
-    form.add(new JLabel("correoInstitucional")); form.add(correo);
-    form.add(new JLabel("facultad")); form.add(facultad);
-    form.add(new JLabel("quintil")); form.add(quintil);
-    form.add(new JLabel("tipoAyudante")); form.add(tipoAyudante);
-    form.add(new JLabel("fechaInicioContrato")); form.add(fci);
-    form.add(new JLabel("fechaFinContrato")); form.add(fcf);
+    form.add(new JLabel("Nombres *")); form.add(nombres);
+    form.add(new JLabel("Apellidos *")); form.add(apellidos);
+    form.add(new JLabel("Correo Institucional *")); form.add(correo);
+    form.add(new JLabel("Facultad *")); form.add(facultad);
+    form.add(new JLabel("Quintil (1-5) *")); form.add(quintil);
+    form.add(new JLabel("Tipo Ayudante *")); form.add(tipoAyudante);
+    form.add(new JLabel("Fecha Inicio Contrato *")); form.add(fci);
+    form.add(new JLabel("Fecha Fin Contrato *")); form.add(fcf);
 
     int ok = JOptionPane.showConfirmDialog(this, form, "Registrar Ayudante", JOptionPane.OK_CANCEL_OPTION);
     if (ok != JOptionPane.OK_OPTION) return;
+
+    // Validaciones
+    if (nombres.getText().trim().isEmpty() || apellidos.getText().trim().isEmpty() ||
+        correo.getText().trim().isEmpty() || facultad.getText().trim().isEmpty() ||
+        quintil.getText().trim().isEmpty() || tipoAyudante.getText().trim().isEmpty() ||
+        fci.getText().trim().isEmpty() || fcf.getText().trim().isEmpty()) {
+      showError("Todos los campos son requeridos");
+      return;
+    }
+
+    int quintilValue;
+    try {
+      quintilValue = Integer.parseInt(quintil.getText().trim());
+      if (quintilValue < 1 || quintilValue > 5) {
+        showError("El quintil debe estar entre 1 y 5");
+        return;
+      }
+    } catch (NumberFormatException e) {
+      showError("El quintil debe ser un número válido");
+      return;
+    }
 
     JsonObject body = new JsonObject();
     body.addProperty("nombres", nombres.getText().trim());
     body.addProperty("apellidos", apellidos.getText().trim());
     body.addProperty("correoInstitucional", correo.getText().trim().toLowerCase());
     body.addProperty("facultad", facultad.getText().trim());
-    body.addProperty("quintil", Integer.parseInt(quintil.getText().trim()));
+    body.addProperty("quintil", quintilValue);
     body.addProperty("tipoAyudante", tipoAyudante.getText().trim());
     body.addProperty("fechaInicioContrato", fci.getText().trim());
     body.addProperty("fechaFinContrato", fcf.getText().trim());
 
     JsonObject resp = api.postJson("/api/v1/director/proyectos/" + proyectoIdSeleccionado + "/ayudantes", body);
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
-      showError("Error al registrar. HTTP " + code);
+      JsonElement data = resp.get("data");
+      String msg = "Error al registrar. HTTP " + code;
+      if (data != null && data.isJsonObject()) {
+        JsonObject dataObj = data.getAsJsonObject();
+        if (dataObj.has("msg")) {
+          msg += ": " + dataObj.get("msg").getAsString();
+        }
+      }
+      showError(msg);
       return;
     }
 
-    JOptionPane.showMessageDialog(this, "Registrado. Revisa la respuesta en consola si necesitas IDs.");
+    JOptionPane.showMessageDialog(this, "Ayudante registrado correctamente.");
     listarAyudantes();
   }
 
@@ -289,7 +357,8 @@ public class DirectorFrame extends JFrame {
 
     String[] opts = {"RENUNCIA", "FIN_CONTRATO", "DESPIDO"};
     String motivo = (String) JOptionPane.showInputDialog(
-        this, "Motivo:", "Finalizar Contrato", JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]
+        this, "Selecciona el motivo:", "Finalizar Contrato", 
+        JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]
     );
     if (motivo == null) return;
 
@@ -298,12 +367,13 @@ public class DirectorFrame extends JFrame {
 
     JsonObject resp = api.postJson("/api/v1/director/contratos/" + contratoId + "/finalizar", body);
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
       showError("Error al finalizar. HTTP " + code);
       return;
     }
 
-    JOptionPane.showMessageDialog(this, "Contrato finalizado.");
+    JOptionPane.showMessageDialog(this, "Contrato finalizado correctamente.");
     listarAyudantes();
   }
 
@@ -338,7 +408,7 @@ public class DirectorFrame extends JFrame {
   }
 
   private void listarPendientes() {
-    if (proyectoIdSeleccionado == null) {
+    if (proyectoIdSeleccionado == null || proyectoIdSeleccionado.isEmpty()) {
       showError("Selecciona un proyecto primero (pestaña Proyectos).");
       return;
     }
@@ -347,13 +417,14 @@ public class DirectorFrame extends JFrame {
 
     JsonObject resp = api.get("/api/v1/director/proyectos/" + proyectoIdSeleccionado + "/bitacoras/pendientes");
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
       showError("No pude listar pendientes. HTTP " + code);
       return;
     }
 
     JsonElement data = resp.get("data");
-    if (!data.isJsonArray()) {
+    if (data == null || !data.isJsonArray()) {
       showError("Respuesta inesperada al listar pendientes.");
       return;
     }
@@ -371,6 +442,12 @@ public class DirectorFrame extends JFrame {
           s(o, "apellidos")
       });
     }
+    
+    if (pendientesModel.getRowCount() == 0) {
+      JOptionPane.showMessageDialog(this, 
+          "No hay bitácoras pendientes para este proyecto.", 
+          "Info", JOptionPane.INFORMATION_MESSAGE);
+    }
   }
 
   private void verBitacora(JTable table) {
@@ -383,13 +460,26 @@ public class DirectorFrame extends JFrame {
 
     JsonObject resp = api.get("/api/v1/director/bitacoras/" + bitacoraId);
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
       showError("No pude ver bitácora. HTTP " + code);
       return;
     }
 
+    // Formatear la respuesta de manera legible
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    String formatted = gson.toJson(resp.get("data"));
+    
+    JTextArea textArea = new JTextArea(formatted);
+    textArea.setEditable(false);
+    textArea.setLineWrap(true);
+    textArea.setWrapStyleWord(true);
+    
+    JScrollPane scrollPane = new JScrollPane(textArea);
+    scrollPane.setPreferredSize(new Dimension(700, 500));
+    
     JOptionPane.showMessageDialog(this,
-        resp.toString(),
+        scrollPane,
         "Bitácora " + bitacoraId,
         JOptionPane.INFORMATION_MESSAGE
     );
@@ -406,24 +496,35 @@ public class DirectorFrame extends JFrame {
 
     String[] opts = {"APROBAR", "RECHAZAR"};
     String decision = (String) JOptionPane.showInputDialog(
-        this, "Decisión:", "Revisar Bitácora", JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]
+        this, "Decisión:", "Revisar Bitácora", 
+        JOptionPane.QUESTION_MESSAGE, null, opts, opts[0]
     );
     if (decision == null) return;
 
-    String obs = JOptionPane.showInputDialog(this, "Observación (opcional):", "OK");
+    String obs = JOptionPane.showInputDialog(this, "Observación (opcional):", "");
+    if (obs == null) obs = "";
 
     JsonObject body = new JsonObject();
     body.addProperty("decision", decision);
-    body.addProperty("observacion", obs == null ? "" : obs);
+    body.addProperty("observacion", obs);
 
     JsonObject resp = api.postJson("/api/v1/director/bitacoras/" + bitacoraId + "/revisar", body);
     int code = resp.get("_httpStatus").getAsInt();
+    
     if (code != 200) {
-      showError("No pude revisar. HTTP " + code);
+      JsonElement data = resp.get("data");
+      String msg = "No pude revisar. HTTP " + code;
+      if (data != null && data.isJsonObject()) {
+        JsonObject dataObj = data.getAsJsonObject();
+        if (dataObj.has("msg")) {
+          msg += ": " + dataObj.get("msg").getAsString();
+        }
+      }
+      showError(msg);
       return;
     }
 
-    JOptionPane.showMessageDialog(this, "Revisión OK.");
+    JOptionPane.showMessageDialog(this, "Revisión realizada correctamente.");
     listarPendientes();
   }
 
@@ -436,6 +537,10 @@ public class DirectorFrame extends JFrame {
 
   private String s(JsonObject o, String key) {
     if (o == null || !o.has(key) || o.get(key).isJsonNull()) return "";
-    return o.get(key).getAsString();
+    JsonElement el = o.get(key);
+    if (el.isJsonPrimitive()) {
+      return el.getAsString();
+    }
+    return el.toString();
   }
 }
