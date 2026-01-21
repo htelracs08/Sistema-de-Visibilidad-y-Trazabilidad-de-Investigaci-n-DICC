@@ -18,3 +18,8 @@ CONTRASEÑA JEFATURA: Jefatura123*
 
 
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/actuator/mappings
+
+Compila el cliente de Jefatura
+mvn -pl client-jefatura clean compile
+
+mvn -pl client-jefatura exec:java -Dexec.mainClass="ec.epn.jefatura.MainJefatura"
