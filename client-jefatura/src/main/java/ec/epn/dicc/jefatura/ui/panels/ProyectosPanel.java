@@ -36,8 +36,10 @@ public class ProyectosPanel extends JPanel {
     top.add(buildRightActions(), BorderLayout.EAST);
     add(top, BorderLayout.NORTH);
 
-    // table
-    model = new DefaultTableModel(new Object[]{"ID", "Código", "Nombre", "Director", "Activo", "Creado"}, 0) {
+    // table - AGREGAMOS COLUMNAS DE TIPO Y SUBTIPO
+    model = new DefaultTableModel(new Object[]{
+        "ID", "Código", "Nombre", "Director", "Tipo", "Subtipo", "Activo", "Creado"
+    }, 0) {
       @Override public boolean isCellEditable(int row, int col) { return false; }
     };
 
@@ -45,8 +47,8 @@ public class ProyectosPanel extends JPanel {
     table.setRowHeight(26);
     table.setAutoCreateRowSorter(true);
 
-    // renderer: activo badge
-    table.getColumnModel().getColumn(4).setCellRenderer(new ActivoRenderer());
+    // renderer: activo badge (ahora en columna 6)
+    table.getColumnModel().getColumn(6).setCellRenderer(new ActivoRenderer());
 
     // hide ID column visually
     TableColumn idCol = table.getColumnModel().getColumn(0);
@@ -139,9 +141,16 @@ public class ProyectosPanel extends JPanel {
       String codigo = getS(o, "codigo");
       String nombre = getS(o, "nombre");
       String director = getS(o, "correoDirector");
+      String tipo = getS(o, "tipo");
+      String subtipo = getS(o, "subtipo");
       boolean activo = getB(o, "activo");
       String creado = getS(o, "creadoEn");
-      model.addRow(new Object[]{id, codigo, nombre, director, activo, creado});
+      
+      // Si no hay tipo, mostrar guión
+      if (tipo.isEmpty()) tipo = "-";
+      if (subtipo.isEmpty()) subtipo = "-";
+      
+      model.addRow(new Object[]{id, codigo, nombre, director, tipo, subtipo, activo, creado});
     }
   }
 
@@ -157,7 +166,13 @@ public class ProyectosPanel extends JPanel {
       String codigo = getS(o, "codigo").toLowerCase();
       String nombre = getS(o, "nombre").toLowerCase();
       String director = getS(o, "correoDirector").toLowerCase();
-      if (codigo.contains(q) || nombre.contains(q) || director.contains(q)) out.add(o);
+      String tipo = getS(o, "tipo").toLowerCase();
+      String subtipo = getS(o, "subtipo").toLowerCase();
+      
+      if (codigo.contains(q) || nombre.contains(q) || director.contains(q) || 
+          tipo.contains(q) || subtipo.contains(q)) {
+        out.add(o);
+      }
     }
     render(out);
     lblEstado.setText("Filtrado: " + out.size());
