@@ -12,7 +12,17 @@ mvn -pl backend -DskipTests clean spring-boot:run
 
 
 Compilar 
-mvn clean compile
+mvn -pl backend clean compile
+Reiniciar
+mvn -pl backend -DskipTests spring-boot:run
+
+Compilar 
+mvn -pl client-jefatura clean compile
+Reiniciar
+mvn -pl client-jefatura exec:java -Dexec.mainClass="ec.epn.dicc.jefatura.MainJefatura"
+
+
+
 
 CONTRASEÑA JEFATURA: Jefatura123*
 
@@ -20,6 +30,6 @@ CONTRASEÑA JEFATURA: Jefatura123*
 curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/actuator/mappings
 
 Compila el cliente de Jefatura
-mvn -pl client-jefatura clean compile
+mvn -pl client-director clean compile
 
-mvn -pl client-jefatura exec:java -Dexec.mainClass="ec.epn.jefatura.MainJefatura"
+mvn -pl client-director exec:java -Dexec.mainClass="ec.epn.jefatura.MainJefatura"

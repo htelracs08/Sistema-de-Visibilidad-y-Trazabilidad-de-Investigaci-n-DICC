@@ -1,1 +1,4 @@
-ec\epn\dicc\director\MainDirector.class
+ec\epn\dicc\director\ui\DirectorFrame.class
+ec\epn\dicc\director\ui\LoginFrame.class
+ec\epn\dicc\director\api\ApiClient.class
+ec\epn\dicc\director\DirectorApp.class
