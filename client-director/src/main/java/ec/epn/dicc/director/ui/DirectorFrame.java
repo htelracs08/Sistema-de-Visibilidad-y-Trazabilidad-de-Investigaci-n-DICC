@@ -11,23 +11,26 @@ import java.awt.*;
 public class DirectorFrame extends JFrame {
   private final ApiClient api;
 
-  // Tab Proyectos
+  // Tab Proyectos - TODAS LAS COLUMNAS
   private final DefaultTableModel proyectosModel = new DefaultTableModel(
-      new Object[]{"proyectoId", "codigo", "nombre", "directorCorreo", "tipo", "subtipo", "maxAyudantes", "maxArticulos"}, 0
+      new Object[]{"proyectoId", "codigo", "nombre", "directorCorreo", "activo", 
+                   "tipo", "subtipo", "fechaInicio", "fechaFin", "maxAyudantes", "maxArticulos"}, 0
   ) {
     @Override public boolean isCellEditable(int r, int c) { return false; }
   };
 
   // Tab Ayudantes
   private final DefaultTableModel ayudantesModel = new DefaultTableModel(
-      new Object[]{"contratoId", "ayudanteId", "correoInstitucional", "nombres", "apellidos", "estado", "fechaInicio", "fechaFin"}, 0
+      new Object[]{"contratoId", "ayudanteId", "correoInstitucional", "nombres", "apellidos", 
+                   "estado", "fechaInicio", "fechaFin", "facultad", "quintil", "tipoAyudante"}, 0
   ) {
     @Override public boolean isCellEditable(int r, int c) { return false; }
   };
 
   // Tab Bitácoras
   private final DefaultTableModel pendientesModel = new DefaultTableModel(
-      new Object[]{"bitacoraId", "contratoId", "anio", "mes", "estado", "correoInstitucional", "nombres", "apellidos"}, 0
+      new Object[]{"bitacoraId", "contratoId", "anio", "mes", "estado", 
+                   "correoInstitucional", "nombres", "apellidos"}, 0
   ) {
     @Override public boolean isCellEditable(int r, int c) { return false; }
   };
@@ -40,7 +43,7 @@ public class DirectorFrame extends JFrame {
     this.api = api;
 
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-    setSize(1100, 650);
+    setSize(1200, 700);
     setLocationRelativeTo(null);
 
     JTabbedPane tabs = new JTabbedPane();
@@ -63,6 +66,21 @@ public class DirectorFrame extends JFrame {
 
     JTable table = new JTable(proyectosModel);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    
+    // Ajustar anchos de columnas
+    table.getColumnModel().getColumn(0).setPreferredWidth(80);  // proyectoId
+    table.getColumnModel().getColumn(1).setPreferredWidth(100); // codigo
+    table.getColumnModel().getColumn(2).setPreferredWidth(200); // nombre
+    table.getColumnModel().getColumn(3).setPreferredWidth(180); // directorCorreo
+    table.getColumnModel().getColumn(4).setPreferredWidth(60);  // activo
+    table.getColumnModel().getColumn(5).setPreferredWidth(120); // tipo
+    table.getColumnModel().getColumn(6).setPreferredWidth(120); // subtipo
+    table.getColumnModel().getColumn(7).setPreferredWidth(100); // fechaInicio
+    table.getColumnModel().getColumn(8).setPreferredWidth(100); // fechaFin
+    table.getColumnModel().getColumn(9).setPreferredWidth(100); // maxAyudantes
+    table.getColumnModel().getColumn(10).setPreferredWidth(100); // maxArticulos
+    
     table.getSelectionModel().addListSelectionListener(e -> {
       if (!e.getValueIsAdjusting()) {
         int row = table.getSelectedRow();
@@ -117,8 +135,11 @@ public class DirectorFrame extends JFrame {
           s(o, "codigo"),
           s(o, "nombre"),
           s(o, "directorCorreo"),
+          o.has("activo") && o.get("activo").getAsBoolean() ? "SÍ" : "NO",
           s(o, "tipo"),
           s(o, "subtipo"),
+          s(o, "fechaInicio"),
+          s(o, "fechaFin"),
           s(o, "maxAyudantes"),
           s(o, "maxArticulos")
       });
@@ -180,10 +201,10 @@ public class DirectorFrame extends JFrame {
     int code = resp.get("_httpStatus").getAsInt();
     
     if (code != 200) {
-      JsonElement data = resp.get("data");
+      JsonElement dataEl = resp.get("data");
       String msg = "Error al actualizar. HTTP " + code;
-      if (data != null && data.isJsonObject()) {
-        JsonObject dataObj = data.getAsJsonObject();
+      if (dataEl != null && dataEl.isJsonObject()) {
+        JsonObject dataObj = dataEl.getAsJsonObject();
         if (dataObj.has("msg")) {
           msg += ": " + dataObj.get("msg").getAsString();
         }
@@ -193,7 +214,7 @@ public class DirectorFrame extends JFrame {
     }
 
     JOptionPane.showMessageDialog(this, "Proyecto actualizado correctamente.");
-    cargarProyectos();
+    cargarProyectos(); // RECARGAR para ver los cambios
   }
 
   // =========================
@@ -205,6 +226,20 @@ public class DirectorFrame extends JFrame {
 
     JTable table = new JTable(ayudantesModel);
     table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+    table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+    
+    // Ajustar anchos
+    table.getColumnModel().getColumn(0).setPreferredWidth(80);  // contratoId
+    table.getColumnModel().getColumn(1).setPreferredWidth(80);  // ayudanteId
+    table.getColumnModel().getColumn(2).setPreferredWidth(180); // correo
+    table.getColumnModel().getColumn(3).setPreferredWidth(100); // nombres
+    table.getColumnModel().getColumn(4).setPreferredWidth(100); // apellidos
+    table.getColumnModel().getColumn(5).setPreferredWidth(80);  // estado
+    table.getColumnModel().getColumn(6).setPreferredWidth(100); // fechaInicio
+    table.getColumnModel().getColumn(7).setPreferredWidth(100); // fechaFin
+    table.getColumnModel().getColumn(8).setPreferredWidth(60);  // facultad
+    table.getColumnModel().getColumn(9).setPreferredWidth(60);  // quintil
+    table.getColumnModel().getColumn(10).setPreferredWidth(150); // tipoAyudante
 
     JButton btnList = new JButton("Listar del Proyecto Seleccionado");
     btnList.addActionListener(e -> listarAyudantes());
@@ -262,7 +297,10 @@ public class DirectorFrame extends JFrame {
           s(o, "apellidos"),
           s(o, "estado"),
           s(o, "fechaInicio"),
-          s(o, "fechaFin")
+          s(o, "fechaFin"),
+          s(o, "facultad"),
+          s(o, "quintil"),
+          s(o, "tipoAyudante")
       });
     }
   }
@@ -330,10 +368,10 @@ public class DirectorFrame extends JFrame {
     int code = resp.get("_httpStatus").getAsInt();
     
     if (code != 200) {
-      JsonElement data = resp.get("data");
+      JsonElement dataEl = resp.get("data");
       String msg = "Error al registrar. HTTP " + code;
-      if (data != null && data.isJsonObject()) {
-        JsonObject dataObj = data.getAsJsonObject();
+      if (dataEl != null && dataEl.isJsonObject()) {
+        JsonObject dataObj = dataEl.getAsJsonObject();
         if (dataObj.has("msg")) {
           msg += ": " + dataObj.get("msg").getAsString();
         }
@@ -512,10 +550,10 @@ public class DirectorFrame extends JFrame {
     int code = resp.get("_httpStatus").getAsInt();
     
     if (code != 200) {
-      JsonElement data = resp.get("data");
+      JsonElement dataEl = resp.get("data");
       String msg = "No pude revisar. HTTP " + code;
-      if (data != null && data.isJsonObject()) {
-        JsonObject dataObj = data.getAsJsonObject();
+      if (dataEl != null && dataEl.isJsonObject()) {
+        JsonObject dataObj = dataEl.getAsJsonObject();
         if (dataObj.has("msg")) {
           msg += ": " + dataObj.get("msg").getAsString();
         }

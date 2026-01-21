@@ -36,7 +36,7 @@ public class ProyectosPanel extends JPanel {
     top.add(buildRightActions(), BorderLayout.EAST);
     add(top, BorderLayout.NORTH);
 
-    // table - AGREGAMOS COLUMNAS DE TIPO Y SUBTIPO
+    // table
     model = new DefaultTableModel(new Object[]{
         "ID", "Código", "Nombre", "Director", "Tipo", "Subtipo", "Activo", "Creado"
     }, 0) {
@@ -179,25 +179,93 @@ public class ProyectosPanel extends JPanel {
   }
 
   private void crearProyectoDialog() {
+    lblEstado.setText("Cargando profesores...");
+    
+    SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
+      List<String> profesores = new ArrayList<>();
+      String error = null;
+      
+      @Override
+      protected List<String> doInBackground() {
+        try {
+          String json = api.get("/api/v1/jefatura/profesores");
+          JsonArray arr = JsonParser.parseString(json).getAsJsonArray();
+          
+          for (JsonElement el : arr) {
+            JsonObject prof = el.getAsJsonObject();
+            String correo = getS(prof, "correo");
+            String nombres = getS(prof, "nombres");
+            String apellidos = getS(prof, "apellidos");
+            
+            if (!correo.isEmpty()) {
+              String display = correo + " (" + nombres + " " + apellidos + ")";
+              profesores.add(correo); // Guardamos solo el correo
+            }
+          }
+        } catch (Exception e) {
+          error = e.getMessage();
+        }
+        return profesores;
+      }
+      
+      @Override
+      protected void done() {
+        if (error != null) {
+          lblEstado.setText("Error al cargar profesores");
+          JOptionPane.showMessageDialog(ProyectosPanel.this, 
+              "Error al cargar profesores: " + error, 
+              "Error", JOptionPane.ERROR_MESSAGE);
+          return;
+        }
+        
+        if (profesores.isEmpty()) {
+          lblEstado.setText("No hay profesores disponibles");
+          JOptionPane.showMessageDialog(ProyectosPanel.this, 
+              "No hay profesores disponibles en el sistema", 
+              "Advertencia", JOptionPane.WARNING_MESSAGE);
+          return;
+        }
+        
+        lblEstado.setText("Profesores cargados");
+        mostrarDialogoCreacion(profesores);
+      }
+    };
+    
+    worker.execute();
+  }
+  
+  private void mostrarDialogoCreacion(List<String> correosDirectores) {
     JTextField codigo = new JTextField();
     JTextField nombre = new JTextField();
-    JTextField correoDirector = new JTextField();
+    JComboBox<String> comboDirector = new JComboBox<>(correosDirectores.toArray(new String[0]));
+    comboDirector.setEditable(false);
 
     JPanel p = new JPanel(new GridLayout(0, 1, 6, 6));
     p.add(new JLabel("Código (ej: PRJ-001):"));
     p.add(codigo);
     p.add(new JLabel("Nombre:"));
     p.add(nombre);
-    p.add(new JLabel("Correo Director:"));
-    p.add(correoDirector);
+    p.add(new JLabel("Director (seleccione):"));
+    p.add(comboDirector);
 
     int ok = JOptionPane.showConfirmDialog(this, p, "Crear proyecto", JOptionPane.OK_CANCEL_OPTION);
     if (ok != JOptionPane.OK_OPTION) return;
+    
+    String codigoText = codigo.getText().trim();
+    String nombreText = nombre.getText().trim();
+    String correoDirector = (String) comboDirector.getSelectedItem();
+    
+    if (codigoText.isEmpty() || nombreText.isEmpty() || correoDirector == null) {
+      JOptionPane.showMessageDialog(this, 
+          "Todos los campos son requeridos", 
+          "Error", JOptionPane.ERROR_MESSAGE);
+      return;
+    }
 
     String body = new Gson().toJson(new CrearProyectoBody(
-        codigo.getText().trim(),
-        nombre.getText().trim(),
-        correoDirector.getText().trim()
+        codigoText,
+        nombreText,
+        correoDirector
     ));
 
     lblEstado.setText("Creando proyecto...");
