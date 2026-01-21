@@ -1,4 +1,4 @@
-package ec.epn.dicc.jefatura;
+package ec.epn.jefatura;
 
 public class MainJefatura {
   public static void main(String[] args) {
