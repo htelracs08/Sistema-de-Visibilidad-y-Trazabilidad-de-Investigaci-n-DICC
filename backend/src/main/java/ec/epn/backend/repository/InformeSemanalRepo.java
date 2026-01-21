@@ -20,15 +20,24 @@ public class InformeSemanalRepo {
                       String actividadesRealizadas,
                       String observaciones,
                       String anexos) {
+
     String id = UUID.randomUUID().toString();
-    jdbc.update("""
+
+    int n = jdbc.update("""
       INSERT INTO informe_semanal
         (id, bitacora_id, fecha_inicio_semana, fecha_fin_semana, actividades_realizadas, observaciones, anexos)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, id, bitacoraId, fechaInicioSemana, fechaFinSemana, actividadesRealizadas, observaciones, anexos);
+      SELECT ?, ?, ?, ?, ?, ?, ?
+      WHERE EXISTS (
+        SELECT 1
+        FROM bitacora_mensual
+        WHERE id = ? AND estado = 'BORRADOR'
+      )
+    """, id, bitacoraId, fechaInicioSemana, fechaFinSemana, actividadesRealizadas, observaciones, anexos, bitacoraId);
 
+    if (n == 0) return null; // no insertó porque no era BORRADOR o no existe
     return id;
   }
+
 
   public java.util.List<java.util.Map<String, Object>> listarPorBitacora(String bitacoraId) {
     return jdbc.query("""
@@ -60,12 +69,13 @@ public class InformeSemanalRepo {
   }
 
   public String obtenerBitacoraIdPorSemana(String semanaId) {
-    return jdbc.queryForObject("""
+    return jdbc.query("""
       SELECT bitacora_id
       FROM informe_semanal
       WHERE id = ?
-    """, String.class, semanaId);
+    """, rs -> rs.next() ? rs.getString("bitacora_id") : null, semanaId);
   }
+
 
 
 

@@ -4,8 +4,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 @Repository
@@ -17,7 +15,7 @@ public class BitacoraRepo {
     this.jdbc = jdbc;
   }
 
-  //  para el semáforo: cuenta solo APROBADAS
+  // ✅ Para semáforo: cuenta solo APROBADAS
   public int contarAprobadasEnRango(String contratoId, int anioDesde, int mesDesde, int anioHasta, int mesHasta) {
     Integer n = jdbc.queryForObject("""
       SELECT COUNT(1)
@@ -34,7 +32,7 @@ public class BitacoraRepo {
     return n == null ? 0 : n;
   }
 
-  //  obtener o crear la bitácora mensual del mes actual para un contrato
+  // ✅ Obtener o crear la bitácora mensual del mes actual para un contrato
   public String obtenerOCrearActual(String contratoId) {
     LocalDate hoy = LocalDate.now();
     int anio = hoy.getYear();
@@ -46,7 +44,7 @@ public class BitacoraRepo {
         WHERE contrato_id = ? AND anio = ? AND mes = ?
         LIMIT 1
       """,
-      (rs) -> rs.next() ? rs.getString("id") : null,
+      rs -> rs.next() ? rs.getString("id") : null,
       contratoId, anio, mes
     );
 
@@ -61,7 +59,7 @@ public class BitacoraRepo {
     return id;
   }
 
-  //  obtener cabecera/detalle de bitácora (para ver bitácora completa)
+  // ✅ Obtener cabecera/detalle de bitácora (Ayudante)
   public java.util.Map<String, Object> obtenerDetalle(String bitacoraId) {
     return jdbc.query("""
       SELECT id, contrato_id, anio, mes, estado, comentario_revision, creado_en
@@ -81,56 +79,7 @@ public class BitacoraRepo {
     }, bitacoraId);
   }
 
-  public int enviar(String bitacoraId) {
-    return jdbc.update("""
-      UPDATE bitacora_mensual
-      SET estado = 'ENVIADA'
-      WHERE id = ?
-    """, bitacoraId);
-  }
-
-  public String estado(String bitacoraId) {
-    return jdbc.queryForObject("""
-      SELECT estado FROM bitacora_mensual WHERE id = ?
-    """, String.class, bitacoraId);
-  }
-
-  public java.util.List<java.util.Map<String, Object>> listarPendientesPorProyecto(String proyectoId) {
-    return jdbc.query("""
-      SELECT
-        b.id AS bitacora_id,
-        b.contrato_id,
-        b.anio,
-        b.mes,
-        b.estado,
-        b.creado_en,
-        a.id AS ayudante_id,
-        a.nombres,
-        a.apellidos,
-        a.correo_institucional
-      FROM bitacora_mensual b
-      JOIN contrato c ON c.id = b.contrato_id
-      JOIN ayudante a ON a.id = c.ayudante_id
-      WHERE c.proyecto_id = ?
-        AND b.estado = 'ENVIADA'
-      ORDER BY b.creado_en DESC
-    """, (rs, rowNum) -> {
-      var m = new java.util.LinkedHashMap<String, Object>();
-      m.put("bitacoraId", rs.getString("bitacora_id"));
-      m.put("contratoId", rs.getString("contrato_id"));
-      m.put("anio", rs.getInt("anio"));
-      m.put("mes", rs.getInt("mes"));
-      m.put("estado", rs.getString("estado"));
-      m.put("creadoEn", rs.getString("creado_en"));
-      m.put("ayudanteId", rs.getString("ayudante_id"));
-      m.put("nombres", rs.getString("nombres"));
-      m.put("apellidos", rs.getString("apellidos"));
-      m.put("correoInstitucional", rs.getString("correo_institucional"));
-      return m;
-    }, proyectoId);
-  }
-
-  //  obtener estado actual
+  // ✅ Estado actual por bitácora
   public String obtenerEstado(String bitacoraId) {
     return jdbc.queryForObject("""
       SELECT estado
@@ -139,7 +88,7 @@ public class BitacoraRepo {
     """, String.class, bitacoraId);
   }
 
-  // ✅ NUEVO: obtener estado de bitácora a partir de una semanaId
+  // ✅ Estado de bitácora a partir de una semanaId
   public String obtenerEstadoPorSemana(String semanaId) {
     return jdbc.queryForObject("""
       SELECT b.estado
@@ -149,7 +98,39 @@ public class BitacoraRepo {
     """, String.class, semanaId);
   }
 
-  // aprobar/rechazar + comentario_revision (tu columna real)
+  // ✅ Seguridad: pertenece al contrato
+  public boolean perteneceAContrato(String bitacoraId, String contratoId) {
+    Integer n = jdbc.queryForObject("""
+      SELECT COUNT(1)
+      FROM bitacora_mensual
+      WHERE id = ? AND contrato_id = ?
+    """, Integer.class, bitacoraId, contratoId);
+    return n != null && n > 0;
+  }
+
+  // ✅ Enviar (seguro): SOLO si está en BORRADOR
+  public int enviar(String bitacoraId) {
+    return jdbc.update("""
+      UPDATE bitacora_mensual
+      SET estado = 'ENVIADA'
+      WHERE id = ? AND estado = 'BORRADOR'
+    """, bitacoraId);
+  }
+
+  // ✅ Enviar + limpiar comentario del director (recomendado)
+  public int enviarYLimpiarComentario(String bitacoraId) {
+    return jdbc.update("""
+      UPDATE bitacora_mensual
+      SET estado = 'ENVIADA',
+          comentario_revision = NULL
+      WHERE id = ? AND estado = 'BORRADOR'
+    """, bitacoraId);
+  }
+
+  // ✅ Aprobar / Rechazar
+  // Regla recomendada:
+  // - Si APROBADA => queda APROBADA
+  // - Si RECHAZADA => vuelve a BORRADOR (para que el ayudante pueda editar)
   public int revisar(String bitacoraId, String nuevoEstado, String comentarioRevision) {
     return jdbc.update("""
       UPDATE bitacora_mensual
@@ -160,24 +141,9 @@ public class BitacoraRepo {
     """, nuevoEstado, comentarioRevision, bitacoraId);
   }
 
-
-  public boolean perteneceAContrato(String bitacoraId, String contratoId) {
-    Integer n = jdbc.queryForObject("""
-      SELECT COUNT(1)
-      FROM bitacora_mensual
-      WHERE id = ? AND contrato_id = ?
-    """, Integer.class, bitacoraId, contratoId);
-    return n != null && n > 0;
-  }
-
-  public boolean directorPuedeVerProyecto(String proyectoId, String correoDirector) {
-    Integer n = jdbc.queryForObject("""
-      SELECT COUNT(1)
-      FROM proyecto
-      WHERE id = ? AND lower(director_correo) = lower(?)
-    """, Integer.class, proyectoId, correoDirector);
-    return n != null && n > 0;
-  }
+  // ==========================
+  // Seguridad Director
+  // ==========================
 
   public boolean directorPuedeRevisarBitacora(String bitacoraId, String correoDirector) {
     Integer n = jdbc.queryForObject("""
@@ -260,7 +226,7 @@ public class BitacoraRepo {
       JOIN proyecto p ON p.id = c.proyecto_id
       JOIN ayudante a ON a.id = c.ayudante_id
       WHERE p.id = ?
-        AND p.director_correo = ?
+        AND lower(p.director_correo) = lower(?)
         AND b.estado = 'ENVIADA'
       ORDER BY b.creado_en DESC
     """, (rs, rowNum) -> {
@@ -277,7 +243,4 @@ public class BitacoraRepo {
       return m;
     }, proyectoId, correoDirector);
   }
-
-
-
 }

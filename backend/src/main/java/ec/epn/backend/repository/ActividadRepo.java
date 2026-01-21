@@ -19,14 +19,24 @@ public class ActividadRepo {
                       String horaSalida,
                       double totalHoras,
                       String descripcion) {
-    String id = UUID.randomUUID().toString();
-    jdbc.update("""
-      INSERT INTO actividad (id, semana_id, hora_inicio, hora_salida, total_horas, descripcion)
-      VALUES (?, ?, ?, ?, ?, ?)
-    """, id, semanaId, horaInicio, horaSalida, totalHoras, descripcion);
 
+    String id = UUID.randomUUID().toString();
+
+    int n = jdbc.update("""
+      INSERT INTO actividad (id, semana_id, hora_inicio, hora_salida, total_horas, descripcion)
+      SELECT ?, ?, ?, ?, ?, ?
+      WHERE EXISTS (
+        SELECT 1
+        FROM informe_semanal s
+        JOIN bitacora_mensual b ON b.id = s.bitacora_id
+        WHERE s.id = ? AND b.estado = 'BORRADOR'
+      )
+    """, id, semanaId, horaInicio, horaSalida, totalHoras, descripcion, semanaId);
+
+    if (n == 0) return null;
     return id;
   }
+
 
   public java.util.List<java.util.Map<String, Object>> listarPorSemana(String semanaId) {
     return jdbc.query("""

@@ -24,7 +24,7 @@ public class DirectorBitacoraController {
 
   @GetMapping("/bitacoras/{bitacoraId}")
   public Object verBitacora(@PathVariable String bitacoraId, Principal principal) {
-    String correoDirector = principal.getName();
+    String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
 
     var cabecera = bitacoraRepo.obtenerDetalleParaDirector(bitacoraId.trim(), correoDirector);
     if (cabecera == null) {
@@ -43,13 +43,15 @@ public class DirectorBitacoraController {
   public record RevisarBitacoraReq(String decision, String observacion) {}
 
   @PostMapping("/bitacoras/{bitacoraId}/revisar")
-  public Object revisar(@PathVariable String bitacoraId, @RequestBody RevisarBitacoraReq req, Principal principal) {
+  public Object revisar(@PathVariable String bitacoraId,
+                        @RequestBody RevisarBitacoraReq req,
+                        Principal principal) {
 
     if (req == null || req.decision() == null || req.decision().isBlank()) {
       return Map.of("ok", false, "msg", "decision es requerido (APROBAR | RECHAZAR)");
     }
 
-    String correoDirector = principal.getName();
+    String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
 
     // Seguridad: solo si pertenece a su proyecto
     if (!bitacoraRepo.directorPuedeRevisarBitacora(bitacoraId.trim(), correoDirector)) {
@@ -59,9 +61,13 @@ public class DirectorBitacoraController {
     String decision = req.decision().trim().toUpperCase();
     String nuevoEstado;
 
-    if ("APROBAR".equals(decision)) nuevoEstado = "APROBADA";
-    else if ("RECHAZAR".equals(decision)) nuevoEstado = "RECHAZADA";
-    else return Map.of("ok", false, "msg", "decision inválida (APROBAR | RECHAZAR)");
+    if ("APROBAR".equals(decision)) {
+      nuevoEstado = "APROBADA";       // bloqueada
+    } else if ("RECHAZAR".equals(decision)) {
+      nuevoEstado = "BORRADOR";       // ✅ reabre para corrección
+    } else {
+      return Map.of("ok", false, "msg", "decision inválida (APROBAR | RECHAZAR)");
+    }
 
     String estadoActual;
     try {
@@ -70,6 +76,7 @@ public class DirectorBitacoraController {
       return Map.of("ok", false, "msg", "Bitácora no encontrada");
     }
 
+    // Solo se revisa si está ENVIADA
     if (!"ENVIADA".equalsIgnoreCase(estadoActual)) {
       return Map.of("ok", false, "msg", "Solo se puede revisar bitácoras en estado ENVIADA", "estadoActual", estadoActual);
     }
@@ -77,7 +84,7 @@ public class DirectorBitacoraController {
     int n = bitacoraRepo.revisar(
       bitacoraId.trim(),
       nuevoEstado,
-      req.observacion() == null ? null : req.observacion().trim()
+      (req.observacion() == null || req.observacion().isBlank()) ? null : req.observacion().trim()
     );
 
     if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
@@ -87,10 +94,7 @@ public class DirectorBitacoraController {
 
   @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
   public Object pendientes(@PathVariable String proyectoId, Principal principal) {
-    String correoDirector = principal.getName();
+    String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
     return bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
   }
-
-
-
 }

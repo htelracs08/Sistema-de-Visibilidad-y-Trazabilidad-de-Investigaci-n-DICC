@@ -1,0 +1,26 @@
+proyectoId
+80968cd0-9d05-4745-b6bd-04bd826bc24e
+
+
+"ayudanteId":
+"2bfcfda4-505c-44b2-b24b-ecbd0697b265"
+
+
+"contratoId":
+"ca84406a-807a-44ce-bab1-dda66e20b717"
+
+
+"bitacoraId":
+"7db7d390-19c0-4334-ac3d-da4db2f9af84"
+
+
+"semanaId":
+"53227be4-5871-49a0-92f3-72604aaa25d7"
+
+
+"actividadId":
+"f7a5c485-5673-4d0d-ba39-2cc9e8438f24"
+
+
+  curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* \
+  http://localhost:8080/api/v1/jefatura/proyectos/80968cd0-9d05-4745-b6bd-04bd826bc24e/ayudantes
