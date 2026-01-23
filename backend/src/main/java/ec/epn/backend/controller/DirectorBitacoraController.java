@@ -6,6 +6,7 @@ import ec.epn.backend.repository.InformeSemanalRepo;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -95,6 +96,10 @@ public class DirectorBitacoraController {
   @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
   public Object pendientes(@PathVariable String proyectoId, Principal principal) {
     String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
-    return bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
+    
+    // ✅ FIX: Retornar directamente la lista, envuelta en un objeto con "ok"
+    List<Map<String, Object>> lista = bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
+    
+    return lista; // El frontend espera un array directo
   }
 }

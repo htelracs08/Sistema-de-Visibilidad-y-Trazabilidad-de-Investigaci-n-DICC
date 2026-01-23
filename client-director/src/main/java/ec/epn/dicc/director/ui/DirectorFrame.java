@@ -218,7 +218,7 @@ public class DirectorFrame extends JFrame {
   }
 
   // =========================
-  // TAB: AYUDANTES
+  // TAB: AYUDANTES - CORREGIDO
   // =========================
   private JPanel buildTabAyudantes() {
     JPanel p = new JPanel(new BorderLayout());
@@ -282,12 +282,26 @@ public class DirectorFrame extends JFrame {
     }
 
     JsonElement data = resp.get("data");
-    if (data == null || !data.isJsonArray()) {
-      showError("Respuesta inesperada al listar ayudantes.");
+    
+    // ✅ FIX: El backend retorna directamente un array, no {ok: true, items: [...]}
+    if (data == null) {
+      showError("Respuesta vacía del servidor.");
       return;
     }
 
-    for (JsonElement el : data.getAsJsonArray()) {
+    // El data puede ser un array directamente
+    JsonArray arr;
+    if (data.isJsonArray()) {
+      arr = data.getAsJsonArray();
+    } else if (data.isJsonObject() && data.getAsJsonObject().has("items")) {
+      arr = data.getAsJsonObject().getAsJsonArray("items");
+    } else {
+      showError("Formato de respuesta inesperado al listar ayudantes.");
+      System.out.println("DEBUG - Response data: " + data);
+      return;
+    }
+
+    for (JsonElement el : arr) {
       JsonObject o = el.getAsJsonObject();
       ayudantesModel.addRow(new Object[]{
           s(o, "contratoId"),
@@ -303,6 +317,10 @@ public class DirectorFrame extends JFrame {
           s(o, "tipoAyudante")
       });
     }
+    
+    JOptionPane.showMessageDialog(this, 
+        "Se cargaron " + arr.size() + " contratos/ayudantes.", 
+        "Éxito", JOptionPane.INFORMATION_MESSAGE);
   }
 
   private void registrarAyudante() {
@@ -416,7 +434,7 @@ public class DirectorFrame extends JFrame {
   }
 
   // =========================
-  // TAB: BITÁCORAS
+  // TAB: BITÁCORAS - CORREGIDO
   // =========================
   private JPanel buildTabBitacoras() {
     JPanel p = new JPanel(new BorderLayout());
@@ -462,12 +480,25 @@ public class DirectorFrame extends JFrame {
     }
 
     JsonElement data = resp.get("data");
-    if (data == null || !data.isJsonArray()) {
-      showError("Respuesta inesperada al listar pendientes.");
+    
+    // ✅ FIX: Similar al anterior, el backend puede retornar directamente un array
+    if (data == null) {
+      showError("Respuesta vacía del servidor.");
       return;
     }
 
-    for (JsonElement el : data.getAsJsonArray()) {
+    JsonArray arr;
+    if (data.isJsonArray()) {
+      arr = data.getAsJsonArray();
+    } else if (data.isJsonObject() && data.getAsJsonObject().has("items")) {
+      arr = data.getAsJsonObject().getAsJsonArray("items");
+    } else {
+      showError("Formato de respuesta inesperado al listar bitácoras.");
+      System.out.println("DEBUG - Response data: " + data);
+      return;
+    }
+
+    for (JsonElement el : arr) {
       JsonObject o = el.getAsJsonObject();
       pendientesModel.addRow(new Object[]{
           s(o, "bitacoraId"),
@@ -481,10 +512,14 @@ public class DirectorFrame extends JFrame {
       });
     }
     
-    if (pendientesModel.getRowCount() == 0) {
+    if (arr.size() == 0) {
       JOptionPane.showMessageDialog(this, 
           "No hay bitácoras pendientes para este proyecto.", 
           "Info", JOptionPane.INFORMATION_MESSAGE);
+    } else {
+      JOptionPane.showMessageDialog(this, 
+          "Se encontraron " + arr.size() + " bitácoras pendientes.", 
+          "Éxito", JOptionPane.INFORMATION_MESSAGE);
     }
   }
 
