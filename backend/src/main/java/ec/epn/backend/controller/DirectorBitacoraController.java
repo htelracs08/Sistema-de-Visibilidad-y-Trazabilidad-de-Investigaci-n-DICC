@@ -65,7 +65,7 @@ public class DirectorBitacoraController {
     if ("APROBAR".equals(decision)) {
       nuevoEstado = "APROBADA";       // bloqueada
     } else if ("RECHAZAR".equals(decision)) {
-      nuevoEstado = "BORRADOR";       // ✅ reabre para corrección
+      nuevoEstado = "RECHAZADA";      // queda pendiente de corrección
     } else {
       return Map.of("ok", false, "msg", "decision inválida (APROBAR | RECHAZAR)");
     }

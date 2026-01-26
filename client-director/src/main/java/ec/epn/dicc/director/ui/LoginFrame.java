@@ -55,10 +55,19 @@ public class LoginFrame extends JFrame {
     root.add(bottom, BorderLayout.SOUTH);
 
     setContentPane(root);
+    clearForm();
+  }
 
-    // Defaults para pruebas rápidas (puedes borrar o comentar)
-    txtCorreo.setText("ariel.guana@epn.edu.ec");
-    txtPass.setText("Director2026*");
+  private void clearForm() {
+    txtCorreo.setText("");
+    txtPass.setText("");
+    lblEstado.setText(" ");
+  }
+
+  @Override
+  public void setVisible(boolean b) {
+    if (b) clearForm();
+    super.setVisible(b);
   }
 
   private void login() {

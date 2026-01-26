@@ -172,5 +172,25 @@ public class ContratoRepo {
     );
   }
 
+  public java.util.Map<String, Object> obtenerEstudiantePorContrato(String contratoId) {
+    return jdbc.query("""
+        SELECT a.nombres, a.apellidos, a.correo_institucional
+        FROM contrato c
+        JOIN ayudante a ON a.id = c.ayudante_id
+        WHERE c.id = ?
+        LIMIT 1
+      """,
+      rs -> {
+        if (!rs.next()) return null;
+        var m = new java.util.LinkedHashMap<String, Object>();
+        m.put("nombres", rs.getString("nombres"));
+        m.put("apellidos", rs.getString("apellidos"));
+        m.put("correoInstitucional", rs.getString("correo_institucional"));
+        return m;
+      },
+      contratoId
+    );
+  }
+
 
 }

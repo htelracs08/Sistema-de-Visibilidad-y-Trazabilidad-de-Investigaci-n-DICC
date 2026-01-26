@@ -63,7 +63,12 @@ public class SemaforoPanel extends JPanel {
     lblEstado.setForeground(new Color(90, 90, 90));
     add(lblEstado, BorderLayout.SOUTH);
 
+    clearForm();
     refresh();
+  }
+
+  private void clearForm() {
+    cmbColor.setSelectedIndex(-1);
   }
 
   private void refresh() {
@@ -98,7 +103,8 @@ public class SemaforoPanel extends JPanel {
   }
 
   private void filtrar() {
-    String filtro = String.valueOf(cmbColor.getSelectedItem());
+    Object sel = cmbColor.getSelectedItem();
+    String filtro = sel == null ? "TODOS" : String.valueOf(sel);
     model.setRowCount(0);
 
     int shown = 0;

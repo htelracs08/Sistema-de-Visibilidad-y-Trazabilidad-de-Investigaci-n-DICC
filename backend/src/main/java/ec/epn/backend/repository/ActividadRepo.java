@@ -29,11 +29,11 @@ public class ActividadRepo {
         SELECT 1
         FROM informe_semanal s
         JOIN bitacora_mensual b ON b.id = s.bitacora_id
-        WHERE s.id = ? AND b.estado = 'BORRADOR'
+        WHERE s.id = ? AND (b.estado = 'BORRADOR' OR b.estado = 'RECHAZADA')
       )
     """, id, semanaId, horaInicio, horaSalida, totalHoras, descripcion, semanaId);
 
-    if (n == 0) return null;
+    if (n == 0) throw new IllegalStateException("No se pudo crear la actividad: la bitácora no existe o no está en BORRADOR/RECHAZADA");
     return id;
   }
 
@@ -55,6 +55,28 @@ public class ActividadRepo {
       m.put("creadoEn", rs.getString("creado_en"));
       return m;
     }, semanaId);
+  }
+
+  public String obtenerBitacoraIdPorActividad(String actividadId) {
+    return jdbc.query("""
+      SELECT s.bitacora_id
+      FROM actividad a
+      JOIN informe_semanal s ON s.id = a.semana_id
+      WHERE a.id = ?
+    """, rs -> rs.next() ? rs.getString("bitacora_id") : null, actividadId);
+  }
+
+  public int updateActividad(String actividadId,
+                             String horaInicio,
+                             String horaFin,
+                             String descripcion) {
+    return jdbc.update("""
+      UPDATE actividad
+      SET hora_inicio = ?,
+          hora_salida = ?,
+          descripcion = ?
+      WHERE id = ?
+    """, horaInicio, horaFin, descripcion, actividadId);
   }
   
   //bloqueo

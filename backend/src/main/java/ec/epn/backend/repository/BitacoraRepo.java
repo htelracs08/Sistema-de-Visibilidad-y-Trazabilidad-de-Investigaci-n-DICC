@@ -32,31 +32,103 @@ public class BitacoraRepo {
     return n == null ? 0 : n;
   }
 
-  // ✅ Obtener o crear la bitácora mensual del mes actual para un contrato
+  // ✅ Obtener o crear la bitácora mensual para un contrato
+  // Regla:
+  // - Si existe BORRADOR => devolver esa (única activa).
+  // - Si NO existe BORRADOR:
+  //   - Si la última está RECHAZADA => devolver esa (no crear nueva).
+  //   - Si la última está ENVIADA o APROBADA => crear la siguiente.
   public String obtenerOCrearActual(String contratoId) {
-    LocalDate hoy = LocalDate.now();
-    int anio = hoy.getYear();
-    int mes = hoy.getMonthValue();
+    String borradorId = obtenerBorradorActiva(contratoId);
+    if (borradorId != null) return borradorId;
 
-    String existente = jdbc.query("""
-        SELECT id
-        FROM bitacora_mensual
-        WHERE contrato_id = ? AND anio = ? AND mes = ?
-        LIMIT 1
-      """,
-      rs -> rs.next() ? rs.getString("id") : null,
-      contratoId, anio, mes
-    );
+    var ultima = obtenerUltimaPorContrato(contratoId);
+    if (ultima == null) {
+      LocalDate hoy = LocalDate.now();
+      return crearBitacora(contratoId, hoy.getYear(), hoy.getMonthValue());
+    }
 
-    if (existente != null) return existente;
+    String estado = String.valueOf(ultima.get("estado"));
+    Number anioN = (Number) ultima.get("anio");
+    Number mesN = (Number) ultima.get("mes");
+    int anio = anioN == null ? LocalDate.now().getYear() : anioN.intValue();
+    int mes = mesN == null ? LocalDate.now().getMonthValue() : mesN.intValue();
 
+    if ("RECHAZADA".equalsIgnoreCase(estado)) {
+      return String.valueOf(ultima.get("id"));
+    }
+
+    if ("APROBADA".equalsIgnoreCase(estado) || "ENVIADA".equalsIgnoreCase(estado)) {
+      int[] next = siguientePeriodo(anio, mes);
+      return crearBitacora(contratoId, next[0], next[1]);
+    }
+
+    return String.valueOf(ultima.get("id"));
+  }
+
+  public String obtenerBorradorActiva(String contratoId) {
+    return jdbc.query("""
+      SELECT id
+      FROM bitacora_mensual
+      WHERE contrato_id = ? AND UPPER(estado) = 'BORRADOR'
+      ORDER BY anio DESC, mes DESC
+      LIMIT 1
+    """, rs -> rs.next() ? rs.getString("id") : null, contratoId);
+  }
+
+  private int[] siguientePeriodo(int anio, int mes) {
+    int nextAnio = anio;
+    int nextMes = mes + 1;
+    if (nextMes > 12) {
+      nextMes = 1;
+      nextAnio++;
+    }
+    return new int[]{nextAnio, nextMes};
+  }
+
+  public java.util.Map<String, Object> obtenerUltimaPorContrato(String contratoId) {
+    return jdbc.query("""
+      SELECT id, anio, mes, estado
+      FROM bitacora_mensual
+      WHERE contrato_id = ?
+      ORDER BY anio DESC, mes DESC
+      LIMIT 1
+    """, rs -> {
+      if (!rs.next()) return null;
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("id", rs.getString("id"));
+      m.put("anio", rs.getInt("anio"));
+      m.put("mes", rs.getInt("mes"));
+      m.put("estado", rs.getString("estado"));
+      return m;
+    }, contratoId);
+  }
+
+  public String crearBitacora(String contratoId, int anio, int mes) {
     String id = UUID.randomUUID().toString();
     jdbc.update("""
       INSERT INTO bitacora_mensual (id, contrato_id, anio, mes, estado)
       VALUES (?, ?, ?, ?, 'BORRADOR')
     """, id, contratoId, anio, mes);
-
     return id;
+  }
+
+  public java.util.List<java.util.Map<String, Object>> listarAprobadasPorContrato(String contratoId) {
+    return jdbc.query("""
+      SELECT id, anio, mes, estado, creado_en
+      FROM bitacora_mensual
+      WHERE contrato_id = ?
+        AND estado = 'APROBADA'
+      ORDER BY anio DESC, mes DESC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("bitacoraId", rs.getString("id"));
+      m.put("anio", rs.getInt("anio"));
+      m.put("mes", rs.getInt("mes"));
+      m.put("estado", rs.getString("estado"));
+      m.put("creadoEn", rs.getString("creado_en"));
+      return m;
+    }, contratoId);
   }
 
   // ✅ Obtener cabecera/detalle de bitácora (Ayudante)
@@ -79,7 +151,7 @@ public class BitacoraRepo {
     }, bitacoraId);
   }
 
-  // ✅ Estado actual por bitácora
+  // ✅ Estado actual por bitácora (incluye BORRADOR, ENVIADA, APROBADA, RECHAZADA)
   public String obtenerEstado(String bitacoraId) {
     return jdbc.queryForObject("""
       SELECT estado
@@ -108,12 +180,17 @@ public class BitacoraRepo {
     return n != null && n > 0;
   }
 
-  // ✅ Enviar (seguro): SOLO si está en BORRADOR
+  // ✅ Enviar (seguro): SOLO si está en BORRADOR o RECHAZADA
   public int enviar(String bitacoraId) {
+    String estado = obtenerEstado(bitacoraId);
+    if (estado == null) return 0;
+    if (!"BORRADOR".equalsIgnoreCase(estado) && !"RECHAZADA".equalsIgnoreCase(estado)) {
+      return 0;
+    }
     return jdbc.update("""
       UPDATE bitacora_mensual
       SET estado = 'ENVIADA'
-      WHERE id = ? AND estado = 'BORRADOR'
+      WHERE id = ?
     """, bitacoraId);
   }
 
@@ -127,11 +204,15 @@ public class BitacoraRepo {
     """, bitacoraId);
   }
 
-  // ✅ Aprobar / Rechazar
-  // Regla recomendada:
-  // - Si APROBADA => queda APROBADA
-  // - Si RECHAZADA => vuelve a BORRADOR (para que el ayudante pueda editar)
+  // ✅ Revisión del director (solo ENVIADA -> APROBADA/RECHAZADA)
   public int revisar(String bitacoraId, String nuevoEstado, String comentarioRevision) {
+    String estadoActual = obtenerEstado(bitacoraId);
+    if (estadoActual == null) return 0;
+    if (!"ENVIADA".equalsIgnoreCase(estadoActual)) return 0;
+
+    if (!"APROBADA".equalsIgnoreCase(nuevoEstado) && !"RECHAZADA".equalsIgnoreCase(nuevoEstado)) {
+      return 0;
+    }
     return jdbc.update("""
       UPDATE bitacora_mensual
       SET
@@ -139,6 +220,19 @@ public class BitacoraRepo {
         comentario_revision = ?
       WHERE id = ?
     """, nuevoEstado, comentarioRevision, bitacoraId);
+  }
+
+  // ✅ Reapertura para edición (solo RECHAZADA -> BORRADOR)
+  public int reabrirRechazada(String bitacoraId) {
+    String estadoActual = obtenerEstado(bitacoraId);
+    if (estadoActual == null) return 0;
+    if (!"RECHAZADA".equalsIgnoreCase(estadoActual)) return 0;
+
+    return jdbc.update("""
+      UPDATE bitacora_mensual
+      SET estado = 'BORRADOR'
+      WHERE id = ? AND estado = 'RECHAZADA'
+    """, bitacoraId);
   }
 
   // ==========================

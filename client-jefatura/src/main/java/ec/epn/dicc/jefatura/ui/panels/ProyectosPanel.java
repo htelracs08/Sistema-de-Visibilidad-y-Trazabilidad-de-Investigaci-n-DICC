@@ -14,6 +14,41 @@ import java.util.List;
 
 public class ProyectosPanel extends JPanel {
 
+  private enum TipoProyecto {
+    INVESTIGACION("Proyecto de Investigación"),
+    VINCULACION("Proyecto de Vinculación"),
+    INNOVACION("Proyecto de Innovación"),
+    INSTITUCIONAL("Proyecto Institucional");
+
+    private final String label;
+
+    TipoProyecto(String label) {
+      this.label = label;
+    }
+
+    @Override
+    public String toString() {
+      return label;
+    }
+  }
+
+  private enum SubtipoProyecto {
+    BASICA("Investigación Básica"),
+    APLICADA("Investigación Aplicada"),
+    EXPERIMENTAL("Investigación Experimental");
+
+    private final String label;
+
+    SubtipoProyecto(String label) {
+      this.label = label;
+    }
+
+    @Override
+    public String toString() {
+      return label;
+    }
+  }
+
   private final ApiClient api;
 
   private final DefaultTableModel model;
@@ -181,12 +216,12 @@ public class ProyectosPanel extends JPanel {
   private void crearProyectoDialog() {
     lblEstado.setText("Cargando profesores...");
     
-    SwingWorker<List<String>, Void> worker = new SwingWorker<>() {
-      List<String> profesores = new ArrayList<>();
+    SwingWorker<List<DirectorOption>, Void> worker = new SwingWorker<>() {
+      List<DirectorOption> profesores = new ArrayList<>();
       String error = null;
       
       @Override
-      protected List<String> doInBackground() {
+      protected List<DirectorOption> doInBackground() {
         try {
           String json = api.get("/api/v1/jefatura/profesores");
           JsonArray arr = JsonParser.parseString(json).getAsJsonArray();
@@ -198,8 +233,8 @@ public class ProyectosPanel extends JPanel {
             String apellidos = getS(prof, "apellidos");
             
             if (!correo.isEmpty()) {
-              String display = correo + " (" + nombres + " " + apellidos + ")";
-              profesores.add(correo); // Guardamos solo el correo
+              String display = (nombres + " " + apellidos).trim();
+              profesores.add(new DirectorOption(display, correo));
             }
           }
         } catch (Exception e) {
@@ -234,11 +269,28 @@ public class ProyectosPanel extends JPanel {
     worker.execute();
   }
   
-  private void mostrarDialogoCreacion(List<String> correosDirectores) {
+  private void mostrarDialogoCreacion(List<DirectorOption> directores) {
     JTextField codigo = new JTextField();
     JTextField nombre = new JTextField();
-    JComboBox<String> comboDirector = new JComboBox<>(correosDirectores.toArray(new String[0]));
+    JComboBox<DirectorOption> comboDirector = new JComboBox<>(directores.toArray(new DirectorOption[0]));
     comboDirector.setEditable(false);
+
+    JComboBox<TipoProyecto> comboTipo = new JComboBox<>(TipoProyecto.values());
+    JComboBox<SubtipoProyecto> comboSubtipo = new JComboBox<>(SubtipoProyecto.values());
+    comboTipo.setSelectedIndex(-1);
+    comboSubtipo.setSelectedIndex(-1);
+    comboSubtipo.setEnabled(false);
+
+    comboTipo.addActionListener(e -> {
+      Object sel = comboTipo.getSelectedItem();
+      boolean habilitar = sel != null && sel == TipoProyecto.INVESTIGACION;
+      if (!habilitar) {
+        comboSubtipo.setSelectedIndex(-1);
+        comboSubtipo.setEnabled(false);
+      } else {
+        comboSubtipo.setEnabled(true);
+      }
+    });
 
     JPanel p = new JPanel(new GridLayout(0, 1, 6, 6));
     p.add(new JLabel("Código (ej: PRJ-001):"));
@@ -247,13 +299,18 @@ public class ProyectosPanel extends JPanel {
     p.add(nombre);
     p.add(new JLabel("Director (seleccione):"));
     p.add(comboDirector);
+    p.add(new JLabel("Tipo de proyecto:"));
+    p.add(comboTipo);
+    p.add(new JLabel("Subtipo de proyecto:"));
+    p.add(comboSubtipo);
 
     int ok = JOptionPane.showConfirmDialog(this, p, "Crear proyecto", JOptionPane.OK_CANCEL_OPTION);
     if (ok != JOptionPane.OK_OPTION) return;
     
     String codigoText = codigo.getText().trim();
     String nombreText = nombre.getText().trim();
-    String correoDirector = (String) comboDirector.getSelectedItem();
+    DirectorOption seleccionado = (DirectorOption) comboDirector.getSelectedItem();
+    String correoDirector = seleccionado != null ? seleccionado.correo() : null;
     
     if (codigoText.isEmpty() || nombreText.isEmpty() || correoDirector == null) {
       JOptionPane.showMessageDialog(this, 
@@ -315,6 +372,13 @@ public class ProyectosPanel extends JPanel {
   }
 
   private record CrearProyectoBody(String codigo, String nombre, String correoDirector) {}
+
+  private record DirectorOption(String displayName, String correo) {
+    @Override
+    public String toString() {
+      return displayName == null || displayName.isBlank() ? correo : displayName;
+    }
+  }
 
   // Renderer Activo badge
   static class ActivoRenderer extends DefaultTableCellRenderer {

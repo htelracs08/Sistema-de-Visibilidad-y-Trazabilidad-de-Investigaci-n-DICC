@@ -7,11 +7,11 @@ import java.awt.*;
 public class NuevaSemanaDialog extends JDialog {
   private boolean ok = false;
 
-  private final JTextField txtFI = new JTextField("2026-01-05");
-  private final JTextField txtFF = new JTextField("2026-01-09");
+  private final JTextField txtFI = new JTextField();
+  private final JTextField txtFF = new JTextField();
   private final JTextArea txtAct = new JTextArea(4, 30);
   private final JTextArea txtObs = new JTextArea(3, 30);
-  private final JTextField txtAnex = new JTextField("-");
+  private final JTextField txtAnex = new JTextField();
 
   public NuevaSemanaDialog(Frame owner) {
     super(owner, "Nueva Semana", true);
@@ -48,8 +48,7 @@ public class NuevaSemanaDialog extends JDialog {
     form.add(new JLabel("Anexos:"), c);
     c.gridx=1; c.gridy=y++; c.weightx=1; form.add(txtAnex, c);
 
-    txtAct.setText("Avance del módulo de bitácoras");
-    txtObs.setText("Sin novedades");
+    clearForm();
 
     JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     JButton btnCancel = new JButton("Cancelar");
@@ -68,6 +67,20 @@ public class NuevaSemanaDialog extends JDialog {
     root.add(actions, BorderLayout.SOUTH);
 
     setContentPane(root);
+  }
+
+  private void clearForm() {
+    txtFI.setText("");
+    txtFF.setText("");
+    txtAct.setText("");
+    txtObs.setText("");
+    txtAnex.setText("");
+  }
+
+  @Override
+  public void setVisible(boolean b) {
+    if (b) clearForm();
+    super.setVisible(b);
   }
 
   public boolean isOk() { return ok; }

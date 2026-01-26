@@ -1,0 +1,1 @@
+C:\Users\ariel\.m2\repository\com\google\code\gson\gson\2.11.0\gson-2.11.0.jar;C:\Users\ariel\.m2\repository\com\google\errorprone\error_prone_annotations\2.27.0\error_prone_annotations-2.27.0.jar

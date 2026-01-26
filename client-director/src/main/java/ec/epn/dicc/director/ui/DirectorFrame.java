@@ -6,7 +6,17 @@ import ec.epn.dicc.director.api.ApiClient;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
 
 public class DirectorFrame extends JFrame {
   private final ApiClient api;
@@ -152,12 +162,12 @@ public class DirectorFrame extends JFrame {
       return;
     }
 
-    JTextField fIni = new JTextField("2026-01-01");
-    JTextField fFin = new JTextField("2026-12-31");
-    JTextField tipo = new JTextField("INVESTIGACION");
-    JTextField subtipo = new JTextField("INTERNO");
-    JTextField maxAyu = new JTextField("2");
-    JTextField maxArt = new JTextField("3");
+    JTextField fIni = new JTextField();
+    JTextField fFin = new JTextField();
+    JTextField tipo = new JTextField();
+    JTextField subtipo = new JTextField();
+    JTextField maxAyu = new JTextField();
+    JTextField maxArt = new JTextField();
 
     JPanel form = new JPanel(new GridLayout(6, 2, 10, 10));
     form.add(new JLabel("fechaInicio (YYYY-MM-DD)")); form.add(fIni);
@@ -539,23 +549,265 @@ public class DirectorFrame extends JFrame {
       return;
     }
 
-    // Formatear la respuesta de manera legible
-    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    String formatted = gson.toJson(resp.get("data"));
-    
-    JTextArea textArea = new JTextArea(formatted);
-    textArea.setEditable(false);
-    textArea.setLineWrap(true);
-    textArea.setWrapStyleWord(true);
-    
-    JScrollPane scrollPane = new JScrollPane(textArea);
-    scrollPane.setPreferredSize(new Dimension(700, 500));
-    
-    JOptionPane.showMessageDialog(this,
-        scrollPane,
-        "Bitácora " + bitacoraId,
-        JOptionPane.INFORMATION_MESSAGE
-    );
+    JsonElement dataEl = resp.get("data");
+    if (dataEl == null || !dataEl.isJsonObject()) {
+      showError("Respuesta inválida al ver bitácora.");
+      return;
+    }
+
+    showBitacoraDialog(bitacoraId, dataEl.getAsJsonObject());
+  }
+
+  private void showBitacoraDialog(String bitacoraId, JsonObject data) {
+    JDialog dialog = new JDialog(this, "Bitácora " + bitacoraId, true);
+    dialog.setLayout(new BorderLayout(12, 12));
+    dialog.setSize(980, 600);
+    dialog.setLocationRelativeTo(this);
+
+    DefaultTableModel model = new DefaultTableModel(new Object[]{
+        "Semana", "Actividades Semana", "Observaciones", "Anexos",
+        "Actividad", "Inicio", "Salida", "Horas"
+    }, 0) {
+      @Override public boolean isCellEditable(int r, int c) { return false; }
+    };
+
+    JTable table = new JTable(model);
+    table.setAutoCreateRowSorter(true);
+    table.setRowHeight(24);
+
+    TableColumn col0 = table.getColumnModel().getColumn(0);
+    col0.setPreferredWidth(140);
+    table.getColumnModel().getColumn(1).setPreferredWidth(200);
+    table.getColumnModel().getColumn(2).setPreferredWidth(180);
+    table.getColumnModel().getColumn(3).setPreferredWidth(120);
+    table.getColumnModel().getColumn(4).setPreferredWidth(220);
+    table.getColumnModel().getColumn(5).setPreferredWidth(70);
+    table.getColumnModel().getColumn(6).setPreferredWidth(70);
+    table.getColumnModel().getColumn(7).setPreferredWidth(60);
+
+    List<String[]> pdfRows = new ArrayList<>();
+
+    JsonArray semanas = data.has("semanas") && data.get("semanas").isJsonArray()
+        ? data.getAsJsonArray("semanas")
+        : new JsonArray();
+
+    for (JsonElement se : semanas) {
+      if (!se.isJsonObject()) continue;
+      JsonObject semana = se.getAsJsonObject();
+
+      String semanaLabel = (s(semana, "fechaInicioSemana") + " - " + s(semana, "fechaFinSemana")).trim();
+      String actSemana = s(semana, "actividadesRealizadas");
+      String obs = s(semana, "observaciones");
+      String anexos = s(semana, "anexos");
+
+      JsonArray actividades = semana.has("actividades") && semana.get("actividades").isJsonArray()
+          ? semana.getAsJsonArray("actividades")
+          : new JsonArray();
+
+      if (actividades.size() == 0) {
+        String[] row = new String[]{semanaLabel, actSemana, obs, anexos, "", "", "", ""};
+        model.addRow(row);
+        pdfRows.add(row);
+        continue;
+      }
+
+      for (JsonElement ae : actividades) {
+        if (!ae.isJsonObject()) continue;
+        JsonObject act = ae.getAsJsonObject();
+
+        String desc = s(act, "descripcion");
+        String hIni = s(act, "horaInicio");
+        String hFin = s(act, "horaSalida");
+        String horas = s(act, "totalHoras");
+
+        String[] row = new String[]{semanaLabel, actSemana, obs, anexos, desc, hIni, hFin, horas};
+        model.addRow(row);
+        pdfRows.add(row);
+      }
+    }
+
+    JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JButton btnPdf = new JButton("Descargar PDF");
+    JButton btnCerrar = new JButton("Cerrar");
+
+    btnPdf.addActionListener(e -> exportBitacoraPdf(bitacoraId, pdfRows));
+    btnCerrar.addActionListener(e -> dialog.dispose());
+
+    footer.add(btnPdf);
+    footer.add(btnCerrar);
+
+    dialog.add(new JScrollPane(table), BorderLayout.CENTER);
+    dialog.add(footer, BorderLayout.SOUTH);
+    dialog.setVisible(true);
+  }
+
+  private void exportBitacoraPdf(String bitacoraId, List<String[]> rows) {
+    JFileChooser chooser = new JFileChooser();
+    chooser.setDialogTitle("Guardar Bitácora como PDF");
+    chooser.setSelectedFile(new File("bitacora_" + bitacoraId + ".pdf"));
+
+    int result = chooser.showSaveDialog(this);
+    if (result != JFileChooser.APPROVE_OPTION) return;
+
+    File file = chooser.getSelectedFile();
+
+    try {
+      generateBitacoraPdf(file, bitacoraId, rows);
+      JOptionPane.showMessageDialog(this, "PDF generado correctamente.");
+    } catch (IOException ex) {
+      showError("No pude generar el PDF: " + ex.getMessage());
+    }
+  }
+
+  private void generateBitacoraPdf(File file, String bitacoraId, List<String[]> rows) throws IOException {
+    try (PDDocument doc = new PDDocument()) {
+      PDRectangle base = PDRectangle.LETTER;
+      PDRectangle pageSize = new PDRectangle(base.getHeight(), base.getWidth());
+      PDPage page = new PDPage(pageSize);
+      doc.addPage(page);
+
+      float margin = 36f;
+      float yStart = pageSize.getHeight() - margin;
+      float y = yStart;
+      float fontSize = 8f;
+      float leading = 10f;
+
+      List<String> lines = new ArrayList<>();
+      lines.add("Bitácora " + bitacoraId);
+      lines.add(" ");
+
+      String[] header = new String[]{"Semana", "Act.Semana", "Obs", "Anexos", "Actividad", "Ini", "Fin", "Hrs"};
+      int[] widths = new int[]{12, 14, 12, 8, 28, 5, 5, 4};
+
+      lines.add(formatLine(header, widths));
+      lines.add(repeat("-", sum(widths) + (widths.length - 1) * 3));
+
+      for (String[] row : rows) {
+        lines.addAll(wrapRow(row, widths));
+      }
+
+      PDPageContentStream cs = new PDPageContentStream(doc, page);
+      cs.setFont(PDType1Font.COURIER, fontSize);
+      cs.beginText();
+      cs.newLineAtOffset(margin, y);
+
+      for (String line : lines) {
+        if (y <= margin) {
+          cs.endText();
+          cs.close();
+
+          page = new PDPage(pageSize);
+          doc.addPage(page);
+          cs = new PDPageContentStream(doc, page);
+          cs.setFont(PDType1Font.COURIER, fontSize);
+          y = yStart;
+          cs.beginText();
+          cs.newLineAtOffset(margin, y);
+        }
+
+        cs.showText(line);
+        cs.newLineAtOffset(0, -leading);
+        y -= leading;
+      }
+
+      cs.endText();
+      cs.close();
+
+      doc.save(file);
+    }
+  }
+
+  private List<String> wrapRow(String[] row, int[] widths) {
+    List<List<String>> wrapped = new ArrayList<>();
+    int maxLines = 1;
+    for (int i = 0; i < widths.length; i++) {
+      String text = i < row.length ? safe(row[i]) : "";
+      List<String> parts = wrapCell(text, widths[i]);
+      wrapped.add(parts);
+      if (parts.size() > maxLines) maxLines = parts.size();
+    }
+
+    List<String> lines = new ArrayList<>();
+    for (int line = 0; line < maxLines; line++) {
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < widths.length; i++) {
+        String part = line < wrapped.get(i).size() ? wrapped.get(i).get(line) : "";
+        sb.append(padRight(part, widths[i]));
+        if (i < widths.length - 1) sb.append(" | ");
+      }
+      lines.add(sb.toString());
+    }
+    return lines;
+  }
+
+  private List<String> wrapCell(String text, int width) {
+    List<String> out = new ArrayList<>();
+    String t = safe(text);
+    if (t.isEmpty()) {
+      out.add("");
+      return out;
+    }
+
+    String[] words = t.split("\\s+");
+    StringBuilder line = new StringBuilder();
+    for (String word : words) {
+      if (word.length() > width) {
+        if (line.length() > 0) {
+          out.add(line.toString());
+          line.setLength(0);
+        }
+        int i = 0;
+        while (i < word.length()) {
+          int end = Math.min(i + width, word.length());
+          out.add(word.substring(i, end));
+          i = end;
+        }
+        continue;
+      }
+
+      if (line.length() == 0) {
+        line.append(word);
+      } else if (line.length() + 1 + word.length() <= width) {
+        line.append(' ').append(word);
+      } else {
+        out.add(line.toString());
+        line.setLength(0);
+        line.append(word);
+      }
+    }
+
+    if (line.length() > 0) out.add(line.toString());
+    return out;
+  }
+
+  private String formatLine(String[] cells, int[] widths) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < widths.length; i++) {
+      String cell = i < cells.length ? safe(cells[i]) : "";
+      sb.append(padRight(cell, widths[i]));
+      if (i < widths.length - 1) sb.append(" | ");
+    }
+    return sb.toString();
+  }
+
+  private String padRight(String text, int width) {
+    String t = safe(text);
+    if (t.length() >= width) return t.substring(0, width);
+    return t + " ".repeat(width - t.length());
+  }
+
+  private String repeat(String s, int count) {
+    return s.repeat(Math.max(0, count));
+  }
+
+  private int sum(int[] arr) {
+    int total = 0;
+    for (int v : arr) total += v;
+    return total;
+  }
+
+  private String safe(String v) {
+    return v == null ? "" : v.replace("\n", " ").replace("\r", " ").trim();
   }
 
   private void revisarBitacora(JTable table) {

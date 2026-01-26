@@ -71,6 +71,20 @@ public class ApiClient {
     }
   }
 
+  public JsonObject put(String path, JsonObject json) {
+    try {
+      String body = json == null ? "" : gson.toJson(json);
+      HttpRequest request = req("PUT", path)
+          .header("Content-Type", "application/json")
+          .PUT(HttpRequest.BodyPublishers.ofString(body))
+          .build();
+      HttpResponse<String> resp = http.send(request, HttpResponse.BodyHandlers.ofString());
+      return wrap(resp.statusCode(), resp.body());
+    } catch (Exception e) {
+      return wrap(0, "{\"ok\":false,\"msg\":\"" + e.getMessage().replace("\"","'") + "\"}");
+    }
+  }
+
   // ---------- Endpoints específicos ----------
   public JsonObject getMe() { return get("/me"); }
 
@@ -80,6 +94,10 @@ public class ApiClient {
 
   public JsonObject verBitacora(String bitacoraId) {
     return get("/ayudante/bitacoras/" + bitacoraId);
+  }
+
+  public JsonObject listarBitacorasAprobadas() {
+    return get("/ayudante/bitacoras/aprobadas");
   }
 
   public JsonObject crearSemana(String bitacoraId, String fi, String ff, String act, String obs, String anex) {
@@ -98,6 +116,14 @@ public class ApiClient {
     j.addProperty("horaSalida", hSal);
     j.addProperty("descripcion", desc);
     return post("/ayudante/semanas/" + semanaId + "/actividades", j);
+  }
+
+  public JsonObject actualizarActividad(String actividadId, String hIni, String hFin, String desc) {
+    JsonObject j = new JsonObject();
+    j.addProperty("horaInicio", hIni);
+    j.addProperty("horaFin", hFin);
+    j.addProperty("descripcion", desc);
+    return put("/ayudante/actividades/" + actividadId, j);
   }
 
   public JsonObject enviarBitacora(String bitacoraId) {

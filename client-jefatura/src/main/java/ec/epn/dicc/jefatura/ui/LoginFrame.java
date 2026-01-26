@@ -47,6 +47,20 @@ public class LoginFrame extends JFrame {
     txtPass.addActionListener(e -> doLogin());
 
     setContentPane(p);
+    clearForm();
+  }
+
+  private void clearForm() {
+    txtCorreo.setText("");
+    txtPass.setText("");
+    lblStatus.setText(" ");
+    btnLogin.setEnabled(true);
+  }
+
+  @Override
+  public void setVisible(boolean b) {
+    if (b) clearForm();
+    super.setVisible(b);
   }
 
   private void doLogin() {

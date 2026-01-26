@@ -13,6 +13,7 @@ ec\epn\dicc\jefatura\ui\panels\SemaforoPanel$1.class
 ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$CrearProyectoBody.class
 ec\epn\dicc\jefatura\api\Endpoints.class
 ec\epn\dicc\jefatura\ui\panels\SemaforoPanel$2.class
+ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$DirectorOption.class
 ec\epn\dicc\jefatura\ui\panels\EstadisticasPanel.class
 ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$ActivoRenderer.class
 ec\epn\dicc\jefatura\ui\panels\EstadisticasPanel$1.class

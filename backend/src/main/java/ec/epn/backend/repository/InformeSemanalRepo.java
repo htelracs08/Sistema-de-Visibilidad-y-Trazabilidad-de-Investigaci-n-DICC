@@ -30,11 +30,11 @@ public class InformeSemanalRepo {
       WHERE EXISTS (
         SELECT 1
         FROM bitacora_mensual
-        WHERE id = ? AND estado = 'BORRADOR'
+        WHERE id = ? AND (estado = 'BORRADOR' OR estado = 'RECHAZADA')
       )
     """, id, bitacoraId, fechaInicioSemana, fechaFinSemana, actividadesRealizadas, observaciones, anexos, bitacoraId);
 
-    if (n == 0) return null; // no insertó porque no era BORRADOR o no existe
+    if (n == 0) throw new IllegalStateException("No se pudo crear la semana: la bitácora no existe o no está en BORRADOR/RECHAZADA");
     return id;
   }
 
