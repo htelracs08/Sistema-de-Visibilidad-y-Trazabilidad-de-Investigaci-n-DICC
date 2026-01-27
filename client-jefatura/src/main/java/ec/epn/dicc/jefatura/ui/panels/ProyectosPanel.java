@@ -311,6 +311,13 @@ public class ProyectosPanel extends JPanel {
     String nombreText = nombre.getText().trim();
     DirectorOption seleccionado = (DirectorOption) comboDirector.getSelectedItem();
     String correoDirector = seleccionado != null ? seleccionado.correo() : null;
+    TipoProyecto tipoSel = (TipoProyecto) comboTipo.getSelectedItem();
+    SubtipoProyecto subtipoSel = (SubtipoProyecto) comboSubtipo.getSelectedItem();
+    String tipoProyecto = tipoSel != null ? tipoSel.name() : null;
+    String subtipoProyecto = subtipoSel != null ? subtipoSel.name() : null;
+    if (tipoProyecto == null || !"INVESTIGACION".equalsIgnoreCase(tipoProyecto)) {
+      subtipoProyecto = null;
+    }
     
     if (codigoText.isEmpty() || nombreText.isEmpty() || correoDirector == null) {
       JOptionPane.showMessageDialog(this, 
@@ -319,11 +326,17 @@ public class ProyectosPanel extends JPanel {
       return;
     }
 
-    String body = new Gson().toJson(new CrearProyectoBody(
-        codigoText,
-        nombreText,
-        correoDirector
-    ));
+    JsonObject payload = new JsonObject();
+    payload.addProperty("codigo", codigoText);
+    payload.addProperty("nombre", nombreText);
+    payload.addProperty("correoDirector", correoDirector);
+    if (tipoProyecto == null) payload.add("tipoProyecto", JsonNull.INSTANCE);
+    else payload.addProperty("tipoProyecto", tipoProyecto);
+    if (subtipoProyecto == null) payload.add("subtipoProyecto", JsonNull.INSTANCE);
+    else payload.addProperty("subtipoProyecto", subtipoProyecto);
+
+    String body = new Gson().toJson(payload);
+    System.out.println("REQ BODY = " + body);
 
     lblEstado.setText("Creando proyecto...");
     SwingWorker<Void, Void> w = new SwingWorker<>() {
@@ -370,8 +383,6 @@ public class ProyectosPanel extends JPanel {
   private static boolean getB(JsonObject o, String k) {
     return o != null && o.has(k) && !o.get(k).isJsonNull() && o.get(k).getAsBoolean();
   }
-
-  private record CrearProyectoBody(String codigo, String nombre, String correoDirector) {}
 
   private record DirectorOption(String displayName, String correo) {
     @Override

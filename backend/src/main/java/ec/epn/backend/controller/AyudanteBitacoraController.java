@@ -126,7 +126,6 @@ public class AyudanteBitacoraController {
     // seguridad: bitácora debe pertenecer al contrato activo
     String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
     if (!"RECHAZADA".equalsIgnoreCase(estado)) {
-      if (contratoId == null) return noContrato();
       err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
       if (err != null) return err;
     }

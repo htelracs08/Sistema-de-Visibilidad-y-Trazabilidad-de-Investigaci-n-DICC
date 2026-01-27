@@ -3,6 +3,7 @@ ec\epn\dicc\jefatura\ui\panels\ProyectoDetalleDialog.class
 ec\epn\dicc\jefatura\ui\panels\ProyectosPanel.class
 ec\epn\dicc\jefatura\api\ApiClient.class
 ec\epn\dicc\jefatura\ui\panels\EstadisticasPanel$2.class
+ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$TipoProyecto.class
 ec\epn\dicc\jefatura\ui\panels\SemaforoPanel$ColorRenderer.class
 ec\epn\dicc\jefatura\ui\panels\EstadisticasPanel$3.class
 ec\epn\dicc\jefatura\ui\LoginFrame$1.class
@@ -24,6 +25,7 @@ ec\epn\dicc\jefatura\ui\panels\DashboardPanel$1.class
 ec\epn\dicc\jefatura\ui\panels\ProyectoDetalleDialog$2.class
 ec\epn\dicc\jefatura\ui\panels\SimpleDocumentListener.class
 ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$3.class
+ec\epn\dicc\jefatura\ui\panels\ProyectosPanel$SubtipoProyecto.class
 ec\epn\dicc\jefatura\ui\LoginFrame.class
 ec\epn\dicc\jefatura\ui\panels\SemaforoPanel.class
 ec\epn\dicc\jefatura\ui\panels\DashboardPanel.class

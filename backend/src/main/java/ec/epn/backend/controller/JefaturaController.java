@@ -116,6 +116,8 @@ public class JefaturaController {
   @PostMapping("/proyectos")
   public Object crearProyecto(@RequestBody CrearProyectoReq req) {
 
+    System.out.println("REQ = " + req);
+
     if (req == null) return Map.of("ok", false, "msg", "body requerido");
 
     if (req.codigo() == null || req.codigo().isBlank()) {
@@ -131,9 +133,17 @@ public class JefaturaController {
     String codigo = req.codigo().trim();
     String nombre = req.nombre().trim();
     String correoDirector = req.correoDirector().trim().toLowerCase();
+    String tipoProyecto = req.getTipoProyecto() != null ? req.getTipoProyecto().trim() : null;
+    String subtipoProyecto = req.getSubtipoProyecto() != null ? req.getSubtipoProyecto().trim() : null;
+
+    System.out.println("REQ tipoProyecto=" + tipoProyecto + " subtipoProyecto=" + subtipoProyecto);
+
+    if (tipoProyecto == null || !"INVESTIGACION".equalsIgnoreCase(tipoProyecto)) {
+      subtipoProyecto = null;
+    }
 
     // 1) crear proyecto
-    String proyectoId = proyectoRepo.crear(codigo, nombre, correoDirector);
+    String proyectoId = proyectoRepo.crear(codigo, nombre, correoDirector, tipoProyecto, subtipoProyecto);
 
     // 2) crear usuario director si no existe
     boolean seCreoUsuarioDirector = false;

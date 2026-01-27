@@ -14,12 +14,19 @@ public class ProyectoRepo {
     this.jdbc = jdbc;
   }
 
-  public String crear(String codigo, String nombre, String correoDirector) {
+  public String crear(String codigo, String nombre, String correoDirector, String tipoProyecto, String subtipoProyecto) {
     String id = UUID.randomUUID().toString();
+    System.out.println("INSERT proyecto tipo=" + tipoProyecto + " subtipo=" + subtipoProyecto);
     jdbc.update("""
-      INSERT INTO proyecto (id, codigo, nombre, director_correo, activo)
-      VALUES (?, ?, ?, ?, 1)
-      """, id, codigo, nombre, correoDirector);
+      INSERT INTO proyecto (id, codigo, nombre, director_correo, tipo, subtipo, activo)
+      VALUES (?, ?, ?, ?, ?, ?, 1)
+      """, id, codigo, nombre, correoDirector, tipoProyecto, subtipoProyecto);
+    jdbc.update("""
+      UPDATE proyecto
+      SET tipo = ?,
+          subtipo = ?
+      WHERE id = ?
+      """, tipoProyecto, subtipoProyecto, id);
     return id;
   }
 

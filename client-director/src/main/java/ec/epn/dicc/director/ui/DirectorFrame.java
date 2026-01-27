@@ -10,8 +10,15 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import com.toedter.calendar.JDateChooser;
+import com.toedter.calendar.JTextFieldDateEditor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -47,6 +54,10 @@ public class DirectorFrame extends JFrame {
 
   // Selección actual
   private String proyectoIdSeleccionado = null;
+  private String proyectoTipoSeleccionado = null;
+  private String proyectoSubtipoSeleccionado = null;
+  private String proyectoFechaInicioSeleccionada = null;
+  private String proyectoFechaFinSeleccionada = null;
 
   public DirectorFrame(ApiClient api) {
     super("Director - Panel");
@@ -96,6 +107,14 @@ public class DirectorFrame extends JFrame {
         int row = table.getSelectedRow();
         if (row >= 0) {
           proyectoIdSeleccionado = String.valueOf(proyectosModel.getValueAt(row, 0));
+          Object tipoSel = proyectosModel.getValueAt(row, 5);
+          Object subtipoSel = proyectosModel.getValueAt(row, 6);
+          Object fechaIniSel = proyectosModel.getValueAt(row, 7);
+          Object fechaFinSel = proyectosModel.getValueAt(row, 8);
+          proyectoTipoSeleccionado = tipoSel != null ? String.valueOf(tipoSel) : null;
+          proyectoSubtipoSeleccionado = subtipoSel != null ? String.valueOf(subtipoSel) : null;
+          proyectoFechaInicioSeleccionada = fechaIniSel != null ? String.valueOf(fechaIniSel) : null;
+          proyectoFechaFinSeleccionada = fechaFinSel != null ? String.valueOf(fechaFinSel) : null;
         }
       }
     });
@@ -162,18 +181,95 @@ public class DirectorFrame extends JFrame {
       return;
     }
 
-    JTextField fIni = new JTextField();
-    JTextField fFin = new JTextField();
-    JTextField tipo = new JTextField();
-    JTextField subtipo = new JTextField();
+    JDateChooser fIni = new JDateChooser();
+    JDateChooser fFin = new JDateChooser();
+    fIni.setDateFormatString("yyyy-MM-dd");
+    fFin.setDateFormatString("yyyy-MM-dd");
+    ((JTextFieldDateEditor) fIni.getDateEditor()).setEditable(false);
+    ((JTextFieldDateEditor) fFin.getDateEditor()).setEditable(false);
+    JCheckBox sinFechaIni = new JCheckBox("Sin fecha");
+    JCheckBox sinFechaFin = new JCheckBox("Sin fecha");
+    JComboBox<String> comboTipo = new JComboBox<>(new String[]{"INVESTIGACION", "VINCULACION", "DOCENCIA"});
+    JComboBox<String> comboSubtipo = new JComboBox<>(new String[]{"INTERNO", "EXPERIMENTAL", "APLICADA"});
     JTextField maxAyu = new JTextField();
     JTextField maxArt = new JTextField();
 
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    Date parsedIni = parseDateOrNull(dateFormat, proyectoFechaInicioSeleccionada);
+    Date parsedFin = parseDateOrNull(dateFormat, proyectoFechaFinSeleccionada);
+
+    if (parsedIni != null) {
+      fIni.setDate(parsedIni);
+      sinFechaIni.setSelected(false);
+      fIni.setEnabled(true);
+    } else {
+      sinFechaIni.setSelected(true);
+      fIni.setEnabled(false);
+      fIni.setDate(null);
+    }
+
+    if (parsedFin != null) {
+      fFin.setDate(parsedFin);
+      sinFechaFin.setSelected(false);
+      fFin.setEnabled(true);
+    } else {
+      sinFechaFin.setSelected(true);
+      fFin.setEnabled(false);
+      fFin.setDate(null);
+    }
+
+    sinFechaIni.addActionListener(e -> {
+      boolean enabled = !sinFechaIni.isSelected();
+      fIni.setEnabled(enabled);
+      if (!enabled) fIni.setDate(null);
+    });
+    sinFechaFin.addActionListener(e -> {
+      boolean enabled = !sinFechaFin.isSelected();
+      fFin.setEnabled(enabled);
+      if (!enabled) fFin.setDate(null);
+    });
+
+    comboTipo.setSelectedIndex(-1);
+    comboSubtipo.setSelectedIndex(-1);
+    comboSubtipo.setEnabled(false);
+
+    if (proyectoTipoSeleccionado != null && !proyectoTipoSeleccionado.isEmpty()) {
+      comboTipo.setSelectedItem(proyectoTipoSeleccionado);
+    }
+    if (proyectoSubtipoSeleccionado != null && !proyectoSubtipoSeleccionado.isEmpty()) {
+      comboSubtipo.setSelectedItem(proyectoSubtipoSeleccionado);
+    }
+
+    String tipoInicial = (String) comboTipo.getSelectedItem();
+    boolean habilitarInicial = "INVESTIGACION".equalsIgnoreCase(tipoInicial);
+    comboSubtipo.setEnabled(habilitarInicial);
+    if (!habilitarInicial) {
+      comboSubtipo.setSelectedIndex(-1);
+    }
+
+    comboTipo.addActionListener(e -> {
+      String sel = (String) comboTipo.getSelectedItem();
+      boolean habilitar = sel != null && "INVESTIGACION".equalsIgnoreCase(sel);
+      if (!habilitar) {
+        comboSubtipo.setSelectedIndex(-1);
+        comboSubtipo.setEnabled(false);
+      } else {
+        comboSubtipo.setEnabled(true);
+      }
+    });
+
     JPanel form = new JPanel(new GridLayout(6, 2, 10, 10));
-    form.add(new JLabel("fechaInicio (YYYY-MM-DD)")); form.add(fIni);
-    form.add(new JLabel("fechaFin (YYYY-MM-DD)")); form.add(fFin);
-    form.add(new JLabel("tipo")); form.add(tipo);
-    form.add(new JLabel("subtipo (o vacío)")); form.add(subtipo);
+    JPanel fechaIniPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+    fechaIniPanel.add(fIni);
+    fechaIniPanel.add(sinFechaIni);
+    JPanel fechaFinPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+    fechaFinPanel.add(fFin);
+    fechaFinPanel.add(sinFechaFin);
+
+    form.add(new JLabel("fechaInicio (YYYY-MM-DD)")); form.add(fechaIniPanel);
+    form.add(new JLabel("fechaFin (YYYY-MM-DD)")); form.add(fechaFinPanel);
+    form.add(new JLabel("tipo")); form.add(comboTipo);
+    form.add(new JLabel("subtipo (o vacío)")); form.add(comboSubtipo);
     form.add(new JLabel("maxAyudantes")); form.add(maxAyu);
     form.add(new JLabel("maxArticulos")); form.add(maxArt);
 
@@ -181,12 +277,8 @@ public class DirectorFrame extends JFrame {
     if (ok != JOptionPane.OK_OPTION) return;
 
     // Validaciones
-    if (fIni.getText().trim().isEmpty() || fFin.getText().trim().isEmpty()) {
-      showError("Las fechas son requeridas");
-      return;
-    }
-    
-    if (tipo.getText().trim().isEmpty()) {
+    String tipoSel = (String) comboTipo.getSelectedItem();
+    if (tipoSel == null || tipoSel.trim().isEmpty()) {
       showError("El tipo es requerido");
       return;
     }
@@ -200,10 +292,21 @@ public class DirectorFrame extends JFrame {
     }
 
     JsonObject body = new JsonObject();
-    body.addProperty("fechaInicio", fIni.getText().trim());
-    body.addProperty("fechaFin", fFin.getText().trim());
-    body.addProperty("tipo", tipo.getText().trim());
-    body.addProperty("subtipo", subtipo.getText().trim());
+    Date fechaIniSel = fIni.getDate();
+    Date fechaFinSel = fFin.getDate();
+    if (sinFechaIni.isSelected() || fechaIniSel == null) body.add("fechaInicio", JsonNull.INSTANCE);
+    else body.addProperty("fechaInicio", dateFormat.format(fechaIniSel));
+    if (sinFechaFin.isSelected() || fechaFinSel == null) body.add("fechaFin", JsonNull.INSTANCE);
+    else body.addProperty("fechaFin", dateFormat.format(fechaFinSel));
+    body.addProperty("tipo", tipoSel.trim());
+    String subtipoSel = (String) comboSubtipo.getSelectedItem();
+    if (tipoSel == null || !"INVESTIGACION".equalsIgnoreCase(tipoSel)) {
+      body.add("subtipo", JsonNull.INSTANCE);
+    } else if (subtipoSel == null || subtipoSel.trim().isEmpty()) {
+      body.add("subtipo", JsonNull.INSTANCE);
+    } else {
+      body.addProperty("subtipo", subtipoSel.trim());
+    }
     body.addProperty("maxAyudantes", Integer.parseInt(maxAyu.getText().trim()));
     body.addProperty("maxArticulos", Integer.parseInt(maxArt.getText().trim()));
 
@@ -225,6 +328,17 @@ public class DirectorFrame extends JFrame {
 
     JOptionPane.showMessageDialog(this, "Proyecto actualizado correctamente.");
     cargarProyectos(); // RECARGAR para ver los cambios
+  }
+
+  private Date parseDateOrNull(SimpleDateFormat fmt, String value) {
+    if (value == null) return null;
+    String v = value.trim();
+    if (v.isEmpty() || "-".equals(v) || "null".equalsIgnoreCase(v)) return null;
+    try {
+      return fmt.parse(v);
+    } catch (ParseException e) {
+      return null;
+    }
   }
 
   // =========================
@@ -342,11 +456,24 @@ public class DirectorFrame extends JFrame {
     JTextField nombres = new JTextField();
     JTextField apellidos = new JTextField();
     JTextField correo = new JTextField();
-    JTextField facultad = new JTextField("FIS");
-    JTextField quintil = new JTextField("2");
-    JTextField tipoAyudante = new JTextField("AYUDANTE_INVESTIGACION");
-    JTextField fci = new JTextField("2026-01-01");
-    JTextField fcf = new JTextField("2026-03-31");
+    JTextField facultad = new JTextField();
+    JComboBox<Integer> quintil = new JComboBox<>(new Integer[]{1, 2, 3, 4, 5});
+    JComboBox<String> tipoAyudante = new JComboBox<>(new String[]{
+      "ASISTENTE_INVESTIGACION",
+      "AYUDANTE_INVESTIGACION",
+      "TECNICO_INVESTIGACION"
+    });
+    JDateChooser fci = new JDateChooser();
+    JDateChooser fcf = new JDateChooser();
+    fci.setDateFormatString("yyyy-MM-dd");
+    fcf.setDateFormatString("yyyy-MM-dd");
+    ((JTextFieldDateEditor) fci.getDateEditor()).setEditable(false);
+    ((JTextFieldDateEditor) fcf.getDateEditor()).setEditable(false);
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    quintil.setSelectedIndex(-1);
+    tipoAyudante.setSelectedIndex(-1);
+    fci.setDate(null);
+    fcf.setDate(null);
 
     JPanel form = new JPanel(new GridLayout(8, 2, 10, 10));
     form.add(new JLabel("Nombres *")); form.add(nombres);
@@ -364,15 +491,15 @@ public class DirectorFrame extends JFrame {
     // Validaciones
     if (nombres.getText().trim().isEmpty() || apellidos.getText().trim().isEmpty() ||
         correo.getText().trim().isEmpty() || facultad.getText().trim().isEmpty() ||
-        quintil.getText().trim().isEmpty() || tipoAyudante.getText().trim().isEmpty() ||
-        fci.getText().trim().isEmpty() || fcf.getText().trim().isEmpty()) {
+        quintil.getSelectedItem() == null || tipoAyudante.getSelectedItem() == null ||
+        fci.getDate() == null || fcf.getDate() == null) {
       showError("Todos los campos son requeridos");
       return;
     }
 
     int quintilValue;
     try {
-      quintilValue = Integer.parseInt(quintil.getText().trim());
+      quintilValue = (Integer) quintil.getSelectedItem();
       if (quintilValue < 1 || quintilValue > 5) {
         showError("El quintil debe estar entre 1 y 5");
         return;
@@ -388,9 +515,9 @@ public class DirectorFrame extends JFrame {
     body.addProperty("correoInstitucional", correo.getText().trim().toLowerCase());
     body.addProperty("facultad", facultad.getText().trim());
     body.addProperty("quintil", quintilValue);
-    body.addProperty("tipoAyudante", tipoAyudante.getText().trim());
-    body.addProperty("fechaInicioContrato", fci.getText().trim());
-    body.addProperty("fechaFinContrato", fcf.getText().trim());
+    body.addProperty("tipoAyudante", ((String) tipoAyudante.getSelectedItem()).trim());
+    body.addProperty("fechaInicioContrato", dateFormat.format(fci.getDate()));
+    body.addProperty("fechaFinContrato", dateFormat.format(fcf.getDate()));
 
     JsonObject resp = api.postJson("/api/v1/director/proyectos/" + proyectoIdSeleccionado + "/ayudantes", body);
     int code = resp.get("_httpStatus").getAsInt();
@@ -627,10 +754,14 @@ public class DirectorFrame extends JFrame {
     }
 
     JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    JsonObject bitacora = data.has("bitacora") && data.get("bitacora").isJsonObject()
+      ? data.getAsJsonObject("bitacora")
+      : null;
+
     JButton btnPdf = new JButton("Descargar PDF");
     JButton btnCerrar = new JButton("Cerrar");
 
-    btnPdf.addActionListener(e -> exportBitacoraPdf(bitacoraId, pdfRows));
+    btnPdf.addActionListener(e -> exportBitacoraPdf(bitacoraId, pdfRows, bitacora));
     btnCerrar.addActionListener(e -> dialog.dispose());
 
     footer.add(btnPdf);
@@ -641,7 +772,7 @@ public class DirectorFrame extends JFrame {
     dialog.setVisible(true);
   }
 
-  private void exportBitacoraPdf(String bitacoraId, List<String[]> rows) {
+  private void exportBitacoraPdf(String bitacoraId, List<String[]> rows, JsonObject bitacora) {
     JFileChooser chooser = new JFileChooser();
     chooser.setDialogTitle("Guardar Bitácora como PDF");
     chooser.setSelectedFile(new File("bitacora_" + bitacoraId + ".pdf"));
@@ -652,14 +783,14 @@ public class DirectorFrame extends JFrame {
     File file = chooser.getSelectedFile();
 
     try {
-      generateBitacoraPdf(file, bitacoraId, rows);
+      generateBitacoraPdf(file, bitacoraId, rows, bitacora);
       JOptionPane.showMessageDialog(this, "PDF generado correctamente.");
     } catch (IOException ex) {
       showError("No pude generar el PDF: " + ex.getMessage());
     }
   }
 
-  private void generateBitacoraPdf(File file, String bitacoraId, List<String[]> rows) throws IOException {
+  private void generateBitacoraPdf(File file, String bitacoraId, List<String[]> rows, JsonObject bitacora) throws IOException {
     try (PDDocument doc = new PDDocument()) {
       PDRectangle base = PDRectangle.LETTER;
       PDRectangle pageSize = new PDRectangle(base.getHeight(), base.getWidth());
@@ -669,48 +800,241 @@ public class DirectorFrame extends JFrame {
       float margin = 36f;
       float yStart = pageSize.getHeight() - margin;
       float y = yStart;
-      float fontSize = 8f;
-      float leading = 10f;
+      float fontSize = 9f;
+      float headerFontSize = 12f;
+      float leading = 14f;
+      float tableLeading = 12f;
+      float tablePaddingX = 3f;
+      float tablePaddingY = 4f;
 
-      List<String> lines = new ArrayList<>();
-      lines.add("Bitácora " + bitacoraId);
-      lines.add(" ");
-
-      String[] header = new String[]{"Semana", "Act.Semana", "Obs", "Anexos", "Actividad", "Ini", "Fin", "Hrs"};
-      int[] widths = new int[]{12, 14, 12, 8, 28, 5, 5, 4};
-
-      lines.add(formatLine(header, widths));
-      lines.add(repeat("-", sum(widths) + (widths.length - 1) * 3));
-
+      DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+      LocalDate minIni = null;
+      LocalDate maxFin = null;
       for (String[] row : rows) {
-        lines.addAll(wrapRow(row, widths));
+        if (row == null || row.length == 0) continue;
+        String semana = safe(row[0]);
+        String[] parts = semana.split("\\s*-\\s*");
+        if (parts.length == 2) {
+          try {
+            LocalDate ini = LocalDate.parse(parts[0].trim(), df);
+            LocalDate fin = LocalDate.parse(parts[1].trim(), df);
+            if (minIni == null || ini.isBefore(minIni)) minIni = ini;
+            if (maxFin == null || fin.isAfter(maxFin)) maxFin = fin;
+          } catch (Exception ignored) {
+          }
+        }
       }
 
+      String estado = bitacora != null ? s(bitacora, "estado") : "";
+      String fechaCreacion = bitacora != null ? s(bitacora, "creadoEn") : "";
+      String ayudanteNombre = "";
+      String ayudanteCorreo = "";
+      if (bitacora != null) {
+        String nom = s(bitacora, "ayudanteNombres");
+        String ape = s(bitacora, "ayudanteApellidos");
+        ayudanteNombre = (nom + " " + ape).trim();
+        ayudanteCorreo = s(bitacora, "correoInstitucional");
+      }
+      String periodo = "-";
+      if (bitacora != null && bitacora.has("anio") && bitacora.has("mes")
+          && !bitacora.get("anio").isJsonNull() && !bitacora.get("mes").isJsonNull()) {
+        try {
+          int anio = bitacora.get("anio").getAsInt();
+          int mes = bitacora.get("mes").getAsInt();
+          if (anio > 0 && mes > 0) periodo = String.format("%02d/%d", mes, anio);
+        } catch (Exception ignored) {
+        }
+      } else if (minIni != null && maxFin != null) {
+        periodo = df.format(minIni) + " - " + df.format(maxFin);
+      }
+      if (estado.isBlank()) estado = "-";
+      if (fechaCreacion.isBlank()) fechaCreacion = "-";
+
       PDPageContentStream cs = new PDPageContentStream(doc, page);
-      cs.setFont(PDType1Font.COURIER, fontSize);
+
+      String titulo = "BITÁCORA MENSUAL";
+      float titleWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(titulo) / 1000f * headerFontSize;
+      float titleX = (pageSize.getWidth() - titleWidth) / 2f;
+      cs.beginText();
+      cs.setFont(PDType1Font.HELVETICA_BOLD, headerFontSize);
+      cs.newLineAtOffset(titleX, y);
+      cs.showText(titulo);
+      cs.endText();
+      y -= leading;
+
+      cs.setFont(PDType1Font.HELVETICA, fontSize);
       cs.beginText();
       cs.newLineAtOffset(margin, y);
+      cs.showText("ID: " + bitacoraId);
+      cs.endText();
+      y -= leading;
 
-      for (String line : lines) {
-        if (y <= margin) {
-          cs.endText();
+      cs.beginText();
+      cs.newLineAtOffset(margin, y);
+      cs.showText("Periodo: " + periodo);
+      cs.endText();
+      y -= leading;
+
+      cs.beginText();
+      cs.newLineAtOffset(margin, y);
+      cs.showText("Estado: " + estado + "   |   Fecha de creación: " + fechaCreacion);
+      cs.endText();
+      y -= leading;
+
+      cs.beginText();
+      cs.newLineAtOffset(margin, y);
+      cs.showText("Ayudante: " + (ayudanteNombre.isBlank() ? "-" : ayudanteNombre));
+      cs.endText();
+      y -= leading;
+
+      cs.beginText();
+      cs.newLineAtOffset(margin, y);
+      cs.showText("Correo: " + (ayudanteCorreo.isBlank() ? "-" : ayudanteCorreo));
+      cs.endText();
+      y -= leading;
+
+      cs.moveTo(margin, y);
+      cs.lineTo(pageSize.getWidth() - margin, y);
+      cs.stroke();
+      y -= leading;
+
+      String[] header = new String[]{"Semana", "Act.Semana", "Obs", "Anexos", "Actividad", "Ini", "Fin", "Hrs"};
+      float tableWidth = pageSize.getWidth() - 2 * margin;
+      float[] colWidths = new float[]{
+          tableWidth * 0.16f,
+          tableWidth * 0.18f,
+          tableWidth * 0.16f,
+          tableWidth * 0.10f,
+          tableWidth * 0.24f,
+          tableWidth * 0.06f,
+          tableWidth * 0.06f,
+          tableWidth * 0.04f
+      };
+
+      int[] wrapWidths = new int[colWidths.length];
+      for (int i = 0; i < colWidths.length; i++) {
+        wrapWidths[i] = Math.max(4, (int) Math.floor((colWidths[i] - tablePaddingX * 2) / (fontSize * 0.55f)));
+      }
+
+      float headerHeight = tableLeading + tablePaddingY * 2;
+      if (y - headerHeight <= margin) {
+        cs.close();
+        page = new PDPage(pageSize);
+        doc.addPage(page);
+        cs = new PDPageContentStream(doc, page);
+        y = yStart;
+      }
+
+      float x = margin;
+      cs.setLineWidth(0.8f);
+      cs.moveTo(margin, y);
+      cs.lineTo(margin + tableWidth, y);
+      cs.stroke();
+      cs.moveTo(margin, y - headerHeight);
+      cs.lineTo(margin + tableWidth, y - headerHeight);
+      cs.stroke();
+      for (int i = 0; i <= colWidths.length; i++) {
+        cs.moveTo(x, y);
+        cs.lineTo(x, y - headerHeight);
+        cs.stroke();
+        if (i < colWidths.length) x += colWidths[i];
+      }
+
+      float textY = y - tablePaddingY - tableLeading + 3;
+      x = margin;
+      cs.setFont(PDType1Font.HELVETICA_BOLD, fontSize);
+      for (int i = 0; i < header.length; i++) {
+        cs.beginText();
+        cs.newLineAtOffset(x + tablePaddingX, textY);
+        cs.showText(header[i]);
+        cs.endText();
+        x += colWidths[i];
+      }
+
+      y -= headerHeight;
+
+      cs.setFont(PDType1Font.HELVETICA, fontSize);
+      for (String[] row : rows) {
+        List<String> wrapped = wrapRow(row, wrapWidths);
+        int maxLines = wrapped.size() == 0 ? 1 : wrapped.size();
+        float rowHeight = maxLines * tableLeading + tablePaddingY * 2;
+
+        if (y - rowHeight <= margin) {
           cs.close();
-
           page = new PDPage(pageSize);
           doc.addPage(page);
           cs = new PDPageContentStream(doc, page);
-          cs.setFont(PDType1Font.COURIER, fontSize);
           y = yStart;
-          cs.beginText();
-          cs.newLineAtOffset(margin, y);
+
+          cs.setLineWidth(0.8f);
+          cs.moveTo(margin, y);
+          cs.lineTo(margin + tableWidth, y);
+          cs.stroke();
+          cs.moveTo(margin, y - headerHeight);
+          cs.lineTo(margin + tableWidth, y - headerHeight);
+          cs.stroke();
+          x = margin;
+          for (int i = 0; i <= colWidths.length; i++) {
+            cs.moveTo(x, y);
+            cs.lineTo(x, y - headerHeight);
+            cs.stroke();
+            if (i < colWidths.length) x += colWidths[i];
+          }
+
+          textY = y - tablePaddingY - tableLeading + 3;
+          x = margin;
+          cs.setFont(PDType1Font.HELVETICA_BOLD, fontSize);
+          for (int i = 0; i < header.length; i++) {
+            cs.beginText();
+            cs.newLineAtOffset(x + tablePaddingX, textY);
+            cs.showText(header[i]);
+            cs.endText();
+            x += colWidths[i];
+          }
+          cs.setFont(PDType1Font.HELVETICA, fontSize);
+          y -= headerHeight;
         }
 
-        cs.showText(line);
-        cs.newLineAtOffset(0, -leading);
-        y -= leading;
+        cs.setLineWidth(0.6f);
+        cs.moveTo(margin, y);
+        cs.lineTo(margin + tableWidth, y);
+        cs.stroke();
+        cs.moveTo(margin, y - rowHeight);
+        cs.lineTo(margin + tableWidth, y - rowHeight);
+        cs.stroke();
+        x = margin;
+        for (int i = 0; i <= colWidths.length; i++) {
+          cs.moveTo(x, y);
+          cs.lineTo(x, y - rowHeight);
+          cs.stroke();
+          if (i < colWidths.length) x += colWidths[i];
+        }
+
+        List<List<String>> wrappedCols = new ArrayList<>();
+        int maxLineCount = 1;
+        for (int i = 0; i < wrapWidths.length; i++) {
+          String cell = i < row.length ? row[i] : "";
+          List<String> parts = wrapCell(cell, wrapWidths[i]);
+          wrappedCols.add(parts);
+          if (parts.size() > maxLineCount) maxLineCount = parts.size();
+        }
+
+        float baseY = y - tablePaddingY - tableLeading + 3;
+        for (int line = 0; line < maxLineCount; line++) {
+          x = margin;
+          for (int i = 0; i < wrappedCols.size(); i++) {
+            String text = line < wrappedCols.get(i).size() ? wrappedCols.get(i).get(line) : "";
+            cs.beginText();
+            cs.newLineAtOffset(x + tablePaddingX, baseY - line * tableLeading);
+            cs.showText(text);
+            cs.endText();
+            x += colWidths[i];
+          }
+        }
+
+        y -= rowHeight;
       }
 
-      cs.endText();
       cs.close();
 
       doc.save(file);

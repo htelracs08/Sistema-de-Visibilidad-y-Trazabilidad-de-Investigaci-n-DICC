@@ -768,16 +768,6 @@ public class AyudanteFrame extends JFrame {
       y -= leading;
     }
 
-    void addWrapped(String text) throws IOException {
-      for (String line : wrapText(text, PDType1Font.HELVETICA, fontSize, maxWidth)) {
-        addLine(line, false);
-      }
-    }
-
-    void drawWrapped(String text) throws IOException {
-      addWrapped(text);
-    }
-
     void addBlankLine() throws IOException {
       y -= leading / 2f;
       ensureSpace();

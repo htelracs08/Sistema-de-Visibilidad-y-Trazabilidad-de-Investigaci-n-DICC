@@ -69,8 +69,6 @@ public class LoginFrame extends JFrame {
     lblStatus.setForeground(Color.BLUE);
 
     SwingWorker<Void, Void> worker = new SwingWorker<>() {
-      String errorMsg = null;
-      
       @Override protected Void doInBackground() throws Exception {
         String correo = txtCorreo.getText().trim().toLowerCase();
         String pass = new String(txtPass.getPassword());
