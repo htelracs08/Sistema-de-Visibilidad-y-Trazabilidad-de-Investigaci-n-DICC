@@ -96,7 +96,16 @@ public class JefaturaController {
       String color = (faltantes == 0) ? "VERDE" : (faltantes == 1 ? "AMARILLO" : "ROJO");
 
       var m = new java.util.LinkedHashMap<String, Object>();
-      m.putAll(c);
+      m.put("contratoId", c.get("contratoId"));
+      m.put("proyectoId", c.get("proyectoId"));
+      m.put("proyectoCodigo", c.get("proyectoCodigo"));
+      m.put("proyectoNombre", c.get("proyectoNombre"));
+      m.put("fechaInicio", c.get("fechaInicio"));
+      m.put("fechaFin", c.get("fechaFin"));
+      // ✅ CORREGIDO: Mapear correctamente los nombres de ayudantes
+      m.put("nombres", c.get("ayudanteNombres"));
+      m.put("apellidos", c.get("ayudanteApellidos"));
+      m.put("correoInstitucional", c.get("correoInstitucional"));
       m.put("anioDesde", anioDesde);
       m.put("mesDesde", mesDesde);
       m.put("anioHasta", anioHasta);
