@@ -14,11 +14,11 @@ import java.util.List;
 
 public class ProyectosPanel extends JPanel {
 
+  // ✅ CORREGIDO: Tipos de proyecto actualizados
   private enum TipoProyecto {
-    INVESTIGACION("Proyecto de Investigación"),
-    VINCULACION("Proyecto de Vinculación"),
-    INNOVACION("Proyecto de Innovación"),
-    INSTITUCIONAL("Proyecto Institucional");
+    INVESTIGACION("Investigación"),
+    VINCULACION("Vinculación"),
+    TRANSFERENCIA_TECNOLOGICA("Transferencia Tecnológica");
 
     private final String label;
 
@@ -32,10 +32,12 @@ public class ProyectosPanel extends JPanel {
     }
   }
 
+  // ✅ CORREGIDO: Subtipos de proyecto actualizados
   private enum SubtipoProyecto {
-    BASICA("Investigación Básica"),
-    APLICADA("Investigación Aplicada"),
-    EXPERIMENTAL("Investigación Experimental");
+    INTERNO("Interno"),
+    SEMILLA("Semilla"),
+    GRUPAL("Grupal"),
+    MULTIDISCIPLINARIO("Multidisciplinario");
 
     private final String label;
 
@@ -281,6 +283,7 @@ public class ProyectosPanel extends JPanel {
     comboSubtipo.setSelectedIndex(-1);
     comboSubtipo.setEnabled(false);
 
+    // ✅ CORREGIDO: Habilitar subtipo solo si se elige INVESTIGACION
     comboTipo.addActionListener(e -> {
       Object sel = comboTipo.getSelectedItem();
       boolean habilitar = sel != null && sel == TipoProyecto.INVESTIGACION;
@@ -301,7 +304,7 @@ public class ProyectosPanel extends JPanel {
     p.add(comboDirector);
     p.add(new JLabel("Tipo de proyecto:"));
     p.add(comboTipo);
-    p.add(new JLabel("Subtipo de proyecto:"));
+    p.add(new JLabel("Subtipo de proyecto (solo para Investigación):"));
     p.add(comboSubtipo);
 
     int ok = JOptionPane.showConfirmDialog(this, p, "Crear proyecto", JOptionPane.OK_CANCEL_OPTION);

@@ -107,9 +107,14 @@ public class EstadisticasPanel extends JPanel {
 
         // fila total
         modelAyud.addRow(new Object[]{"TOTAL", activosTotal});
+        
+        // ✅ CORREGIDO: Usar el campo correcto "tipo" en lugar de "tipoAyudante"
         for (JsonElement el : porTipo) {
           JsonObject o = el.getAsJsonObject();
-          modelAyud.addRow(new Object[]{s(o, "tipoAyudante"), i(o, "activos")});
+          // El backend devuelve "tipo" y "total", no "tipoAyudante" y "activos"
+          String tipo = s(o, "tipo");
+          int total = i(o, "total");
+          modelAyud.addRow(new Object[]{tipo, total});
         }
 
         lblEstado.setText("OK");
