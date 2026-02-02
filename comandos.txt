@@ -1,5 +1,7 @@
 En Powershell
 
+mvn clean compile
+
 $env:GMAIL_APP_PASSWORD="prtf twzm vwhe erij"
 mvn -pl backend -DskipTests clean spring-boot:run
 
@@ -10,26 +12,32 @@ mvn -pl backend -DskipTests spring-boot:run -e
 mvn -pl backend -DskipTests spring-boot:run
 mvn -pl backend -DskipTests clean spring-boot:run
 
+EN GITBASH
 
-Compilar 
-mvn -pl backend clean compile
-Reiniciar
-mvn -pl backend -DskipTests spring-boot:run
-
-Compilar 
+Compilar JEFATURA
 mvn -pl client-jefatura clean compile
 Reiniciar
 mvn -pl client-jefatura exec:java -Dexec.mainClass="ec.epn.dicc.jefatura.MainJefatura"
 
+Compilar DIRECTOR
+mvn -pl client-director clean compile
+Reiniciar
+mvn -pl client-director exec:java -Dexec.mainClass="ec.epn.dicc.director.DirectorApp"
+
+Compilar AYUDANTE
+mvn -pl client-ayudante clean compile
+Reiniciar
+mvn -pl client-ayudante exec:java -Dexec.mainClass="ec.epn.dicc.ayudante.MainAyudante"
 
 
-
+USUARIO JEFATURA: jonathan.guaman04@epn.edu.ec
 CONTRASEÑA JEFATURA: Jefatura123*
 
+USUARIO DIRECTOR: christian.sigcha@epn.edu.ec
+CONTRASEÑA DIRECTOR: Temp123*
 
-curl -u jonathan.guaman04@epn.edu.ec:Jefatura123* http://localhost:8080/actuator/mappings
 
-Compila el cliente de Jefatura
-mvn -pl client-director clean compile
-
-mvn -pl client-director exec:java -Dexec.mainClass="ec.epn.jefatura.MainJefatura"
+curl -u christian.sigcha@epn.edu.ec:Temp123* \
+  -H "Content-Type: application/json" \
+  -d '{"nuevaPassword":"Director2026*"}' \
+  http://localhost:8080/api/v1/auth/cambiar-password
