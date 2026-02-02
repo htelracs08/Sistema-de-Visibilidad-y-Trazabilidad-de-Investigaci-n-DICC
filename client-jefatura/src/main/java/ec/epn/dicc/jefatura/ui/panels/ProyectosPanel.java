@@ -399,7 +399,7 @@ public class ProyectosPanel extends JPanel {
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
       JLabel c = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-      boolean activo = (value instanceof Boolean) && (Boolean) value;
+      boolean activo = (value instanceof Boolean b) && b;
       c.setText(activo ? "ACTIVO" : "INACTIVO");
       c.setHorizontalAlignment(SwingConstants.CENTER);
       if (!isSelected) {

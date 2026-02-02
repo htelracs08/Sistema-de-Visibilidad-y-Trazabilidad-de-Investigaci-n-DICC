@@ -69,7 +69,7 @@ public class ProyectoDetalleDialog extends JDialog {
 
       @Override protected Void doInBackground() {
         try {
-          String path = String.format(Endpoints.PROYECTOS_AYUDANTES, proyectoId);
+          String path = Endpoints.PROYECTOS_AYUDANTES.formatted(proyectoId);
           String json = api.get(path);
           arr = JsonParser.parseString(json).getAsJsonArray();
         } catch (Exception e) {
