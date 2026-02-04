@@ -17,7 +17,8 @@ public class DirectorBitacoraController {
   private final InformeSemanalRepo informeRepo;
   private final ActividadRepo actividadRepo;
 
-  public DirectorBitacoraController(BitacoraRepo bitacoraRepo, InformeSemanalRepo informeRepo, ActividadRepo actividadRepo) {
+  public DirectorBitacoraController(BitacoraRepo bitacoraRepo, InformeSemanalRepo informeRepo,
+      ActividadRepo actividadRepo) {
     this.bitacoraRepo = bitacoraRepo;
     this.informeRepo = informeRepo;
     this.actividadRepo = actividadRepo;
@@ -41,12 +42,13 @@ public class DirectorBitacoraController {
     return Map.of("ok", true, "bitacora", cabecera, "semanas", semanas);
   }
 
-  public record RevisarBitacoraReq(String decision, String observacion) {}
+  public record RevisarBitacoraReq(String decision, String observacion) {
+  }
 
   @PostMapping("/bitacoras/{bitacoraId}/revisar")
   public Object revisar(@PathVariable String bitacoraId,
-                        @RequestBody RevisarBitacoraReq req,
-                        Principal principal) {
+      @RequestBody RevisarBitacoraReq req,
+      Principal principal) {
 
     if (req == null || req.decision() == null || req.decision().isBlank()) {
       return Map.of("ok", false, "msg", "decision es requerido (APROBAR | RECHAZAR)");
@@ -63,9 +65,9 @@ public class DirectorBitacoraController {
     String nuevoEstado;
 
     if ("APROBAR".equals(decision)) {
-      nuevoEstado = "APROBADA";       // bloqueada
+      nuevoEstado = "APROBADA"; // bloqueada
     } else if ("RECHAZAR".equals(decision)) {
-      nuevoEstado = "RECHAZADA";      // queda pendiente de corrección
+      nuevoEstado = "RECHAZADA"; // queda pendiente de corrección
     } else {
       return Map.of("ok", false, "msg", "decision inválida (APROBAR | RECHAZAR)");
     }
@@ -79,16 +81,17 @@ public class DirectorBitacoraController {
 
     // Solo se revisa si está ENVIADA
     if (!"ENVIADA".equalsIgnoreCase(estadoActual)) {
-      return Map.of("ok", false, "msg", "Solo se puede revisar bitácoras en estado ENVIADA", "estadoActual", estadoActual);
+      return Map.of("ok", false, "msg", "Solo se puede revisar bitácoras en estado ENVIADA", "estadoActual",
+          estadoActual);
     }
 
     int n = bitacoraRepo.revisar(
-      bitacoraId.trim(),
-      nuevoEstado,
-      (req.observacion() == null || req.observacion().isBlank()) ? null : req.observacion().trim()
-    );
+        bitacoraId.trim(),
+        nuevoEstado,
+        (req.observacion() == null || req.observacion().isBlank()) ? null : req.observacion().trim());
 
-    if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
+    if (n == 0)
+      return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     return Map.of("ok", true, "nuevoEstado", nuevoEstado);
   }
@@ -96,10 +99,28 @@ public class DirectorBitacoraController {
   @GetMapping("/proyectos/{proyectoId}/bitacoras/pendientes")
   public Object pendientes(@PathVariable String proyectoId, Principal principal) {
     String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
-    
+
     // ✅ FIX: Retornar directamente la lista, envuelta en un objeto con "ok"
-    List<Map<String, Object>> lista = bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
-    
+    List<Map<String, Object>> lista = bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(),
+        correoDirector);
+
     return lista; // El frontend espera un array directo
   }
+
+  // ========================================
+  // AGREGAR ESTE MÉTODO A DirectorBitacoraController.java
+  // Después del método pendientes() (línea ~90)
+  // ========================================
+
+  @GetMapping("/proyectos/{proyectoId}/bitacoras/todas")
+  public Object todas(@PathVariable String proyectoId, Principal principal) {
+    String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
+
+    // ✅ FIX: Retornar directamente la lista
+    List<Map<String, Object>> lista = bitacoraRepo.listarTodasPorProyectoParaDirector(proyectoId.trim(),
+        correoDirector);
+
+    return lista; // El frontend espera un array directo
+  }
+
 }

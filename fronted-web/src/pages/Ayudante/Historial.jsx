@@ -30,13 +30,16 @@ export default function AyuHistorial() {
     try {
       console.log("📡 Cargando historial de bitácoras...");
       
-      // Intentar endpoint /historial primero
+      // ✅ CORREGIDO: Intentar endpoint /historial primero, luego /aprobadas
       let res;
       try {
         res = await apiGet("/api/v1/ayudante/bitacoras/historial");
+        console.log("✅ Usando endpoint /historial");
       } catch (e) {
         console.warn("⚠️ Endpoint /historial no disponible, usando /aprobadas");
         res = await apiGet("/api/v1/ayudante/bitacoras/aprobadas");
+        console.log("⚠️ Mostrando solo bitácoras APROBADAS (endpoint completo no disponible)");
+        setToast({ msg: "⚠️ Mostrando solo bitácoras aprobadas. Actualiza el backend para ver todas.", kind: "warn" });
       }
 
       const data = Array.isArray(res?.bitacoras) ? res.bitacoras : 
@@ -45,15 +48,6 @@ export default function AyuHistorial() {
       console.log(`✅ ${data.length} bitácoras cargadas`);
       setBitacoras(data);
       setFilteredBitacoras(data);
-      
-      // Contadores por estado
-      const counts = {
-        APROBADA: data.filter(b => b.estado === "APROBADA").length,
-        RECHAZADA: data.filter(b => b.estado === "RECHAZADA").length,
-        PENDIENTE: data.filter(b => b.estado === "PENDIENTE").length,
-        BORRADOR: data.filter(b => b.estado === "BORRADOR").length
-      };
-      console.log("📊 Contadores:", counts);
       
     } catch (e) {
       console.error("❌ Error cargando historial:", e);
@@ -71,17 +65,14 @@ export default function AyuHistorial() {
   useEffect(() => {
     let result = [...bitacoras];
 
-    // Filtro por estado
     if (filterEstado !== "TODAS") {
       result = result.filter(b => b.estado === filterEstado);
     }
 
-    // Filtro por año
     if (filterAnio !== "TODOS") {
       result = result.filter(b => String(b.anio) === filterAnio);
     }
 
-    // Búsqueda
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter(b => 
@@ -95,7 +86,6 @@ export default function AyuHistorial() {
     setFilteredBitacoras(result);
   }, [bitacoras, filterEstado, filterAnio, searchTerm]);
 
-  // Selección individual
   function toggleSelect(bitacoraId) {
     const newSet = new Set(selectedIds);
     if (newSet.has(bitacoraId)) {
@@ -106,25 +96,21 @@ export default function AyuHistorial() {
     setSelectedIds(newSet);
   }
 
-  // Seleccionar todas las filtradas
   function selectAll() {
     const allFiltered = new Set(filteredBitacoras.map(b => b.bitacoraId));
     setSelectedIds(allFiltered);
   }
 
-  // Deseleccionar todas
   function deselectAll() {
     setSelectedIds(new Set());
   }
 
-  // ✅ ENVIAR MÚLTIPLES BITÁCORAS AL DIRECTOR
   async function enviarSeleccionadas() {
     if (selectedIds.size === 0) {
       setToast({ msg: "⚠️ No hay bitácoras seleccionadas", kind: "bad" });
       return;
     }
 
-    // Verificar que todas sean BORRADOR o RECHAZADA
     const seleccionadas = bitacoras.filter(b => selectedIds.has(b.bitacoraId));
     const invalidas = seleccionadas.filter(b => 
       b.estado !== "BORRADOR" && b.estado !== "RECHAZADA"
@@ -140,8 +126,7 @@ export default function AyuHistorial() {
 
     const confirmar = window.confirm(
       `¿Enviar ${selectedIds.size} bitácora(s) al director?\n\n` +
-      "Una vez enviadas, no podrás modificarlas hasta que sean revisadas.\n\n" +
-      `Bitácoras: ${Array.from(selectedIds).join(', ')}`
+      "Una vez enviadas, no podrás modificarlas hasta que sean revisadas."
     );
 
     if (!confirmar) return;
@@ -196,8 +181,6 @@ export default function AyuHistorial() {
       const res = await apiGet(`/api/v1/ayudante/bitacoras/${bitacoraId}`);
       const bitacora = res?.bitacora ?? res;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
-      
-      // Obtener info del estudiante si está disponible
       const estudiante = res?.estudiante || null;
 
       exportBitacoraPdf({
@@ -219,7 +202,7 @@ export default function AyuHistorial() {
     total: bitacoras.length,
     aprobadas: bitacoras.filter(b => b.estado === "APROBADA").length,
     rechazadas: bitacoras.filter(b => b.estado === "RECHAZADA").length,
-    pendientes: bitacoras.filter(b => b.estado === "PENDIENTE").length,
+    enviadas: bitacoras.filter(b => b.estado === "ENVIADA").length,
     borradores: bitacoras.filter(b => b.estado === "BORRADOR").length
   };
 
@@ -240,7 +223,6 @@ export default function AyuHistorial() {
         </div>
       ),
       render: (row) => {
-        // Solo permitir seleccionar BORRADOR o RECHAZADA
         const puedeSeleccionar = row.estado === "BORRADOR" || row.estado === "RECHAZADA";
         
         return (
@@ -267,7 +249,7 @@ export default function AyuHistorial() {
         const badges = {
           APROBADA: <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✅ APROBADA</span>,
           RECHAZADA: <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">❌ RECHAZADA</span>,
-          PENDIENTE: <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">⏳ PENDIENTE</span>,
+          ENVIADA: <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">⏳ ENVIADA</span>,
           BORRADOR: <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">📝 BORRADOR</span>
         };
         return badges[row.estado] || row.estado;
@@ -324,8 +306,8 @@ export default function AyuHistorial() {
           <div className="text-xs text-green-600 mt-1">Aprobadas</div>
         </div>
         <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-          <div className="text-2xl font-bold text-blue-700">{stats.pendientes}</div>
-          <div className="text-xs text-blue-600 mt-1">Pendientes</div>
+          <div className="text-2xl font-bold text-blue-700">{stats.enviadas}</div>
+          <div className="text-xs text-blue-600 mt-1">Enviadas</div>
         </div>
         <div className="p-3 bg-red-50 rounded-xl border border-red-200">
           <div className="text-2xl font-bold text-red-700">{stats.rechazadas}</div>
@@ -354,7 +336,7 @@ export default function AyuHistorial() {
         >
           <option value="TODAS">Todos los estados</option>
           <option value="APROBADA">✅ Aprobadas</option>
-          <option value="PENDIENTE">⏳ Pendientes</option>
+          <option value="ENVIADA">⏳ Enviadas</option>
           <option value="RECHAZADA">❌ Rechazadas</option>
           <option value="BORRADOR">📝 Borradores</option>
         </select>
@@ -370,7 +352,6 @@ export default function AyuHistorial() {
           ))}
         </select>
 
-        {/* Botón Enviar Seleccionadas */}
         <button
           onClick={enviarSeleccionadas}
           disabled={selectedIds.size === 0 || loading}
@@ -385,7 +366,6 @@ export default function AyuHistorial() {
         </button>
       </div>
 
-      {/* Info de selección */}
       {selectedIds.size > 0 && (
         <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
           <div className="flex items-center justify-between">
@@ -402,7 +382,6 @@ export default function AyuHistorial() {
         </div>
       )}
 
-      {/* Tabla */}
       {loading && <Loading />}
       {!loading && <Table columns={columns} rows={filteredBitacoras} />}
 

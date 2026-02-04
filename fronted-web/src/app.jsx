@@ -52,7 +52,6 @@ export default function App() {
         <Route path="proyectos" element={<DirProyectos />} />
         <Route path="ayudantes" element={<DirAyudantes />} />
         <Route path="bitacoras" element={<DirBitacoras />} />
-      //Para Director
         <Route path="historial" element={<DirHistorial />} />
       </Route>
 
@@ -67,7 +66,6 @@ export default function App() {
         <Route index element={<Navigate to="/ayudante/bitacora-actual" replace />} />
         <Route path="bitacora-actual" element={<AyuBitacoraActual />} />
         <Route path="bitacora/:id" element={<AyuBitacoraVer />} />
-     //Para Ayudante
         <Route path="historial" element={<AyuHistorialBitacoras />} />
 
       </Route>

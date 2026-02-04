@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import BrandHeader from "../../components/BrandHeader.jsx";
+import ChangePasswordModal from "../../components/ChangePasswordModal.jsx";
 import { clearAuth } from "../../lib/auth";
 
 const menuItems = [
   { path: "/ayudante/bitacora-actual", label: "Bitácora Actual", icon: "📝" },
-  { path: "/ayudante/historial", label: "Historial", icon: "📚" } // ✨ NUEVO
+  { path: "/ayudante/historial", label: "Historial", icon: "📚" }
 ];
 
 export default function AyudanteLayout() {
   const nav = useNavigate();
+  const [showChangePassword, setShowChangePassword] = useState(false);
   
   function logout() {
     clearAuth();
@@ -46,7 +48,16 @@ export default function AyudanteLayout() {
               ))}
             </nav>
 
+            {/* 🔐 NUEVO: Botón de Cambiar Contraseña */}
             <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 font-bold hover:shadow-lg transition-all duration-200 hover:scale-105 mb-3"
+              >
+                <span>🔐</span>
+                <span>Cambiar Contraseña</span>
+              </button>
+
               <button
                 onClick={logout}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-poli-navy to-blue-900 text-white py-3 font-bold hover:shadow-lg transition-all duration-200 hover:scale-105"
@@ -62,6 +73,12 @@ export default function AyudanteLayout() {
           </main>
         </div>
       </div>
+
+      {/* 🔐 Modal de Cambio de Contraseña */}
+      <ChangePasswordModal 
+        open={showChangePassword} 
+        onClose={() => setShowChangePassword(false)} 
+      />
     </div>
   );
 }

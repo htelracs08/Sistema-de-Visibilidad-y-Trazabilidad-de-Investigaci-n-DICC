@@ -28,8 +28,7 @@ public class AyudanteBitacoraController {
       ContratoRepo contratoRepo,
       BitacoraRepo bitacoraRepo,
       InformeSemanalRepo informeRepo,
-      ActividadRepo actividadRepo
-  ) {
+      ActividadRepo actividadRepo) {
     this.contratoRepo = contratoRepo;
     this.bitacoraRepo = bitacoraRepo;
     this.informeRepo = informeRepo;
@@ -45,7 +44,8 @@ public class AyudanteBitacoraController {
   }
 
   private String contratoActivoOrNull(String correo) {
-    if (correo == null || correo.isBlank()) return null;
+    if (correo == null || correo.isBlank())
+      return null;
     return contratoRepo.obtenerContratoActivoPorCorreo(correo.trim().toLowerCase());
   }
 
@@ -58,11 +58,14 @@ public class AyudanteBitacoraController {
   }
 
   private Object validarQueBitacoraEsDelContratoActivo(String bitacoraId, String contratoId) {
-    if (bitacoraId == null || bitacoraId.isBlank()) return Map.of("ok", false, "msg", "bitacoraId requerido");
-    if (contratoId == null || contratoId.isBlank()) return noContrato();
+    if (bitacoraId == null || bitacoraId.isBlank())
+      return Map.of("ok", false, "msg", "bitacoraId requerido");
+    if (contratoId == null || contratoId.isBlank())
+      return noContrato();
 
     var detalle = bitacoraRepo.obtenerDetalle(bitacoraId.trim());
-    if (detalle == null) return Map.of("ok", false, "msg", "Bitácora no encontrada");
+    if (detalle == null)
+      return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     String contratoBitacora = (String) detalle.get("contratoId");
     if (contratoBitacora == null || !contratoBitacora.equalsIgnoreCase(contratoId.trim())) {
@@ -85,7 +88,8 @@ public class AyudanteBitacoraController {
   @PostMapping("/bitacoras/actual")
   public Object obtenerBitacoraActual(Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
 
@@ -99,12 +103,41 @@ public class AyudanteBitacoraController {
   @GetMapping("/bitacoras/aprobadas")
   public Object listarAprobadas(Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     var rows = bitacoraRepo.listarAprobadasPorContrato(contratoId);
+    return Map.of("ok", true, "bitacoras", rows);
+  }
+
+
+
+
+
+  
+  // ========================================
+  // AGREGAR ESTE MÉTODO A AyudanteBitacoraController.java
+  // Después del método listarAprobadas() (línea ~90)
+  // ========================================
+
+  // =========================
+  // 1c) Listar TODAS las bitácoras (historial completo)
+  // =========================
+  @GetMapping("/bitacoras/historial")
+  public Object listarHistorial(Principal principal) {
+    String correo = correo(principal);
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
+
+    String contratoId = contratoActivoOrNull(correo);
+    if (contratoId == null)
+      return noContrato();
+
+    var rows = bitacoraRepo.listarTodasPorContrato(contratoId);
     return Map.of("ok", true, "bitacoras", rows);
   }
 
@@ -113,29 +146,34 @@ public class AyudanteBitacoraController {
   // =========================
   @PostMapping("/bitacoras/{bitacoraId}/semanas")
   public Object crearSemana(@PathVariable String bitacoraId,
-                            @RequestBody CrearInformeSemanalReq req,
-                            Principal principal) {
+      @RequestBody CrearInformeSemanalReq req,
+      Principal principal) {
 
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     Object err;
     // seguridad: bitácora debe pertenecer al contrato activo
     String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
     if (!"RECHAZADA".equalsIgnoreCase(estado)) {
       err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-      if (err != null) return err;
+      if (err != null)
+        return err;
     }
 
     // bloqueo: SOLO BORRADOR (antes de insertar)
     err = validarBitacoraEditable(bitacoraId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     // validaciones body
-    if (req == null) return Map.of("ok", false, "msg", "body requerido");
+    if (req == null)
+      return Map.of("ok", false, "msg", "body requerido");
     if (req.fechaInicioSemana() == null || req.fechaInicioSemana().isBlank()) {
       return Map.of("ok", false, "msg", "fechaInicioSemana es requerido (YYYY-MM-DD)");
     }
@@ -167,8 +205,7 @@ public class AyudanteBitacoraController {
           ff.toString(),
           req.actividadesRealizadas().trim(),
           req.observaciones(),
-          req.anexos()
-      );
+          req.anexos());
     } catch (IllegalStateException e) {
       return Map.of("ok", false, "msg", e.getMessage());
     }
@@ -185,14 +222,16 @@ public class AyudanteBitacoraController {
   // =========================
   @PostMapping("/semanas/{semanaId}/actividades")
   public Object crearActividad(@PathVariable String semanaId,
-                               @RequestBody CrearActividadReq req,
-                               Principal principal) {
+      @RequestBody CrearActividadReq req,
+      Principal principal) {
 
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     if (semanaId == null || semanaId.isBlank()) {
       return Map.of("ok", false, "msg", "semanaId requerido");
@@ -200,18 +239,22 @@ public class AyudanteBitacoraController {
 
     // ubicar bitacoraId desde semana
     String bitacoraId = informeRepo.obtenerBitacoraIdPorSemana(semanaId.trim());
-    if (bitacoraId == null) return Map.of("ok", false, "msg", "Semana no encontrada");
+    if (bitacoraId == null)
+      return Map.of("ok", false, "msg", "Semana no encontrada");
 
     // seguridad: la bitácora de esa semana debe ser del contrato activo
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     // bloqueo: SOLO BORRADOR
     err = validarBitacoraEditable(bitacoraId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     // validaciones body
-    if (req == null) return Map.of("ok", false, "msg", "body requerido");
+    if (req == null)
+      return Map.of("ok", false, "msg", "body requerido");
     if (req.horaInicio() == null || req.horaInicio().isBlank()) {
       return Map.of("ok", false, "msg", "horaInicio es requerido (HH:mm)");
     }
@@ -244,8 +287,7 @@ public class AyudanteBitacoraController {
           hi.toString(),
           hs.toString(),
           totalHoras,
-          req.descripcion().trim()
-      );
+          req.descripcion().trim());
     } catch (IllegalStateException e) {
       return Map.of("ok", false, "msg", e.getMessage());
     }
@@ -257,21 +299,25 @@ public class AyudanteBitacoraController {
     return Map.of("ok", true, "actividadId", actividadId, "totalHoras", totalHoras);
   }
 
-  public record ActualizarActividadReq(String horaInicio, String horaFin, String descripcion) {}
+  public record ActualizarActividadReq(String horaInicio, String horaFin, String descripcion) {
+  }
 
   // =========================
-  // 3.B) Actualizar actividad (solo si BORRADOR o RECHAZADA + pertenece a su contrato)
+  // 3.B) Actualizar actividad (solo si BORRADOR o RECHAZADA + pertenece a su
+  // contrato)
   // =========================
   @PutMapping("/actividades/{actividadId}")
   public Object actualizarActividad(@PathVariable String actividadId,
-                                    @RequestBody ActualizarActividadReq req,
-                                    Principal principal) {
+      @RequestBody ActualizarActividadReq req,
+      Principal principal) {
 
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     if (actividadId == null || actividadId.isBlank()) {
       return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -285,12 +331,15 @@ public class AyudanteBitacoraController {
     }
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     err = validarBitacoraEditable(bitacoraId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
-    if (req == null) return Map.of("ok", false, "msg", "body requerido");
+    if (req == null)
+      return Map.of("ok", false, "msg", "body requerido");
     if (req.horaInicio() == null || req.horaInicio().isBlank()) {
       return Map.of("ok", false, "msg", "horaInicio es requerido (HH:mm)");
     }
@@ -317,10 +366,10 @@ public class AyudanteBitacoraController {
         actividadId.trim(),
         hi.toString(),
         hf.toString(),
-        req.descripcion().trim()
-    );
+        req.descripcion().trim());
 
-    if (n == 0) return Map.of("ok", false, "msg", "Actividad no encontrada");
+    if (n == 0)
+      return Map.of("ok", false, "msg", "Actividad no encontrada");
 
     return Map.of("ok", true);
   }
@@ -331,16 +380,20 @@ public class AyudanteBitacoraController {
   @GetMapping("/bitacoras/{bitacoraId}")
   public Object verBitacora(@PathVariable String bitacoraId, Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     var cabecera = bitacoraRepo.obtenerDetalle(bitacoraId.trim());
-    if (cabecera == null) return Map.of("ok", false, "msg", "Bitácora no encontrada");
+    if (cabecera == null)
+      return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     var semanas = informeRepo.listarPorBitacora(bitacoraId.trim());
     for (var s : semanas) {
@@ -376,13 +429,16 @@ public class AyudanteBitacoraController {
   @GetMapping("/bitacoras/{bitacoraId}/semanas")
   public Object listarSemanas(@PathVariable String bitacoraId, Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     return Map.of("ok", true, "items", informeRepo.listarPorBitacora(bitacoraId.trim()));
   }
@@ -393,20 +449,24 @@ public class AyudanteBitacoraController {
   @GetMapping("/semanas/{semanaId}/actividades")
   public Object listarActividades(@PathVariable String semanaId, Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     if (semanaId == null || semanaId.isBlank()) {
       return Map.of("ok", false, "msg", "semanaId requerido");
     }
 
     String bitacoraId = informeRepo.obtenerBitacoraIdPorSemana(semanaId.trim());
-    if (bitacoraId == null) return Map.of("ok", false, "msg", "Semana no encontrada");
+    if (bitacoraId == null)
+      return Map.of("ok", false, "msg", "Semana no encontrada");
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     return Map.of("ok", true, "items", actividadRepo.listarPorSemana(semanaId.trim()));
   }
@@ -417,13 +477,16 @@ public class AyudanteBitacoraController {
   @PostMapping("/bitacoras/{bitacoraId}/enviar")
   public Object enviar(@PathVariable String bitacoraId, Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     // 1) Solo BORRADOR o RECHAZADA
     String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
@@ -445,10 +508,11 @@ public class AyudanteBitacoraController {
 
     // 4) Recién aquí cambiamos estado
     int n = bitacoraRepo.enviar(bitacoraId.trim());
-    if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
+    if (n == 0)
+      return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     return Map.of("ok", true);
-    
+
   }
 
   // =========================
@@ -457,13 +521,16 @@ public class AyudanteBitacoraController {
   @PostMapping("/bitacoras/{bitacoraId}/reabrir")
   public Object reabrir(@PathVariable String bitacoraId, Principal principal) {
     String correo = correo(principal);
-    if (correo == null || correo.isBlank()) return noAutorizado();
+    if (correo == null || correo.isBlank())
+      return noAutorizado();
 
     String contratoId = contratoActivoOrNull(correo);
-    if (contratoId == null) return noContrato();
+    if (contratoId == null)
+      return noContrato();
 
     Object err = validarQueBitacoraEsDelContratoActivo(bitacoraId, contratoId);
-    if (err != null) return err;
+    if (err != null)
+      return err;
 
     String estado = bitacoraRepo.obtenerEstado(bitacoraId.trim());
     if (!"RECHAZADA".equalsIgnoreCase(estado)) {
@@ -471,7 +538,8 @@ public class AyudanteBitacoraController {
     }
 
     int n = bitacoraRepo.reabrirRechazada(bitacoraId.trim());
-    if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada o no reabierta");
+    if (n == 0)
+      return Map.of("ok", false, "msg", "Bitácora no encontrada o no reabierta");
 
     return Map.of("ok", true);
   }

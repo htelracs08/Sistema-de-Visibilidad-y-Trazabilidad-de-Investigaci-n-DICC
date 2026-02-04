@@ -41,9 +41,10 @@
 //     </div>
 //   );
 // }
-import React from "react";
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import React, { useState } from "react";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import BrandHeader from "../../components/BrandHeader.jsx";
+import ChangePasswordModal from "../../components/ChangePasswordModal.jsx";
 import { clearAuth } from "../../lib/auth";
 
 const menuItems = [
@@ -55,7 +56,7 @@ const menuItems = [
 
 export default function JefaturaLayout() {
   const nav = useNavigate();
-  const location = useLocation();
+  const [showChangePassword, setShowChangePassword] = useState(false);
   
   function logout() {
     clearAuth();
@@ -92,7 +93,16 @@ export default function JefaturaLayout() {
               ))}
             </nav>
 
-            <div className="mt-6 pt-6 border-t border-gray-200">
+            {/* 🔐 BOTONES DE ACCIÓN */}
+            <div className="mt-6 pt-6 border-t border-gray-200 space-y-2">
+              <button
+                onClick={() => setShowChangePassword(true)}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white py-3 font-bold hover:shadow-lg transition-all duration-200 hover:scale-105"
+              >
+                <span>🔐</span>
+                <span>Cambiar Contraseña</span>
+              </button>
+
               <button
                 onClick={logout}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-poli-navy to-blue-900 text-white py-3 font-bold hover:shadow-lg transition-all duration-200 hover:scale-105"
@@ -108,6 +118,12 @@ export default function JefaturaLayout() {
           </main>
         </div>
       </div>
+
+      {/* 🔐 Modal de Cambio de Contraseña */}
+      <ChangePasswordModal 
+        open={showChangePassword} 
+        onClose={() => setShowChangePassword(false)} 
+      />
     </div>
   );
 }
