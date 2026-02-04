@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { apiGet, apiPost, apiPut } from "../../lib/api"; // ✅ CORREGIDO: apiPut agregado
+import { apiGet, apiPost, apiPut } from "../../lib/api";
 import Modal from "../../components/Modal.jsx";
 import Loading from "../../components/Loading.jsx";
 import Toast from "../../components/Toast.jsx";
@@ -31,7 +31,6 @@ export default function AyuBitacoraActual() {
     descripcion: ""
   });
 
-  // ✅ Modal para EDITAR actividad
   const [openEditAct, setOpenEditAct] = useState(false);
   const [actToEdit, setActToEdit] = useState(null);
 
@@ -39,15 +38,20 @@ export default function AyuBitacoraActual() {
     setLoading(true);
     setToast({ msg: "", kind: "info" });
     try {
+      console.log("📡 Obteniendo bitácora actual...");
       const res = await apiPost("/api/v1/ayudante/bitacoras/actual", {});
       const ok = res?.ok === true;
       const id = res?.bitacoraId;
 
-      if (!ok || !id) throw new Error(res?.msg || "No pude obtener la bitácora actual");
+      if (!ok || !id) {
+        throw new Error(res?.msg || "No pude obtener la bitácora actual");
+      }
 
+      console.log("✅ Bitácora actual obtenida:", id);
       setBitacoraId(id);
       await load(id);
     } catch (e) {
+      console.error("❌ Error obteniendo bitácora actual:", e);
       setToast({ msg: e.message, kind: "bad" });
     } finally {
       setLoading(false);
@@ -59,11 +63,14 @@ export default function AyuBitacoraActual() {
     setLoading(true);
     setToast({ msg: "", kind: "info" });
     try {
+      console.log("📡 Cargando detalles de bitácora:", id);
       const res = await apiGet(`/api/v1/ayudante/bitacoras/${id}`);
       const bitacora = res?.bitacora ?? res;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
+      console.log("✅ Bitácora cargada:", { estado: bitacora?.estado, semanasCount: semanas.length });
       setData({ bitacora, semanas });
     } catch (e) {
+      console.error("❌ Error cargando bitácora:", e);
       setToast({ msg: e.message, kind: "bad" });
     } finally {
       setLoading(false);
@@ -73,9 +80,12 @@ export default function AyuBitacoraActual() {
   useEffect(() => { init(); }, []);
 
   function abrirSemana() {
-    // ✅ Solo permitir si NO está aprobada
     if (data?.bitacora?.estado === "APROBADA") {
       setToast({ msg: "⚠️ No puedes modificar una bitácora APROBADA", kind: "bad" });
+      return;
+    }
+    if (data?.bitacora?.estado === "PENDIENTE") {
+      setToast({ msg: "⚠️ Esta bitácora está pendiente de revisión. No se puede modificar.", kind: "bad" });
       return;
     }
 
@@ -103,6 +113,7 @@ export default function AyuBitacoraActual() {
     }
 
     try {
+      console.log("📤 Creando semana en bitácora:", bitacoraId);
       await apiPost(`/api/v1/ayudante/bitacoras/${bitacoraId}/semanas`, {
         fechaInicioSemana: semanaForm.fechaInicioSemana.trim(),
         fechaFinSemana: semanaForm.fechaFinSemana.trim(),
@@ -115,14 +126,18 @@ export default function AyuBitacoraActual() {
       setToast({ msg: "✅ Semana creada", kind: "ok" });
       await load();
     } catch (e) {
+      console.error("❌ Error creando semana:", e);
       setToast({ msg: e.message, kind: "bad" });
     }
   }
 
   function abrirActividad(semanaId) {
-    // ✅ Solo permitir si NO está aprobada
     if (data?.bitacora?.estado === "APROBADA") {
       setToast({ msg: "⚠️ No puedes modificar una bitácora APROBADA", kind: "bad" });
+      return;
+    }
+    if (data?.bitacora?.estado === "PENDIENTE") {
+      setToast({ msg: "⚠️ Esta bitácora está pendiente de revisión. No se puede modificar.", kind: "bad" });
       return;
     }
 
@@ -141,6 +156,7 @@ export default function AyuBitacoraActual() {
     }
 
     try {
+      console.log("📤 Creando actividad en semana:", targetSemanaId);
       await apiPost(`/api/v1/ayudante/semanas/${targetSemanaId}/actividades`, {
         horaInicio: actForm.horaInicio.trim(),
         horaSalida: actForm.horaSalida.trim(),
@@ -151,15 +167,18 @@ export default function AyuBitacoraActual() {
       setToast({ msg: "✅ Actividad creada", kind: "ok" });
       await load();
     } catch (e) {
+      console.error("❌ Error creando actividad:", e);
       setToast({ msg: e.message, kind: "bad" });
     }
   }
 
-  // ✅ EDITAR ACTIVIDAD
   function abrirEditarActividad(actividad) {
-    // ✅ Solo permitir si NO está aprobada
     if (data?.bitacora?.estado === "APROBADA") {
       setToast({ msg: "⚠️ No puedes modificar una bitácora APROBADA", kind: "bad" });
+      return;
+    }
+    if (data?.bitacora?.estado === "PENDIENTE") {
+      setToast({ msg: "⚠️ Esta bitácora está pendiente de revisión. No se puede modificar.", kind: "bad" });
       return;
     }
 
@@ -185,6 +204,7 @@ export default function AyuBitacoraActual() {
     }
 
     try {
+      console.log("📤 Editando actividad:", actToEdit.actividadId);
       await apiPut(`/api/v1/ayudante/actividades/${actToEdit.actividadId}`, {
         horaInicio: actForm.horaInicio.trim(),
         horaFin: actForm.horaSalida.trim(),
@@ -195,26 +215,59 @@ export default function AyuBitacoraActual() {
       setToast({ msg: "✅ Actividad actualizada correctamente", kind: "ok" });
       await load();
     } catch (e) {
+      console.error("❌ Error editando actividad:", e);
       setToast({ msg: `❌ ${e.message}`, kind: "bad" });
     }
   }
 
+  // ✅ FUNCIÓN ENVIAR - CRÍTICA
   async function enviar() {
-    if (!bitacoraId) return;
+    if (!bitacoraId) {
+      setToast({ msg: "⚠️ No hay bitácora para enviar", kind: "bad" });
+      return;
+    }
 
-    // ✅ Solo permitir si está en BORRADOR o RECHAZADA
     const estado = data?.bitacora?.estado;
+    
     if (estado === "APROBADA") {
       setToast({ msg: "⚠️ Esta bitácora ya fue APROBADA", kind: "bad" });
       return;
     }
 
+    if (estado === "PENDIENTE") {
+      setToast({ msg: "⚠️ Esta bitácora ya está PENDIENTE de revisión", kind: "bad" });
+      return;
+    }
+
+    // Validar que tenga al menos una semana
+    if (!data?.semanas || data.semanas.length === 0) {
+      setToast({ msg: "⚠️ Debes agregar al menos una semana antes de enviar", kind: "bad" });
+      return;
+    }
+
+    const confirmar = window.confirm(
+      "¿Estás seguro de enviar esta bitácora al director?\n\n" +
+      "Una vez enviada, no podrás modificarla hasta que el director la revise.\n\n" +
+      `Semanas registradas: ${data.semanas.length}`
+    );
+    
+    if (!confirmar) return;
+
     try {
+      console.log("📤 Enviando bitácora al director:", bitacoraId);
+      setLoading(true);
+      
       await apiPost(`/api/v1/ayudante/bitacoras/${bitacoraId}/enviar`, {});
-      setToast({ msg: "✅ Bitácora enviada al director", kind: "ok" });
+      
+      setToast({ msg: "✅ Bitácora enviada al director correctamente", kind: "ok" });
+      
+      // Recargar para ver el nuevo estado
       await load();
     } catch (e) {
-      setToast({ msg: e.message, kind: "bad" });
+      console.error("❌ Error enviando bitácora:", e);
+      setToast({ msg: `❌ ${e.message}`, kind: "bad" });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -290,16 +343,16 @@ export default function AyuBitacoraActual() {
       key: "_actions",
       label: "Acciones",
       render: (r) => {
-        const esAprobada = data?.bitacora?.estado === "APROBADA";
+        const puedeEditar = data?.bitacora?.estado !== "APROBADA" && data?.bitacora?.estado !== "PENDIENTE";
         
         if (r.type === 'semana') {
           return (
             <button
-              disabled={esAprobada}
+              disabled={!puedeEditar}
               className={`rounded-xl px-3 py-2 text-white font-bold text-sm ${
-                esAprobada 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-poli-navy hover:bg-blue-900'
+                puedeEditar
+                  ? 'bg-poli-navy hover:bg-blue-900'
+                  : 'bg-gray-400 cursor-not-allowed' 
               }`}
               onClick={() => abrirActividad(r.semanaId)}
             >
@@ -309,11 +362,11 @@ export default function AyuBitacoraActual() {
         } else {
           return (
             <button
-              disabled={esAprobada}
+              disabled={!puedeEditar}
               className={`rounded-xl px-3 py-2 text-white font-bold text-sm ${
-                esAprobada 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : 'bg-amber-500 hover:bg-amber-600'
+                puedeEditar
+                  ? 'bg-amber-500 hover:bg-amber-600'
+                  : 'bg-gray-400 cursor-not-allowed' 
               }`}
               onClick={() => abrirEditarActividad(r)}
             >
@@ -335,57 +388,141 @@ export default function AyuBitacoraActual() {
     <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-bold">📝 BORRADOR</span>
   );
 
+  // ✅ Determinar permisos
+  const puedeEnviar = (data?.bitacora?.estado === "BORRADOR" || data?.bitacora?.estado === "RECHAZADA") && 
+                      data?.semanas && data.semanas.length > 0;
+  const puedeModificar = data?.bitacora?.estado !== "APROBADA" && data?.bitacora?.estado !== "PENDIENTE";
+
   return (
     <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5 space-y-4">
-      <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-        <div>
-          <div className="text-lg font-bold text-poli-ink">Bitácora mensual actual</div>
-          <div className="text-sm text-gray-500 flex items-center gap-2">
-            BitácoraId: <b>{bitacoraId || "-"}</b>
-            <span className="mx-2">|</span>
-            Estado: {estadoBadge}
-          </div>
-        </div>
+      
+      {/* ============ HEADER CON INFORMACIÓN Y BOTONES ============ */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row gap-3 md:items-start md:justify-between">
+          <div className="flex-1">
+            <div className="text-lg font-bold text-poli-ink">Bitácora mensual actual</div>
+            <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
+              BitácoraId: <b>{bitacoraId || "-"}</b>
+              <span className="mx-2">|</span>
+              Estado: {estadoBadge}
+            </div>
+            
+            {/* ✅ Mensajes informativos */}
+            {data?.bitacora?.estado === "APROBADA" && (
+              <div className="mt-3 p-3 bg-green-50 rounded-xl border border-green-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">✅</span>
+                  <div>
+                    <div className="font-semibold text-green-800">Bitácora Aprobada</div>
+                    <div className="text-sm text-green-700 mt-1">
+                      Esta bitácora ya fue aprobada por el director. No se pueden realizar modificaciones.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {data?.bitacora?.estado === "PENDIENTE" && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">⏳</span>
+                  <div>
+                    <div className="font-semibold text-blue-800">Pendiente de Revisión</div>
+                    <div className="text-sm text-blue-700 mt-1">
+                      Esta bitácora está siendo revisada por el director. No se pueden realizar modificaciones hasta que sea aprobada o rechazada.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {data?.bitacora?.estado === "RECHAZADA" && (
+              <div className="mt-3 p-3 bg-red-50 rounded-xl border border-red-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">❌</span>
+                  <div>
+                    <div className="font-semibold text-red-800">Bitácora Rechazada</div>
+                    <div className="text-sm text-red-700 mt-1">
+                      Esta bitácora fue rechazada. Realiza las correcciones necesarias y vuelve a enviarla.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
-        <div className="flex gap-2 flex-wrap">
-          <button onClick={() => load()} className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold">
-            🔄 Refrescar
-          </button>
-          <button 
-            onClick={abrirSemana} 
-            disabled={data?.bitacora?.estado === "APROBADA"}
-            className={`rounded-xl px-4 py-2 text-white font-bold ${
-              data?.bitacora?.estado === "APROBADA"
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-poli-navy hover:bg-blue-900'
-            }`}
-          >
-            ➕ Semana
-          </button>
-          <button
-            onClick={() => nav(`/ayudante/historial`)}
-            className="rounded-xl px-4 py-2 bg-emerald-600 text-white font-bold hover:bg-emerald-700"
-          >
-            📚 Ver Historial
-          </button>
+            {data?.bitacora?.estado === "BORRADOR" && (!data?.semanas || data.semanas.length === 0) && (
+              <div className="mt-3 p-3 bg-amber-50 rounded-xl border border-amber-200">
+                <div className="flex items-start gap-2">
+                  <span className="text-xl">📝</span>
+                  <div>
+                    <div className="font-semibold text-amber-800">Bitácora en Borrador</div>
+                    <div className="text-sm text-amber-700 mt-1">
+                      Agrega al menos una semana con sus actividades antes de enviar la bitácora al director.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ✅ BOTONES DE ACCIÓN */}
+          <div className="flex gap-2 flex-wrap">
+            <button 
+              onClick={() => load()} 
+              className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold transition-all"
+            >
+              🔄 Refrescar
+            </button>
+            
+            {puedeModificar && (
+              <button 
+                onClick={abrirSemana} 
+                className="rounded-xl px-4 py-2 bg-poli-navy text-white font-bold hover:bg-blue-900 transition-all"
+              >
+                ➕ Semana
+              </button>
+            )}
+
+            {/* ✅ BOTÓN ENVIAR - MUY VISIBLE */}
+            {puedeEnviar && (
+              <button
+                onClick={enviar}
+                disabled={loading}
+                className="rounded-xl px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold hover:shadow-xl transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <span className="text-lg">📤</span>
+                <span>Enviar al Director</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => nav(`/ayudante/historial`)}
+              className="rounded-xl px-4 py-2 bg-purple-600 text-white font-bold hover:bg-purple-700 transition-all"
+            >
+              📚 Ver Historial
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* ============ TABLA DE CONTENIDO ============ */}
       {loading && <Loading />}
       {!loading && <Table columns={cols} rows={expandedRows} />}
 
-      {/* Modales */}
+      {/* ============ MODALES ============ */}
+      
+      {/* Modal: Crear Semana */}
       <Modal open={openSemana} title="➕ Crear semana" onClose={() => setOpenSemana(false)}>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Fecha inicio</label>
+            <label className="text-sm text-gray-600 font-semibold">Fecha inicio *</label>
             <input type="date" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={semanaForm.fechaInicioSemana}
               onChange={(e) => setSemanaForm({ ...semanaForm, fechaInicioSemana: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Fecha fin</label>
+            <label className="text-sm text-gray-600 font-semibold">Fecha fin *</label>
             <input type="date" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={semanaForm.fechaFinSemana}
               onChange={(e) => setSemanaForm({ ...semanaForm, fechaFinSemana: e.target.value })}
@@ -397,6 +534,7 @@ export default function AyuBitacoraActual() {
             <textarea className="mt-1 w-full rounded-xl border px-3 py-2 min-h-[90px]"
               value={semanaForm.actividadesRealizadas}
               onChange={(e) => setSemanaForm({ ...semanaForm, actividadesRealizadas: e.target.value })}
+              placeholder="Describe las actividades realizadas durante esta semana..."
             />
           </div>
 
@@ -405,6 +543,7 @@ export default function AyuBitacoraActual() {
             <textarea className="mt-1 w-full rounded-xl border px-3 py-2 min-h-[70px]"
               value={semanaForm.observaciones}
               onChange={(e) => setSemanaForm({ ...semanaForm, observaciones: e.target.value })}
+              placeholder="Observaciones adicionales (opcional)"
             />
           </div>
 
@@ -413,6 +552,7 @@ export default function AyuBitacoraActual() {
             <input className="mt-1 w-full rounded-xl border px-3 py-2"
               value={semanaForm.anexos}
               onChange={(e) => setSemanaForm({ ...semanaForm, anexos: e.target.value })}
+              placeholder="Enlaces o referencias a documentos"
             />
           </div>
         </div>
@@ -421,23 +561,24 @@ export default function AyuBitacoraActual() {
           <button onClick={() => setOpenSemana(false)} className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold">
             Cancelar
           </button>
-          <button onClick={crearSemana} className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold">
-            ✅ Crear
+          <button onClick={crearSemana} className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700">
+            ✅ Crear Semana
           </button>
         </div>
       </Modal>
 
+      {/* Modal: Crear Actividad */}
       <Modal open={openAct} title="➕ Crear actividad" onClose={() => setOpenAct(false)}>
         <div className="grid md:grid-cols-2 gap-3">
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Hora inicio (HH:mm)</label>
+            <label className="text-sm text-gray-600 font-semibold">Hora inicio (HH:mm) *</label>
             <input type="time" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={actForm.horaInicio}
               onChange={(e) => setActForm({ ...actForm, horaInicio: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Hora salida (HH:mm)</label>
+            <label className="text-sm text-gray-600 font-semibold">Hora salida (HH:mm) *</label>
             <input type="time" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={actForm.horaSalida}
               onChange={(e) => setActForm({ ...actForm, horaSalida: e.target.value })}
@@ -449,6 +590,7 @@ export default function AyuBitacoraActual() {
             <textarea className="mt-1 w-full rounded-xl border px-3 py-2 min-h-[90px]"
               value={actForm.descripcion}
               onChange={(e) => setActForm({ ...actForm, descripcion: e.target.value })}
+              placeholder="Describe detalladamente la actividad realizada..."
             />
           </div>
         </div>
@@ -457,12 +599,13 @@ export default function AyuBitacoraActual() {
           <button onClick={() => setOpenAct(false)} className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold">
             Cancelar
           </button>
-          <button onClick={crearActividad} className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold">
-            ✅ Crear
+          <button onClick={crearActividad} className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700">
+            ✅ Crear Actividad
           </button>
         </div>
       </Modal>
 
+      {/* Modal: Editar Actividad */}
       <Modal open={openEditAct} title="✏️ Editar actividad" onClose={() => setOpenEditAct(false)}>
         <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-200">
           <p className="text-sm text-amber-800">
@@ -472,14 +615,14 @@ export default function AyuBitacoraActual() {
 
         <div className="grid md:grid-cols-2 gap-3">
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Hora inicio (HH:mm)</label>
+            <label className="text-sm text-gray-600 font-semibold">Hora inicio (HH:mm) *</label>
             <input type="time" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={actForm.horaInicio}
               onChange={(e) => setActForm({ ...actForm, horaInicio: e.target.value })}
             />
           </div>
           <div>
-            <label className="text-sm text-gray-600 font-semibold">Hora salida (HH:mm)</label>
+            <label className="text-sm text-gray-600 font-semibold">Hora salida (HH:mm) *</label>
             <input type="time" className="mt-1 w-full rounded-xl border px-3 py-2"
               value={actForm.horaSalida}
               onChange={(e) => setActForm({ ...actForm, horaSalida: e.target.value })}

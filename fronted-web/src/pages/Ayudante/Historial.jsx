@@ -1,463 +1,468 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { apiGet, apiPost } from "../../lib/api";
-import Table from "../../components/Table.jsx";
+import Modal from "../../components/Modal.jsx";
 import Loading from "../../components/Loading.jsx";
 import Toast from "../../components/Toast.jsx";
-import Modal from "../../components/Modal.jsx";
-import Badge from "../../components/Badge.jsx";
+import Table from "../../components/Table.jsx";
 import { exportBitacoraPdf } from "../../lib/pdf";
 
-export default function AyuHistorialBitacoras() {
-  const [rows, setRows] = useState([]);
+export default function AyuHistorial() {
+  const [bitacoras, setBitacoras] = useState([]);
+  const [filteredBitacoras, setFilteredBitacoras] = useState([]);
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState({ msg: "", kind: "info" });
-
-  // ✨ FILTROS MEJORADOS
-  const [filtroEstado, setFiltroEstado] = useState("TODOS");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filtroAnio, setFiltroAnio] = useState("TODOS");
-
-  // Modal de visualización
-  const [openView, setOpenView] = useState(false);
-  const [viewData, setViewData] = useState(null);
-  const [viewLoading, setViewLoading] = useState(false);
-  const [selectedBitacoraId, setSelectedBitacoraId] = useState("");
-
-  // ========================================
-  // CARGA DE BITÁCORAS
-  // ========================================
   
-  async function load() {
+  // Filtros
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterEstado, setFilterEstado] = useState("TODAS");
+  const [filterAnio, setFilterAnio] = useState("TODOS");
+
+  // Selección múltiple
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  
+  // Modal detalles
+  const [openDetalle, setOpenDetalle] = useState(false);
+  const [bitacoraDetalle, setBitacoraDetalle] = useState(null);
+
+  async function cargarHistorial() {
     setLoading(true);
     setToast({ msg: "", kind: "info" });
     try {
-      // Obtener bitácoras aprobadas
-      const aprobadas = await apiGet("/api/v1/ayudante/bitacoras/aprobadas");
-      const arrAprobadas = Array.isArray(aprobadas) ? aprobadas : (aprobadas?.items ?? []);
-
-      // TODO: Cuando el backend tenga endpoint para TODAS las bitácoras, usar ese
-      // Por ahora solo mostramos las aprobadas
-      setRows(arrAprobadas.map(b => ({...b, estado: b.estado || "APROBADA"})));
+      console.log("📡 Cargando historial de bitácoras...");
       
-      setToast({ msg: `✅ ${arrAprobadas.length} bitácora${arrAprobadas.length !== 1 ? 's' : ''} cargada${arrAprobadas.length !== 1 ? 's' : ''}`, kind: "ok" });
+      // Intentar endpoint /historial primero
+      let res;
+      try {
+        res = await apiGet("/api/v1/ayudante/bitacoras/historial");
+      } catch (e) {
+        console.warn("⚠️ Endpoint /historial no disponible, usando /aprobadas");
+        res = await apiGet("/api/v1/ayudante/bitacoras/aprobadas");
+      }
+
+      const data = Array.isArray(res?.bitacoras) ? res.bitacoras : 
+                   Array.isArray(res) ? res : [];
+      
+      console.log(`✅ ${data.length} bitácoras cargadas`);
+      setBitacoras(data);
+      setFilteredBitacoras(data);
+      
+      // Contadores por estado
+      const counts = {
+        APROBADA: data.filter(b => b.estado === "APROBADA").length,
+        RECHAZADA: data.filter(b => b.estado === "RECHAZADA").length,
+        PENDIENTE: data.filter(b => b.estado === "PENDIENTE").length,
+        BORRADOR: data.filter(b => b.estado === "BORRADOR").length
+      };
+      console.log("📊 Contadores:", counts);
+      
     } catch (e) {
-      setToast({ msg: `❌ Error: ${e.message}`, kind: "bad" });
+      console.error("❌ Error cargando historial:", e);
+      setToast({ msg: `Error: ${e.message}`, kind: "bad" });
     } finally {
       setLoading(false);
     }
   }
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    cargarHistorial();
+  }, []);
 
-  // ========================================
-  // FILTRADO AVANZADO
-  // ========================================
-  
-  const filteredRows = useMemo(() => {
-    let filtered = rows;
+  // Aplicar filtros
+  useEffect(() => {
+    let result = [...bitacoras];
 
     // Filtro por estado
-    if (filtroEstado !== "TODOS") {
-      filtered = filtered.filter(r => r.estado === filtroEstado);
+    if (filterEstado !== "TODAS") {
+      result = result.filter(b => b.estado === filterEstado);
     }
 
     // Filtro por año
-    if (filtroAnio !== "TODOS") {
-      filtered = filtered.filter(r => String(r.anio) === filtroAnio);
+    if (filterAnio !== "TODOS") {
+      result = result.filter(b => String(b.anio) === filterAnio);
     }
 
-    // Filtro por búsqueda
+    // Búsqueda
     if (searchTerm.trim()) {
-      const term = searchTerm.trim().toLowerCase();
-      filtered = filtered.filter(r => {
-        const searchText = [
-          r.bitacoraId,
-          r.anio,
-          r.mes,
-          r.estado
-        ].join(" ").toLowerCase();
-        return searchText.includes(term);
+      const term = searchTerm.toLowerCase();
+      result = result.filter(b => 
+        String(b.bitacoraId || '').toLowerCase().includes(term) ||
+        String(b.mes || '').includes(term) ||
+        String(b.anio || '').includes(term) ||
+        String(b.estado || '').toLowerCase().includes(term)
+      );
+    }
+
+    setFilteredBitacoras(result);
+  }, [bitacoras, filterEstado, filterAnio, searchTerm]);
+
+  // Selección individual
+  function toggleSelect(bitacoraId) {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(bitacoraId)) {
+      newSet.delete(bitacoraId);
+    } else {
+      newSet.add(bitacoraId);
+    }
+    setSelectedIds(newSet);
+  }
+
+  // Seleccionar todas las filtradas
+  function selectAll() {
+    const allFiltered = new Set(filteredBitacoras.map(b => b.bitacoraId));
+    setSelectedIds(allFiltered);
+  }
+
+  // Deseleccionar todas
+  function deselectAll() {
+    setSelectedIds(new Set());
+  }
+
+  // ✅ ENVIAR MÚLTIPLES BITÁCORAS AL DIRECTOR
+  async function enviarSeleccionadas() {
+    if (selectedIds.size === 0) {
+      setToast({ msg: "⚠️ No hay bitácoras seleccionadas", kind: "bad" });
+      return;
+    }
+
+    // Verificar que todas sean BORRADOR o RECHAZADA
+    const seleccionadas = bitacoras.filter(b => selectedIds.has(b.bitacoraId));
+    const invalidas = seleccionadas.filter(b => 
+      b.estado !== "BORRADOR" && b.estado !== "RECHAZADA"
+    );
+
+    if (invalidas.length > 0) {
+      setToast({ 
+        msg: `⚠️ Solo puedes enviar bitácoras en estado BORRADOR o RECHAZADA. ${invalidas.length} bitácoras no cumplen.`, 
+        kind: "bad" 
       });
+      return;
     }
 
-    return filtered;
-  }, [rows, filtroEstado, filtroAnio, searchTerm]);
+    const confirmar = window.confirm(
+      `¿Enviar ${selectedIds.size} bitácora(s) al director?\n\n` +
+      "Una vez enviadas, no podrás modificarlas hasta que sean revisadas.\n\n" +
+      `Bitácoras: ${Array.from(selectedIds).join(', ')}`
+    );
 
-  // ========================================
-  // AÑOS ÚNICOS PARA FILTRO
-  // ========================================
-  
-  const aniosUnicos = useMemo(() => {
-    const anios = [...new Set(rows.map(r => String(r.anio)).filter(Boolean))];
-    return ["TODOS", ...anios.sort((a, b) => b.localeCompare(a))];
-  }, [rows]);
+    if (!confirmar) return;
 
-  // ========================================
-  // COLUMNAS DE LA TABLA
-  // ========================================
-  
-  const columns = [
-    { 
-      key: "bitacoraId", 
-      label: "ID",
-      render: (r) => <span className="font-mono text-sm font-semibold">#{r.bitacoraId}</span>
-    },
-    { 
-      key: "periodo", 
-      label: "Período",
-      render: (r) => (
-        <span className="px-3 py-1 rounded-lg bg-blue-100 text-blue-800 font-semibold text-sm">
-          {r.anio}-{String(r.mes).padStart(2, '0')}
-        </span>
-      )
-    },
-    {
-      key: "estado",
-      label: "Estado",
-      render: (r) => {
-        if (r.estado === "APROBADA") return <Badge kind="ok">✅ APROBADA</Badge>;
-        if (r.estado === "RECHAZADA") return <Badge kind="bad">❌ RECHAZADA</Badge>;
-        if (r.estado === "PENDIENTE") return <Badge kind="warn">⏳ PENDIENTE</Badge>;
-        return <Badge kind="info">📝 BORRADOR</Badge>;
+    setLoading(true);
+    let exitosas = 0;
+    let fallidas = 0;
+
+    for (const bitacoraId of selectedIds) {
+      try {
+        console.log(`📤 Enviando bitácora ${bitacoraId}...`);
+        await apiPost(`/api/v1/ayudante/bitacoras/${bitacoraId}/enviar`, {});
+        exitosas++;
+      } catch (e) {
+        console.error(`❌ Error enviando ${bitacoraId}:`, e);
+        fallidas++;
       }
-    },
-    {
-      key: "_actions",
-      label: "Acciones",
-      render: (r) => (
-        <div className="flex gap-2">
-          <button
-            className="rounded-xl px-3 py-2 bg-gradient-to-r from-poli-navy to-blue-900 text-white font-bold text-sm hover:shadow-lg transition-all"
-            onClick={() => verDetalle(r.bitacoraId)}
-          >
-            👁️ Ver
-          </button>
-          <button
-            className="rounded-xl px-3 py-2 bg-gradient-to-r from-poli-red to-red-600 text-white font-bold text-sm hover:shadow-lg transition-all"
-            onClick={() => descargarPdf(r.bitacoraId)}
-          >
-            📄 PDF
-          </button>
-          {(r.estado === "BORRADOR" || r.estado === "RECHAZADA") && (
-            <button
-              className="rounded-xl px-3 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold text-sm hover:shadow-lg transition-all"
-              onClick={() => enviar(r.bitacoraId)}
-            >
-              📤 Enviar
-            </button>
-          )}
-        </div>
-      )
     }
-  ];
 
-  // ========================================
-  // VER DETALLE DE BITÁCORA
-  // ========================================
-  
+    setLoading(false);
+    setSelectedIds(new Set());
+
+    if (fallidas === 0) {
+      setToast({ msg: `✅ ${exitosas} bitácora(s) enviadas correctamente`, kind: "ok" });
+    } else {
+      setToast({ msg: `⚠️ ${exitosas} enviadas, ${fallidas} fallaron`, kind: "bad" });
+    }
+
+    await cargarHistorial();
+  }
+
   async function verDetalle(bitacoraId) {
-    setSelectedBitacoraId(bitacoraId);
-    setOpenView(true);
-    setViewLoading(true);
-    setViewData(null);
-
+    setLoading(true);
     try {
+      console.log("📡 Obteniendo detalles de bitácora:", bitacoraId);
       const res = await apiGet(`/api/v1/ayudante/bitacoras/${bitacoraId}`);
-      const bitacora = res?.bitacora ?? res;
-      const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
-      setViewData({ bitacora, semanas });
+      setBitacoraDetalle(res);
+      setOpenDetalle(true);
     } catch (e) {
-      setToast({ msg: `❌ Error: ${e.message}`, kind: "bad" });
-      setOpenView(false);
+      console.error("❌ Error obteniendo detalles:", e);
+      setToast({ msg: e.message, kind: "bad" });
     } finally {
-      setViewLoading(false);
+      setLoading(false);
     }
   }
 
-  // ========================================
-  // DESCARGAR PDF
-  // ========================================
-  
   async function descargarPdf(bitacoraId) {
-    setToast({ msg: "⏳ Generando PDF...", kind: "info" });
     try {
+      console.log("📄 Descargando PDF de bitácora:", bitacoraId);
+      setToast({ msg: "⏳ Generando PDF...", kind: "info" });
+
       const res = await apiGet(`/api/v1/ayudante/bitacoras/${bitacoraId}`);
       const bitacora = res?.bitacora ?? res;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
+      
+      // Obtener info del estudiante si está disponible
+      const estudiante = res?.estudiante || null;
 
-      const estudiante = {
-        nombres: res.nombres || "",
-        apellidos: res.apellidos || "",
-        correoInstitucional: res.correoInstitucional || "",
-        facultad: res.facultad || ""
-      };
-
-      const filename = exportBitacoraPdf({
+      exportBitacoraPdf({
         bitacoraId,
         bitacora,
         semanas,
         estudiante
       });
 
-      setToast({ msg: `✅ PDF generado: ${filename}`, kind: "ok" });
+      setToast({ msg: "✅ PDF descargado", kind: "ok" });
     } catch (e) {
-      setToast({ msg: `❌ Error generando PDF: ${e.message}`, kind: "bad" });
+      console.error("❌ Error generando PDF:", e);
+      setToast({ msg: `❌ ${e.message}`, kind: "bad" });
     }
   }
 
-  // ========================================
-  // ENVIAR BITÁCORA
-  // ========================================
-  
-  async function enviar(bitacoraId) {
-    const confirmar = window.confirm("¿Estás seguro de enviar esta bitácora al director?");
-    if (!confirmar) return;
+  // Estadísticas
+  const stats = {
+    total: bitacoras.length,
+    aprobadas: bitacoras.filter(b => b.estado === "APROBADA").length,
+    rechazadas: bitacoras.filter(b => b.estado === "RECHAZADA").length,
+    pendientes: bitacoras.filter(b => b.estado === "PENDIENTE").length,
+    borradores: bitacoras.filter(b => b.estado === "BORRADOR").length
+  };
 
-    try {
-      await apiPost(`/api/v1/ayudante/bitacoras/${bitacoraId}/enviar`, {});
-      setToast({ msg: "✅ Bitácora enviada al director", kind: "ok" });
-      await load();
-    } catch (e) {
-      setToast({ msg: `❌ Error: ${e.message}`, kind: "bad" });
+  const aniosDisponibles = [...new Set(bitacoras.map(b => b.anio))].sort((a, b) => b - a);
+
+  const columns = [
+    {
+      key: "select",
+      label: (
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            className="w-4 h-4 cursor-pointer"
+            checked={selectedIds.size > 0 && selectedIds.size === filteredBitacoras.length}
+            onChange={(e) => e.target.checked ? selectAll() : deselectAll()}
+          />
+          <span>Sel</span>
+        </div>
+      ),
+      render: (row) => {
+        // Solo permitir seleccionar BORRADOR o RECHAZADA
+        const puedeSeleccionar = row.estado === "BORRADOR" || row.estado === "RECHAZADA";
+        
+        return (
+          <input
+            type="checkbox"
+            className="w-4 h-4 cursor-pointer disabled:opacity-30"
+            disabled={!puedeSeleccionar}
+            checked={selectedIds.has(row.bitacoraId)}
+            onChange={() => toggleSelect(row.bitacoraId)}
+          />
+        );
+      }
+    },
+    { key: "bitacoraId", label: "ID Bitácora" },
+    { 
+      key: "periodo", 
+      label: "Periodo",
+      render: (row) => `${row.anio}-${String(row.mes).padStart(2, '0')}`
+    },
+    {
+      key: "estado",
+      label: "Estado",
+      render: (row) => {
+        const badges = {
+          APROBADA: <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-bold">✅ APROBADA</span>,
+          RECHAZADA: <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold">❌ RECHAZADA</span>,
+          PENDIENTE: <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold">⏳ PENDIENTE</span>,
+          BORRADOR: <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-bold">📝 BORRADOR</span>
+        };
+        return badges[row.estado] || row.estado;
+      }
+    },
+    {
+      key: "acciones",
+      label: "Acciones",
+      render: (row) => (
+        <div className="flex gap-2">
+          <button
+            onClick={() => verDetalle(row.bitacoraId)}
+            className="px-3 py-1.5 bg-poli-navy text-white rounded-lg text-sm font-bold hover:bg-blue-900"
+          >
+            👁️ Ver
+          </button>
+          <button
+            onClick={() => descargarPdf(row.bitacoraId)}
+            className="px-3 py-1.5 bg-poli-red text-white rounded-lg text-sm font-bold hover:bg-red-700"
+          >
+            📄 PDF
+          </button>
+        </div>
+      )
     }
-  }
-
-  // ========================================
-  // COLUMNAS Y DATOS DEL MODAL
-  // ========================================
-  
-  const viewColumns = [
-    { key: "semana", label: "Semana" },
-    { key: "actSemana", label: "Actividades Semana" },
-    { key: "obs", label: "Observaciones" },
-    { key: "anexos", label: "Anexos" },
-    { key: "actividad", label: "Actividad" },
-    { key: "ini", label: "Inicio" },
-    { key: "sal", label: "Salida" },
-    { key: "hrs", label: "Horas" }
   ];
 
-  const viewRows = useMemo(() => {
-    if (!viewData) return [];
-    
-    const rows = [];
-    for (const semana of viewData.semanas || []) {
-      const acts = Array.isArray(semana.actividades) ? semana.actividades : [];
-      if (!acts.length) {
-        rows.push({
-          semana: `${semana.fechaInicioSemana || ""} - ${semana.fechaFinSemana || ""}`.trim(),
-          actSemana: semana.actividadesRealizadas || "",
-          obs: semana.observaciones || "",
-          anexos: semana.anexos || "",
-          actividad: "",
-          ini: "",
-          sal: "",
-          hrs: ""
-        });
-      } else {
-        for (const a of acts) {
-          rows.push({
-            semana: `${semana.fechaInicioSemana || ""} - ${semana.fechaFinSemana || ""}`.trim(),
-            actSemana: semana.actividadesRealizadas || "",
-            obs: semana.observaciones || "",
-            anexos: semana.anexos || "",
-            actividad: a.descripcion || "",
-            ini: a.horaInicio || "",
-            sal: a.horaSalida || "",
-            hrs: a.totalHoras || ""
-          });
-        }
-      }
-    }
-    return rows;
-  }, [viewData]);
-
-  // ========================================
-  // ESTADÍSTICAS RÁPIDAS
-  // ========================================
-  
-  const stats = useMemo(() => {
-    return {
-      total: rows.length,
-      aprobadas: rows.filter(r => r.estado === "APROBADA").length,
-      rechazadas: rows.filter(r => r.estado === "RECHAZADA").length,
-      pendientes: rows.filter(r => r.estado === "PENDIENTE").length,
-      borradores: rows.filter(r => r.estado === "BORRADOR").length
-    };
-  }, [rows]);
-
-  // ========================================
-  // RENDERIZADO
-  // ========================================
-  
   return (
-    <div className="space-y-4">
+    <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5 space-y-4">
       
-      {/* ============ ESTADÍSTICAS RÁPIDAS ============ */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <div className="rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 p-4 border border-blue-200 shadow-sm">
-          <div className="text-2xl font-bold text-blue-900">{stats.total}</div>
-          <div className="text-sm text-blue-600 font-semibold">Total de bitácoras</div>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-poli-ink">📚 Historial de Bitácoras</h2>
+          <p className="text-sm text-gray-500 mt-1">Revisa y gestiona todas tus bitácoras mensuales</p>
         </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-green-50 to-green-100 p-4 border border-green-200 shadow-sm">
-          <div className="text-2xl font-bold text-green-900">{stats.aprobadas}</div>
-          <div className="text-sm text-green-600 font-semibold">✅ Aprobadas</div>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 border border-yellow-200 shadow-sm">
-          <div className="text-2xl font-bold text-yellow-900">{stats.pendientes}</div>
-          <div className="text-sm text-yellow-600 font-semibold">⏳ Pendientes</div>
-        </div>
-
-        <div className="rounded-xl bg-gradient-to-br from-red-50 to-red-100 p-4 border border-red-200 shadow-sm">
-          <div className="text-2xl font-bold text-red-900">{stats.rechazadas}</div>
-          <div className="text-sm text-red-600 font-semibold">❌ Rechazadas</div>
-        </div>
-      </div>
-
-      {/* ============ TABLA PRINCIPAL ============ */}
-      <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5 space-y-4">
         
-        {/* Header con filtros */}
-        <div className="flex flex-col gap-4">
-          <div className="text-2xl font-bold text-poli-ink flex items-center gap-2">
-            📚 Historial de Bitácoras
-          </div>
-
-          {/* Filtros */}
-          <div className="grid md:grid-cols-4 gap-3">
-            <div>
-              <input
-                type="text"
-                placeholder="🔍 Buscar por ID, año, mes..."
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-poli-navy/30 transition-all"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-
-            <div>
-              <select
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-poli-navy/30 transition-all"
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
-              >
-                <option value="TODOS">📋 Todos los estados</option>
-                <option value="APROBADA">✅ Solo aprobadas</option>
-                <option value="RECHAZADA">❌ Solo rechazadas</option>
-                <option value="PENDIENTE">⏳ Solo pendientes</option>
-                <option value="BORRADOR">📝 Solo borradores</option>
-              </select>
-            </div>
-
-            <div>
-              <select
-                className="w-full rounded-xl border border-gray-300 px-4 py-2.5 outline-none focus:ring-2 focus:ring-poli-navy/30 transition-all"
-                value={filtroAnio}
-                onChange={(e) => setFiltroAnio(e.target.value)}
-              >
-                {aniosUnicos.map(anio => (
-                  <option key={anio} value={anio}>
-                    {anio === "TODOS" ? "📅 Todos los años" : `Año ${anio}`}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <button 
-                onClick={load} 
-                className="w-full rounded-xl px-4 py-2.5 bg-gradient-to-r from-poli-navy to-blue-900 text-white font-bold hover:shadow-lg transition-all"
-              >
-                🔄 Refrescar
-              </button>
-            </div>
-          </div>
-
-          {/* Resumen de filtros */}
-          {(searchTerm || filtroEstado !== "TODOS" || filtroAnio !== "TODOS") && (
-            <div className="flex items-center justify-between px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-semibold text-blue-900">
-                  📊 Mostrando {filteredRows.length} de {rows.length} bitácoras
-                </span>
-              </div>
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setFiltroEstado("TODOS");
-                  setFiltroAnio("TODOS");
-                }}
-                className="text-poli-red hover:underline text-sm font-semibold"
-              >
-                🗑️ Limpiar filtros
-              </button>
-            </div>
-          )}
-        </div>
-
-        {loading ? <Loading /> : <Table columns={columns} rows={filteredRows} />}
+        <button
+          onClick={cargarHistorial}
+          className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold transition-all"
+        >
+          🔄 Refrescar
+        </button>
       </div>
 
-      {/* ============ MODAL DE VISUALIZACIÓN ============ */}
-      <Modal 
-        open={openView} 
-        title={`📋 Bitácora #${selectedBitacoraId}`} 
-        onClose={() => setOpenView(false)}
-      >
-        {viewLoading && <Loading />}
-        {!viewLoading && viewData && (
+      {/* Estadísticas */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="p-3 bg-gray-50 rounded-xl border border-gray-200">
+          <div className="text-2xl font-bold text-poli-navy">{stats.total}</div>
+          <div className="text-xs text-gray-600 mt-1">Total</div>
+        </div>
+        <div className="p-3 bg-green-50 rounded-xl border border-green-200">
+          <div className="text-2xl font-bold text-green-700">{stats.aprobadas}</div>
+          <div className="text-xs text-green-600 mt-1">Aprobadas</div>
+        </div>
+        <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="text-2xl font-bold text-blue-700">{stats.pendientes}</div>
+          <div className="text-xs text-blue-600 mt-1">Pendientes</div>
+        </div>
+        <div className="p-3 bg-red-50 rounded-xl border border-red-200">
+          <div className="text-2xl font-bold text-red-700">{stats.rechazadas}</div>
+          <div className="text-xs text-red-600 mt-1">Rechazadas</div>
+        </div>
+        <div className="p-3 bg-amber-50 rounded-xl border border-amber-200">
+          <div className="text-2xl font-bold text-amber-700">{stats.borradores}</div>
+          <div className="text-xs text-amber-600 mt-1">Borradores</div>
+        </div>
+      </div>
+
+      {/* Filtros y búsqueda */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input
+          type="text"
+          placeholder="🔍 Buscar..."
+          className="rounded-xl border border-gray-300 px-4 py-2"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        <select
+          className="rounded-xl border border-gray-300 px-4 py-2"
+          value={filterEstado}
+          onChange={(e) => setFilterEstado(e.target.value)}
+        >
+          <option value="TODAS">Todos los estados</option>
+          <option value="APROBADA">✅ Aprobadas</option>
+          <option value="PENDIENTE">⏳ Pendientes</option>
+          <option value="RECHAZADA">❌ Rechazadas</option>
+          <option value="BORRADOR">📝 Borradores</option>
+        </select>
+
+        <select
+          className="rounded-xl border border-gray-300 px-4 py-2"
+          value={filterAnio}
+          onChange={(e) => setFilterAnio(e.target.value)}
+        >
+          <option value="TODOS">Todos los años</option>
+          {aniosDisponibles.map(anio => (
+            <option key={anio} value={anio}>{anio}</option>
+          ))}
+        </select>
+
+        {/* Botón Enviar Seleccionadas */}
+        <button
+          onClick={enviarSeleccionadas}
+          disabled={selectedIds.size === 0 || loading}
+          className={`rounded-xl px-4 py-2 font-bold transition-all flex items-center justify-center gap-2 ${
+            selectedIds.size > 0 && !loading
+              ? 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white hover:shadow-xl'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          <span>📤</span>
+          <span>Enviar ({selectedIds.size})</span>
+        </button>
+      </div>
+
+      {/* Info de selección */}
+      {selectedIds.size > 0 && (
+        <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-blue-800">
+              <span className="font-bold">{selectedIds.size}</span> bitácora(s) seleccionada(s)
+            </div>
+            <button
+              onClick={deselectAll}
+              className="text-xs text-blue-600 hover:text-blue-800 underline"
+            >
+              Deseleccionar todas
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Tabla */}
+      {loading && <Loading />}
+      {!loading && <Table columns={columns} rows={filteredBitacoras} />}
+
+      {/* Modal Detalle */}
+      <Modal open={openDetalle} title="📋 Detalles de Bitácora" onClose={() => setOpenDetalle(false)} size="xl">
+        {bitacoraDetalle && (
           <div className="space-y-4">
-            
-            {/* Info de la bitácora */}
-            <div className="rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border border-blue-200">
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-gray-600">Año:</span>{" "}
-                  <span className="font-bold">{viewData.bitacora?.anio}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Mes:</span>{" "}
-                  <span className="font-bold">{viewData.bitacora?.mes}</span>
-                </div>
-                <div className="col-span-2">
-                  <span className="text-gray-600">Estado:</span>{" "}
-                  {viewData.bitacora?.estado === "APROBADA" ? (
-                    <Badge kind="ok">✅ APROBADA</Badge>
-                  ) : viewData.bitacora?.estado === "RECHAZADA" ? (
-                    <Badge kind="bad">❌ RECHAZADA</Badge>
-                  ) : viewData.bitacora?.estado === "PENDIENTE" ? (
-                    <Badge kind="warn">⏳ PENDIENTE</Badge>
-                  ) : (
-                    <Badge kind="info">📝 BORRADOR</Badge>
-                  )}
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <span className="text-sm text-gray-600 font-semibold">Bitácora ID:</span>
+                <div className="text-base">{bitacoraDetalle.bitacora?.bitacoraId || bitacoraDetalle.bitacoraId}</div>
+              </div>
+              <div>
+                <span className="text-sm text-gray-600 font-semibold">Estado:</span>
+                <div className="text-base">{bitacoraDetalle.bitacora?.estado || bitacoraDetalle.estado}</div>
+              </div>
+              <div>
+                <span className="text-sm text-gray-600 font-semibold">Año:</span>
+                <div className="text-base">{bitacoraDetalle.bitacora?.anio || bitacoraDetalle.anio}</div>
+              </div>
+              <div>
+                <span className="text-sm text-gray-600 font-semibold">Mes:</span>
+                <div className="text-base">{bitacoraDetalle.bitacora?.mes || bitacoraDetalle.mes}</div>
               </div>
             </div>
 
-            {/* Tabla de actividades */}
-            <Table columns={viewColumns} rows={viewRows} />
+            <div className="border-t pt-3">
+              <div className="font-bold mb-2">Semanas registradas:</div>
+              {Array.isArray(bitacoraDetalle.semanas) && bitacoraDetalle.semanas.length > 0 ? (
+                bitacoraDetalle.semanas.map((semana, idx) => (
+                  <div key={idx} className="mb-4 p-3 bg-gray-50 rounded-xl">
+                    <div className="font-semibold text-sm">
+                      📅 {semana.fechaInicioSemana} - {semana.fechaFinSemana}
+                    </div>
+                    <div className="text-sm mt-1">{semana.actividadesRealizadas}</div>
+                    {semana.actividades && semana.actividades.length > 0 && (
+                      <div className="mt-2 text-xs text-gray-600">
+                        {semana.actividades.length} actividad(es) detallada(s)
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-gray-500 italic">Sin semanas registradas</div>
+              )}
+            </div>
 
-            {/* Botones de acción */}
-            <div className="flex gap-3 justify-end pt-4 border-t">
+            <div className="flex justify-end gap-2 pt-3 border-t">
               <button
-                onClick={() => descargarPdf(selectedBitacoraId)}
-                className="rounded-xl px-5 py-2.5 bg-gradient-to-r from-poli-red to-red-600 text-white font-bold hover:shadow-lg transition-all"
+                onClick={() => descargarPdf(bitacoraDetalle.bitacora?.bitacoraId || bitacoraDetalle.bitacoraId)}
+                className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700"
               >
                 📄 Descargar PDF
               </button>
-              {(viewData.bitacora?.estado === "BORRADOR" || viewData.bitacora?.estado === "RECHAZADA") && (
-                <button
-                  onClick={() => {
-                    enviar(selectedBitacoraId);
-                    setOpenView(false);
-                  }}
-                  className="rounded-xl px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-bold hover:shadow-lg transition-all"
-                >
-                  📤 Enviar al Director
-                </button>
-              )}
+              <button
+                onClick={() => setOpenDetalle(false)}
+                className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         )}
