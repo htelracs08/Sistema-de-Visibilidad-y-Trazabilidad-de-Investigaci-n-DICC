@@ -6,6 +6,8 @@ mvn clean compile
 $env:GMAIL_APP_PASSWORD="prtf twzm vwhe erij"
 mvn -pl backend -DskipTests clean spring-boot:run
 
+cd fronted-web
+npm run dev
 
 Comando para iniciar el servidor 
 mvn -pl backend spring-boot:run
