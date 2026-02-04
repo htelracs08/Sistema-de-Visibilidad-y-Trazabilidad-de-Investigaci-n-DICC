@@ -15,7 +15,7 @@ public class EmailTemplates {
     + "- Nombre: " + safe(nombreProyecto) + "\n\n"
     + "Credenciales temporales:\n"
     + "- Usuario: " + safe(correo) + "\n"
-    + "- Contraseña temporal: " + safe(tempPass) + "\n\n"
+    + "- Contraseña: " + safe(tempPass) + "\n\n"
     + "Por favor cambia tu contraseña al ingresar.\n\n"
     + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
     + "⚠️  ADVERTENCIA IMPORTANTE\n"
@@ -52,7 +52,7 @@ public class EmailTemplates {
       + "- Fin contrato: " + safe(fechaFin) + "\n\n"
       + "Credenciales temporales:\n"
       + "- Usuario: " + safe(correo) + "\n"
-      + "- Contraseña temporal: " + safe(tempPass) + "\n\n"
+      + "- Contraseña: " + safe(tempPass) + "\n\n"
       + "Por favor cambia tu contraseña al ingresar.\n\n"
       + "Atentamente,\n"
       + "Sistema DICC";
