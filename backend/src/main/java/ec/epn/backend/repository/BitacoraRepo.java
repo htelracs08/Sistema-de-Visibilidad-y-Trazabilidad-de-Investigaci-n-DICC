@@ -15,6 +15,48 @@ public class BitacoraRepo {
     this.jdbc = jdbc;
   }
 
+  // ✅ NUEVO MÉTODO: Listar bitácoras aprobadas de un proyecto (para Director)
+  public java.util.List<java.util.Map<String, Object>> listarAprobadasPorProyectoParaDirector(String proyectoId, String correoDirector) {
+    return jdbc.query("""
+      SELECT
+        b.id AS bitacora_id,
+        b.contrato_id,
+        b.anio,
+        b.mes,
+        b.estado,
+        b.comentario_revision,
+        b.creado_en,
+        a.nombres,
+        a.apellidos,
+        a.correo_institucional,
+        c.fecha_inicio AS contrato_fecha_inicio,
+        c.fecha_fin AS contrato_fecha_fin
+      FROM bitacora_mensual b
+      JOIN contrato c ON c.id = b.contrato_id
+      JOIN proyecto p ON p.id = c.proyecto_id
+      JOIN ayudante a ON a.id = c.ayudante_id
+      WHERE p.id = ?
+        AND lower(p.director_correo) = lower(?)
+        AND b.estado = 'APROBADA'
+      ORDER BY b.anio DESC, b.mes DESC, a.apellidos ASC
+    """, (rs, rowNum) -> {
+      var m = new java.util.LinkedHashMap<String, Object>();
+      m.put("bitacoraId", rs.getString("bitacora_id"));
+      m.put("contratoId", rs.getString("contrato_id"));
+      m.put("anio", rs.getInt("anio"));
+      m.put("mes", rs.getInt("mes"));
+      m.put("estado", rs.getString("estado"));
+      m.put("comentarioRevision", rs.getString("comentario_revision"));
+      m.put("creadoEn", rs.getString("creado_en"));
+      m.put("nombres", rs.getString("nombres"));
+      m.put("apellidos", rs.getString("apellidos"));
+      m.put("correoInstitucional", rs.getString("correo_institucional"));
+      m.put("contratoFechaInicio", rs.getString("contrato_fecha_inicio"));
+      m.put("contratoFechaFin", rs.getString("contrato_fecha_fin"));
+      return m;
+    }, proyectoId, correoDirector);
+  }
+
   // ✅ Para semáforo: cuenta solo APROBADAS
   public int contarAprobadasEnRango(String contratoId, int anioDesde, int mesDesde, int anioHasta, int mesHasta) {
     Integer n = jdbc.queryForObject("""

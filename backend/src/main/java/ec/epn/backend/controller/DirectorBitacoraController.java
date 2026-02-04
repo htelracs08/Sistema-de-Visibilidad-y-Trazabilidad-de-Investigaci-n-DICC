@@ -97,9 +97,18 @@ public class DirectorBitacoraController {
   public Object pendientes(@PathVariable String proyectoId, Principal principal) {
     String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
     
-    // ✅ FIX: Retornar directamente la lista, envuelta en un objeto con "ok"
     List<Map<String, Object>> lista = bitacoraRepo.listarPendientesPorProyectoParaDirector(proyectoId.trim(), correoDirector);
     
-    return lista; // El frontend espera un array directo
+    return lista;
+  }
+
+  // ✅ NUEVO ENDPOINT: Historial de bitácoras aprobadas del proyecto
+  @GetMapping("/proyectos/{proyectoId}/bitacoras/aprobadas")
+  public Object aprobadasDelProyecto(@PathVariable String proyectoId, Principal principal) {
+    String correoDirector = principal.getName() == null ? "" : principal.getName().trim().toLowerCase();
+    
+    List<Map<String, Object>> lista = bitacoraRepo.listarAprobadasPorProyectoParaDirector(proyectoId.trim(), correoDirector);
+    
+    return lista;
   }
 }

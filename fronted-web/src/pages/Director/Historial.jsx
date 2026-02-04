@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { apiGet, apiPost } from "../../lib/api";
+import { apiGet } from "../../lib/api";
 import Table from "../../components/Table.jsx";
 import Loading from "../../components/Loading.jsx";
 import Toast from "../../components/Toast.jsx";
 import Modal from "../../components/Modal.jsx";
 import Badge from "../../components/Badge.jsx";
-import ConfirmDialog from "../../components/ConfirmDialog.jsx";
 import { exportBitacoraPdf } from "../../lib/pdf";
 import { getDirectorSelectedProject } from "../../lib/state";
 
@@ -17,22 +16,14 @@ export default function DirHistorialBitacoras() {
   const [toast, setToast] = useState({ msg: "", kind: "info" });
 
   // ✅ FILTROS
-  const [filtroEstado, setFiltroEstado] = useState("TODOS");
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterAnio, setFilterAnio] = useState("TODOS");
 
   // Modal de visualización
   const [openView, setOpenView] = useState(false);
   const [viewData, setViewData] = useState(null);
   const [viewLoading, setViewLoading] = useState(false);
   const [selectedBitacoraId, setSelectedBitacoraId] = useState("");
-
-  // Modal de confirmación
-  const [confirmDialog, setConfirmDialog] = useState({
-    open: false,
-    action: null,
-    bitacoraId: null
-  });
-  const [observacion, setObservacion] = useState("");
 
   async function load() {
     if (!selected?.id) {
@@ -43,21 +34,18 @@ export default function DirHistorialBitacoras() {
     setLoading(true);
     setToast({ msg: "", kind: "info" });
     try {
-      // Obtener TODAS las bitácoras del proyecto (no solo pendientes)
-      const res = await apiGet(`/api/v1/director/proyectos/${selected.id}/bitacoras/todas`);
+      console.log(`📡 Cargando bitácoras aprobadas del proyecto ${selected.id}...`);
+      
+      // ✅ LLAMAR AL NUEVO ENDPOINT DE BITÁCORAS APROBADAS
+      const res = await apiGet(`/api/v1/director/proyectos/${selected.id}/bitacoras/aprobadas`);
       const arr = Array.isArray(res) ? res : (res?.items ?? []);
+      
+      console.log(`✅ ${arr.length} bitácoras aprobadas cargadas`);
       setRows(arr);
-      setToast({ msg: `✅ ${arr.length} bitácoras cargadas`, kind: "ok" });
+      setToast({ msg: `✅ ${arr.length} bitácoras aprobadas`, kind: "ok" });
     } catch (e) {
-      // Si el endpoint "todas" no existe, usar "pendientes"
-      try {
-        const res = await apiGet(`/api/v1/director/proyectos/${selected.id}/bitacoras/pendientes`);
-        const arr = Array.isArray(res) ? res : (res?.items ?? []);
-        setRows(arr);
-        setToast({ msg: `⚠️ Solo se muestran bitácoras pendientes (endpoint /todas no disponible)`, kind: "warn" });
-      } catch (e2) {
-        setToast({ msg: e2.message, kind: "bad" });
-      }
+      console.error("❌ Error cargando historial:", e);
+      setToast({ msg: e.message, kind: "bad" });
     } finally {
       setLoading(false);
     }
@@ -69,10 +57,12 @@ export default function DirHistorialBitacoras() {
   const filteredRows = useMemo(() => {
     let filtered = rows;
 
-    if (filtroEstado !== "TODOS") {
-      filtered = filtered.filter(r => r.estado === filtroEstado);
+    // Filtro por año
+    if (filterAnio !== "TODOS") {
+      filtered = filtered.filter(r => String(r.anio) === filterAnio);
     }
 
+    // Búsqueda
     if (searchTerm.trim()) {
       const term = searchTerm.trim().toLowerCase();
       filtered = filtered.filter(r => {
@@ -89,10 +79,22 @@ export default function DirHistorialBitacoras() {
     }
 
     return filtered;
-  }, [rows, filtroEstado, searchTerm]);
+  }, [rows, filterAnio, searchTerm]);
+
+  // Obtener años únicos para el filtro
+  const aniosDisponibles = useMemo(() => {
+    const anios = [...new Set(rows.map(r => String(r.anio)))];
+    return anios.sort((a, b) => Number(b) - Number(a));
+  }, [rows]);
 
   const columns = [
-    { key: "bitacoraId", label: "BitacoraId" },
+    { 
+      key: "bitacoraId", 
+      label: "ID Bitácora",
+      render: (r) => (
+        <div className="font-mono text-xs">{r.bitacoraId}</div>
+      )
+    },
     {
       key: "ayudante",
       label: "Ayudante",
@@ -111,11 +113,17 @@ export default function DirHistorialBitacoras() {
     {
       key: "estado",
       label: "Estado",
+      render: (r) => <Badge kind="ok">✅ APROBADA</Badge>
+    },
+    {
+      key: "fecha",
+      label: "Fecha Aprobación",
       render: (r) => {
-        if (r.estado === "APROBADA") return <Badge kind="ok">APROBADA</Badge>;
-        if (r.estado === "RECHAZADA") return <Badge kind="bad">RECHAZADA</Badge>;
-        if (r.estado === "PENDIENTE") return <Badge kind="warn">PENDIENTE</Badge>;
-        return <Badge kind="info">BORRADOR</Badge>;
+        try {
+          return new Date(r.creadoEn).toLocaleDateString('es-ES');
+        } catch {
+          return r.creadoEn || '-';
+        }
       }
     },
     {
@@ -147,19 +155,22 @@ export default function DirHistorialBitacoras() {
     setViewData(null);
 
     try {
+      console.log(`📡 Obteniendo detalles de bitácora ${bitacoraId}...`);
       const res = await apiGet(`/api/v1/director/bitacoras/${bitacoraId}`);
       const bitacora = res?.bitacora ?? res;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
 
       const estudiante = {
-        nombres: res.nombres || "",
-        apellidos: res.apellidos || "",
-        correoInstitucional: res.correoInstitucional || "",
-        facultad: res.facultad || ""
+        nombres: res?.ayudanteNombres || res?.nombres || "",
+        apellidos: res?.ayudanteApellidos || res?.apellidos || "",
+        correoInstitucional: res?.correoInstitucional || "",
+        facultad: res?.facultad || ""
       };
 
       setViewData({ bitacora, semanas, estudiante });
+      console.log("✅ Detalles cargados");
     } catch (e) {
+      console.error("❌ Error obteniendo detalles:", e);
       setToast({ msg: e.message, kind: "bad" });
       setOpenView(false);
     } finally {
@@ -170,15 +181,16 @@ export default function DirHistorialBitacoras() {
   async function descargarPdf(bitacoraId) {
     setToast({ msg: "⏳ Generando PDF...", kind: "info" });
     try {
+      console.log(`📄 Generando PDF de bitácora ${bitacoraId}...`);
       const res = await apiGet(`/api/v1/director/bitacoras/${bitacoraId}`);
       const bitacora = res?.bitacora ?? res;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
 
       const estudiante = {
-        nombres: res.nombres || "",
-        apellidos: res.apellidos || "",
-        correoInstitucional: res.correoInstitucional || "",
-        facultad: res.facultad || ""
+        nombres: res?.ayudanteNombres || res?.nombres || "",
+        apellidos: res?.ayudanteApellidos || res?.apellidos || "",
+        correoInstitucional: res?.correoInstitucional || "",
+        facultad: res?.facultad || ""
       };
 
       const filename = exportBitacoraPdf({
@@ -190,37 +202,8 @@ export default function DirHistorialBitacoras() {
 
       setToast({ msg: `✅ PDF generado: ${filename}`, kind: "ok" });
     } catch (e) {
+      console.error("❌ Error generando PDF:", e);
       setToast({ msg: `❌ Error generando PDF: ${e.message}`, kind: "bad" });
-    }
-  }
-
-  function abrirConfirmacion(action) {
-    setConfirmDialog({
-      open: true,
-      action,
-      bitacoraId: selectedBitacoraId
-    });
-    setObservacion("");
-  }
-
-  async function revisar() {
-    const { action, bitacoraId } = confirmDialog;
-    if (!bitacoraId || !action) return;
-
-    const decision = action === "aprobar" ? "APROBAR" : "RECHAZAR";
-
-    try {
-      await apiPost(`/api/v1/director/bitacoras/${bitacoraId}/revisar`, {
-        decision,
-        observacion: observacion.trim() || ""
-      });
-
-      setToast({ msg: `✅ Bitácora ${decision === "APROBAR" ? "aprobada" : "rechazada"}`, kind: "ok" });
-      setOpenView(false);
-      setConfirmDialog({ open: false, action: null, bitacoraId: null });
-      await load();
-    } catch (e) {
-      setToast({ msg: e.message, kind: "bad" });
     }
   }
 
@@ -279,7 +262,7 @@ export default function DirHistorialBitacoras() {
       {/* Header */}
       <div className="flex flex-col gap-4">
         <div>
-          <div className="text-lg font-bold text-poli-ink">📚 Historial de Bitácoras</div>
+          <div className="text-lg font-bold text-poli-ink">✅ Historial de Bitácoras Aprobadas</div>
           <div className="text-sm text-gray-500">{header}</div>
         </div>
 
@@ -299,14 +282,13 @@ export default function DirHistorialBitacoras() {
             <div>
               <select
                 className="w-full rounded-xl border px-4 py-2 outline-none focus:ring-2 focus:ring-poli-navy/30"
-                value={filtroEstado}
-                onChange={(e) => setFiltroEstado(e.target.value)}
+                value={filterAnio}
+                onChange={(e) => setFilterAnio(e.target.value)}
               >
-                <option value="TODOS">📋 Todas las bitácoras</option>
-                <option value="PENDIENTE">⏳ Solo pendientes</option>
-                <option value="APROBADA">✅ Solo aprobadas</option>
-                <option value="RECHAZADA">❌ Solo rechazadas</option>
-                <option value="BORRADOR">📝 Solo borradores</option>
+                <option value="TODOS">📅 Todos los años</option>
+                {aniosDisponibles.map(anio => (
+                  <option key={anio} value={anio}>{anio}</option>
+                ))}
               </select>
             </div>
 
@@ -321,21 +303,28 @@ export default function DirHistorialBitacoras() {
           </div>
         )}
 
-        {/* Resumen */}
-        {selected?.id && (searchTerm || filtroEstado !== "TODOS") && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-600">
-              Mostrando {filteredRows.length} de {rows.length} bitácoras
-            </span>
-            <button
-              onClick={() => {
-                setSearchTerm("");
-                setFiltroEstado("TODOS");
-              }}
-              className="text-poli-red hover:underline"
-            >
-              Limpiar filtros
-            </button>
+        {/* Info y resumen */}
+        {selected?.id && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-green-800">
+                💡 <strong>Mostrando solo bitácoras aprobadas</strong> del proyecto. Total: <strong>{rows.length}</strong>
+                {(searchTerm || filterAnio !== "TODOS") && (
+                  <> | Filtradas: <strong>{filteredRows.length}</strong></>
+                )}
+              </div>
+              {(searchTerm || filterAnio !== "TODOS") && (
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setFilterAnio("TODOS");
+                  }}
+                  className="text-xs text-green-700 hover:text-green-900 underline font-semibold"
+                >
+                  Limpiar filtros
+                </button>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -350,7 +339,22 @@ export default function DirHistorialBitacoras() {
         </div>
       )}
 
-      {selected?.id && (loading ? <Loading /> : <Table columns={columns} rows={filteredRows} />)}
+      {selected?.id && (
+        loading ? <Loading /> : (
+          filteredRows.length === 0 ? (
+            <div className="p-8 text-center bg-gray-50 rounded-xl border border-gray-200">
+              <div className="text-4xl mb-3">📭</div>
+              <div className="text-gray-600">
+                {rows.length === 0 
+                  ? "No hay bitácoras aprobadas en este proyecto"
+                  : "No se encontraron bitácoras con los filtros aplicados"}
+              </div>
+            </div>
+          ) : (
+            <Table columns={columns} rows={filteredRows} />
+          )
+        )
+      )}
 
       {/* Modal de visualización */}
       <Modal open={openView} title={`📋 Bitácora ${selectedBitacoraId}`} onClose={() => setOpenView(false)}>
@@ -369,8 +373,8 @@ export default function DirHistorialBitacoras() {
             )}
 
             {/* Info bitácora */}
-            <div className="rounded-xl bg-poli-gray p-3 border border-gray-200 text-sm">
-              <b>Estado:</b> {viewData.bitacora?.estado}{" "}
+            <div className="rounded-xl bg-green-50 p-3 border border-green-200 text-sm">
+              <b>Estado:</b> <Badge kind="ok">APROBADA</Badge>{" "}
               <span className="mx-2">|</span>
               <b>Año:</b> {viewData.bitacora?.anio}{" "}
               <span className="mx-2">|</span>
@@ -381,27 +385,10 @@ export default function DirHistorialBitacoras() {
             <div className="flex flex-wrap gap-2 justify-end">
               <button 
                 onClick={() => descargarPdf(selectedBitacoraId)} 
-                className="rounded-xl px-4 py-2 bg-poli-navy text-white font-bold hover:bg-blue-900"
+                className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700"
               >
                 📄 Descargar PDF
               </button>
-              
-              {viewData.bitacora?.estado === "PENDIENTE" && (
-                <>
-                  <button 
-                    onClick={() => abrirConfirmacion("aprobar")} 
-                    className="rounded-xl px-4 py-2 bg-emerald-600 text-white font-bold hover:bg-emerald-700"
-                  >
-                    ✅ Aprobar
-                  </button>
-                  <button 
-                    onClick={() => abrirConfirmacion("rechazar")} 
-                    className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700"
-                  >
-                    ❌ Rechazar
-                  </button>
-                </>
-              )}
             </div>
 
             {/* Tabla */}
@@ -409,41 +396,6 @@ export default function DirHistorialBitacoras() {
           </div>
         )}
       </Modal>
-
-      {/* Dialog de confirmación */}
-      <ConfirmDialog
-        open={confirmDialog.open}
-        title={
-          confirmDialog.action === "aprobar"
-            ? "¿Aprobar esta bitácora?"
-            : "¿Rechazar esta bitácora?"
-        }
-        message={
-          <div>
-            <p className="mb-3">
-              {confirmDialog.action === "aprobar"
-                ? "El ayudante recibirá una notificación de aprobación."
-                : "El ayudante deberá corregir y reenviar la bitácora."}
-            </p>
-            <div>
-              <label className="text-sm text-gray-600 font-semibold">
-                Observación {confirmDialog.action === "rechazar" && "(requerida)"}:
-              </label>
-              <textarea
-                className="mt-1 w-full rounded-xl border px-3 py-2 min-h-[80px]"
-                value={observacion}
-                onChange={(e) => setObservacion(e.target.value)}
-                placeholder="Comentarios..."
-              />
-            </div>
-          </div>
-        }
-        confirmText={confirmDialog.action === "aprobar" ? "Aprobar" : "Rechazar"}
-        cancelText="Cancelar"
-        onConfirm={revisar}
-        onCancel={() => setConfirmDialog({ open: false, action: null, bitacoraId: null })}
-        type={confirmDialog.action === "aprobar" ? "info" : "danger"}
-      />
 
       <Toast msg={toast.msg} kind={toast.kind} onClose={() => setToast({ msg: "", kind: "info" })} />
     </div>
