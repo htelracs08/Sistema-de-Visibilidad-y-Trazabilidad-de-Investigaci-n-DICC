@@ -8,6 +8,7 @@ import ec.epn.backend.repository.ProyectoRepo;
 import ec.epn.backend.repository.UsuarioRepo;
 import ec.epn.backend.service.NotificacionPort;
 import org.springframework.web.bind.annotation.*;
+import ec.epn.backend.util.PasswordGenerator;
 
 import java.time.LocalDate;
 import java.util.Map;
@@ -132,7 +133,7 @@ public class DirectorAyudantesController {
     String contratoId = contratoRepo.crear(pid, ayudanteId, fci.toString(), fcf.toString());
 
     boolean seCreoUsuarioAyudante = false;
-    String tempPass = "Temp123*";
+    String tempPass = PasswordGenerator.generar();
 
     if (!usuarioRepo.existsByCorreo(correo)) {
       usuarioRepo.crearUsuario(nombres, apellidos, correo, tempPass, "AYUDANTE");

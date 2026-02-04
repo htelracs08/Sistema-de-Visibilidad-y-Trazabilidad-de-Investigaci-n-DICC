@@ -8,6 +8,7 @@ import ec.epn.backend.repository.ProyectoRepo;
 import ec.epn.backend.repository.UsuarioRepo;
 import ec.epn.backend.service.NotificacionPort;
 import org.springframework.web.bind.annotation.*;
+import ec.epn.backend.util.PasswordGenerator;
 
 import java.util.List;
 import java.util.Map;
@@ -156,7 +157,7 @@ public class JefaturaController {
 
     // 2) crear usuario director si no existe
     boolean seCreoUsuarioDirector = false;
-    String tempPass = "Temp123*";
+    String tempPass = PasswordGenerator.generar();
 
     if (!usuarioRepo.existsByCorreo(correoDirector)) {
       var prof = profesorRepo.findByCorreo(correoDirector).orElse(null);
