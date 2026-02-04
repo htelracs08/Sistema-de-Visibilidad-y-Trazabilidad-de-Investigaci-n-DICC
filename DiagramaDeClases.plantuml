@@ -1,0 +1,480 @@
+@startuml Sistema de Gestión de Ayudantes - DICC
+
+!define ENTITY_COLOR #E8F5E9
+!define CONTROLLER_COLOR #E3F2FD
+!define REPO_COLOR #FFF3E0
+!define SERVICE_COLOR #F3E5F5
+!define UTIL_COLOR #FFF9C4
+
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor<<Entity>> ENTITY_COLOR
+    BackgroundColor<<Controller>> CONTROLLER_COLOR
+    BackgroundColor<<Repository>> REPO_COLOR
+    BackgroundColor<<Service>> SERVICE_COLOR
+    BackgroundColor<<Utility>> UTIL_COLOR
+    BorderColor Black
+    ArrowColor #424242
+}
+
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+
+' ============================================
+' PAQUETE DOMAIN (ARRIBA IZQUIERDA)
+' ============================================
+package "Domain" {
+    class Usuario <<Entity>> {
+        - id: String
+        - nombres: String
+        - apellidos: String
+        - correo: String
+        - password: String
+        - rol: String
+        - debeCambiarPassword: boolean
+    }
+
+    class Profesor <<Entity>> {
+        - id: String
+        - nombres: String
+        - apellidos: String
+        - correo: String
+    }
+
+    class Ayudante <<Entity>> {
+        - id: String
+        - nombres: String
+        - apellidos: String
+        - correoInstitucional: String
+        - facultad: String
+        - quintil: int
+        - tipoAyudante: String
+    }
+
+    class Contrato <<Entity>> {
+        - id: String
+        - proyectoId: String
+        - ayudanteId: String
+        - fechaInicio: String
+        - fechaFin: String
+        - estado: String
+        - motivoInactivo: String
+    }
+}
+
+' ============================================
+' PAQUETE DTOs (ARRIBA DERECHA)
+' ============================================
+package "DTOs" {
+    class CrearProyectoReq {
+        - codigo: String
+        - nombre: String
+        - correoDirector: String
+        - tipoProyecto: String
+        - subtipoProyecto: String
+        + getCodigo(): String
+        + getNombre(): String
+        + getCorreoDirector(): String
+        + getTipoProyecto(): String
+        + getSubtipoProyecto(): String
+    }
+
+    class RegistrarAyudanteReq {
+        - nombres: String
+        - apellidos: String
+        - correoInstitucional: String
+        - facultad: String
+        - quintil: Integer
+        - tipoAyudante: String
+        - fechaInicioContrato: String
+        - fechaFinContrato: String
+    }
+
+    class ActualizarProyectoReq {
+        - fechaInicio: String
+        - fechaFin: String
+        - tipo: String
+        - subtipo: String
+        - maxAyudantes: Integer
+        - maxArticulos: Integer
+    }
+
+    class CrearInformeSemanalReq {
+        - fechaInicioSemana: String
+        - fechaFinSemana: String
+        - actividadesRealizadas: String
+        - observaciones: String
+        - anexos: String
+    }
+
+    class CrearActividadReq {
+        - horaInicio: String
+        - horaSalida: String
+        - descripcion: String
+    }
+}
+
+' ============================================
+' PAQUETE REPOSITORIES (CENTRO IZQUIERDA)
+' ============================================
+package "Repositories" {
+    class UsuarioRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + findByCorreo(correo: String): Optional<Usuario>
+        + existsByCorreo(correo: String): boolean
+        + crearUsuario(nombres, apellidos, correo, password, rol): void
+        + cambiarPassword(correo, nuevaPassword): void
+    }
+
+    class ProfesorRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + findAll(): List<Profesor>
+        + findByCorreo(correo: String): Optional<Profesor>
+    }
+
+    class AyudanteRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + findByCorreoInstitucional(correo: String): Optional<Ayudante>
+        + crear(a: Ayudante): String
+    }
+
+    class ContratoRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + contarActivosPorProyecto(proyectoId: String): int
+        + crear(proyectoId, ayudanteId, fechaInicio, fechaFin): String
+        + listarPorProyecto(proyectoId: String): List<Map>
+        + finalizar(contratoId, motivo: String): void
+        + contarActivosGlobal(): int
+        + contarActivosPorTipoAyudante(): List<Map>
+        + listarActivosDetallado(): List<Map>
+        + obtenerContratoActivoPorCorreo(correo: String): String
+        + obtenerEstudiantePorContrato(contratoId: String): Map
+    }
+
+    class ProyectoRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + crear(codigo, nombre, correoDirector, tipo, subtipo): String
+        + findAll(): List<Map>
+        + listarResumen(): List<Map>
+        + estadisticasPorTipoYEstado(): List<Map>
+        + actualizarDetalles(proyectoId, fechaInicio, fechaFin, tipo, subtipo, maxAyudantes, maxArticulos): int
+        + obtenerMaxAyudantes(proyectoId: String): Integer
+        + obtenerBasicoPorId(proyectoId: String): Map
+    }
+
+    class BitacoraRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + contarAprobadasEnRango(contratoId, anioDesde, mesDesde, anioHasta, mesHasta): int
+        + obtenerOCrearActual(contratoId: String): String
+        + obtenerBorradorActiva(contratoId: String): String
+        + obtenerUltimaPorContrato(contratoId: String): Map
+        + crearBitacora(contratoId, anio, mes): String
+        + listarAprobadasPorContrato(contratoId: String): List<Map>
+        + obtenerDetalle(bitacoraId: String): Map
+        + obtenerEstado(bitacoraId: String): String
+        + obtenerEstadoPorSemana(semanaId: String): String
+        + perteneceAContrato(bitacoraId, contratoId: String): boolean
+        + enviar(bitacoraId: String): int
+        + enviarYLimpiarComentario(bitacoraId: String): int
+        + revisar(bitacoraId, nuevoEstado, comentario): int
+        + reabrirRechazada(bitacoraId: String): int
+        + directorPuedeRevisarBitacora(bitacoraId, correoDirector): boolean
+        + obtenerDetalleParaDirector(bitacoraId, correoDirector): Map
+        + listarPendientesPorProyectoParaDirector(proyectoId, correoDirector): List<Map>
+    }
+
+    class InformeSemanalRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + crear(bitacoraId, fechaInicioSemana, fechaFinSemana, actividadesRealizadas, observaciones, anexos): String
+        + listarPorBitacora(bitacoraId: String): List<Map>
+        + contarPorBitacora(bitacoraId: String): int
+        + obtenerBitacoraIdPorSemana(semanaId: String): String
+    }
+
+    class ActividadRepo <<Repository>> {
+        - jdbc: JdbcTemplate
+        + crear(semanaId, horaInicio, horaSalida, totalHoras, descripcion): String
+        + listarPorSemana(semanaId: String): List<Map>
+        + obtenerBitacoraIdPorActividad(actividadId: String): String
+        + updateActividad(actividadId, horaInicio, horaFin, descripcion): int
+        + contarPorBitacora(bitacoraId: String): int
+    }
+}
+
+' ============================================
+' PAQUETE SERVICES (ABAJO IZQUIERDA)
+' ============================================
+package "Services" {
+    interface NotificacionPort <<Service>> {
+        + enviarCredencialesTemporalesDirector(correo, nombres, apellidos, tempPassword, proyectoId): void
+        + enviarCredencialesTemporalesAyudante(correo, nombres, apellidos, tempPassword, proyectoId, fechaInicio, fechaFin): void
+    }
+
+    class NotificacionService <<Service>> {
+        - emailService: EmailService
+        - templates: EmailTemplates
+        - proyectoRepo: ProyectoRepo
+        + enviarCredencialesTemporalesDirector(...): void
+        + enviarCredencialesTemporalesAyudante(...): void
+    }
+
+    class EmailService <<Service>> {
+        + sendPlainText(to, subject, body): void
+    }
+
+    class EmailTemplates <<Service>> {
+        + credencialesDirector(nombres, apellidos, correo, tempPass, codigoProyecto, nombreProyecto): String
+        + credencialesAyudante(nombres, apellidos, correo, tempPass, codigoProyecto, nombreProyecto, fechaInicio, fechaFin): String
+        - safe(s: String): String
+    }
+
+    class ProfesorImporter <<Service>> {
+        - jdbc: JdbcTemplate
+        + run(args: String[]): void
+    }
+}
+
+' ============================================
+' PAQUETE UTIL (ABAJO CENTRO)
+' ============================================
+package "Util" {
+    class PasswordGenerator <<Utility>> {
+        - {static} MAYUSCULAS: String
+        - {static} MINUSCULAS: String
+        - {static} NUMEROS: String
+        - {static} CARACTERES_ESPECIALES: String
+        - {static} TODOS: String
+        - {static} random: SecureRandom
+        + {static} generar(longitud: int): String
+        + {static} generar(): String
+        - {static} mezclar(input: String): String
+    }
+}
+
+' ============================================
+' PAQUETE CONTROLLERS (CENTRO DERECHA)
+' ============================================
+package "Controllers" {
+    class CommonController <<Controller>> {
+        - usuarioRepo: UsuarioRepo
+        + health(): Map
+        + me(principal: Principal): Map
+    }
+
+    class AuthController <<Controller>> {
+        - usuarioRepo: UsuarioRepo
+        + cambiarPassword(principal, req: CambiarPasswordReq): Map
+    }
+
+    class JefaturaController <<Controller>> {
+        - proyectoRepo: ProyectoRepo
+        - usuarioRepo: UsuarioRepo
+        - profesorRepo: ProfesorRepo
+        - contratoRepo: ContratoRepo
+        - bitacoraRepo: BitacoraRepo
+        - notificacion: NotificacionPort
+        + totalActivos(): Object
+        + listarProfesores(): List
+        + resumenProyectos(): Object
+        + estadisticasAyudantes(): Object
+        + listarAyudantesProyecto(proyectoId): Object
+        + estadisticasProyectos(): Object
+        + semaforo(): Object
+        + crearProyecto(req: CrearProyectoReq): Object
+        + listarProyectos(): Object
+    }
+
+    class DirectorController <<Controller>> {
+        - jdbc: JdbcTemplate
+        + misProyectos(principal: Principal): List<Map>
+    }
+
+    class DirectorProyectoController <<Controller>> {
+        - proyectoRepo: ProyectoRepo
+        + actualizar(proyectoId: String, req: ActualizarProyectoReq): Object
+    }
+
+    class DirectorAyudantesController <<Controller>> {
+        - ayudanteRepo: AyudanteRepo
+        - contratoRepo: ContratoRepo
+        - usuarioRepo: UsuarioRepo
+        - proyectoRepo: ProyectoRepo
+        - notificacion: NotificacionPort
+        + listar(proyectoId: String): Object
+        + finalizar(contratoId: String, req: FinalizarContratoReq): Object
+        + registrar(proyectoId: String, req: RegistrarAyudanteReq): Object
+    }
+
+    class DirectorBitacoraController <<Controller>> {
+        - bitacoraRepo: BitacoraRepo
+        - informeRepo: InformeSemanalRepo
+        - actividadRepo: ActividadRepo
+        + verBitacora(bitacoraId: String, principal: Principal): Object
+        + revisar(bitacoraId: String, req: RevisarBitacoraReq, principal: Principal): Object
+        + pendientes(proyectoId: String, principal: Principal): Object
+    }
+
+    class AyudanteBitacoraController <<Controller>> {
+        - contratoRepo: ContratoRepo
+        - bitacoraRepo: BitacoraRepo
+        - informeRepo: InformeSemanalRepo
+        - actividadRepo: ActividadRepo
+        + obtenerBitacoraActual(principal: Principal): Object
+        + listarAprobadas(principal: Principal): Object
+        + crearSemana(bitacoraId: String, req: CrearInformeSemanalReq, principal: Principal): Object
+        + crearActividad(semanaId: String, req: CrearActividadReq, principal: Principal): Object
+        + actualizarActividad(actividadId: String, req: ActualizarActividadReq, principal: Principal): Object
+        + verBitacora(bitacoraId: String, principal: Principal): Object
+        + listarSemanas(bitacoraId: String, principal: Principal): Object
+        + listarActividades(semanaId: String, principal: Principal): Object
+        + enviar(bitacoraId: String, principal: Principal): Object
+        + reabrir(bitacoraId: String, principal: Principal): Object
+        - correo(principal: Principal): String
+        - contratoActivoOrNull(correo: String): String
+        - validarQueBitacoraEsDelContratoActivo(bitacoraId: String, contratoId: String): Object
+        - validarBitacoraEditable(bitacoraId: String): Object
+    }
+
+    class DebugController <<Controller>> {
+        - repo: UsuarioRepo
+        + usuario(correo: String): Map
+    }
+
+    class BitacoraDebugController <<Controller>> {
+        - jdbc: JdbcTemplate
+        + aprobar(body: Map): Object
+    }
+}
+
+' ============================================
+' ORGANIZACIÓN ESPACIAL
+' ============================================
+
+' Organizar Domain arriba a la izquierda
+Usuario -[hidden]right- Profesor
+Profesor -[hidden]right- Ayudante
+Ayudante -[hidden]right- Contrato
+
+' Organizar DTOs arriba a la derecha
+CrearProyectoReq -[hidden]down- RegistrarAyudanteReq
+RegistrarAyudanteReq -[hidden]down- ActualizarProyectoReq
+ActualizarProyectoReq -[hidden]down- CrearInformeSemanalReq
+CrearInformeSemanalReq -[hidden]down- CrearActividadReq
+
+' Organizar Repositories en el centro-izquierda
+UsuarioRepo -[hidden]down- ProfesorRepo
+ProfesorRepo -[hidden]down- AyudanteRepo
+AyudanteRepo -[hidden]down- ContratoRepo
+ContratoRepo -[hidden]down- ProyectoRepo
+ProyectoRepo -[hidden]down- BitacoraRepo
+BitacoraRepo -[hidden]down- InformeSemanalRepo
+InformeSemanalRepo -[hidden]down- ActividadRepo
+
+' Organizar Services abajo a la izquierda
+NotificacionPort -[hidden]right- NotificacionService
+NotificacionService -[hidden]down- EmailService
+EmailService -[hidden]right- EmailTemplates
+EmailTemplates -[hidden]down- ProfesorImporter
+
+' Organizar Controllers en el centro-derecha
+CommonController -[hidden]down- AuthController
+AuthController -[hidden]down- JefaturaController
+JefaturaController -[hidden]down- DirectorController
+DirectorController -[hidden]down- DirectorProyectoController
+DirectorProyectoController -[hidden]down- DirectorAyudantesController
+DirectorAyudantesController -[hidden]down- DirectorBitacoraController
+DirectorBitacoraController -[hidden]down- AyudanteBitacoraController
+AyudanteBitacoraController -[hidden]down- DebugController
+DebugController -[hidden]down- BitacoraDebugController
+
+' ============================================
+' RELACIONES DOMAIN -> REPOSITORIES
+' ============================================
+
+UsuarioRepo ..> Usuario
+ProfesorRepo ..> Profesor
+AyudanteRepo ..> Ayudante
+ContratoRepo ..> Contrato
+
+' ============================================
+' RELACIONES REPOSITORIES -> JDBC
+' ============================================
+
+UsuarioRepo -down-> "JdbcTemplate"
+ProfesorRepo -down-> "JdbcTemplate"
+AyudanteRepo -down-> "JdbcTemplate"
+ContratoRepo -down-> "JdbcTemplate"
+ProyectoRepo -down-> "JdbcTemplate"
+BitacoraRepo -down-> "JdbcTemplate"
+InformeSemanalRepo -down-> "JdbcTemplate"
+ActividadRepo -down-> "JdbcTemplate"
+
+' ============================================
+' RELACIONES SERVICES
+' ============================================
+
+NotificacionService .up.|> NotificacionPort
+NotificacionService -right-> EmailService
+NotificacionService -down-> EmailTemplates
+NotificacionService -up-> ProyectoRepo
+ProfesorImporter -up-> "JdbcTemplate"
+
+' ============================================
+' RELACIONES CONTROLLERS -> REPOSITORIES (PRINCIPALES)
+' ============================================
+
+CommonController -left-> UsuarioRepo
+AuthController -left-> UsuarioRepo
+DebugController -left-> UsuarioRepo
+
+JefaturaController -left-> ProyectoRepo
+JefaturaController -left-> UsuarioRepo
+JefaturaController -left-> ProfesorRepo
+JefaturaController -left-> ContratoRepo
+JefaturaController -left-> BitacoraRepo
+
+DirectorController -down-> "JdbcTemplate"
+DirectorProyectoController -left-> ProyectoRepo
+
+DirectorAyudantesController -left-> AyudanteRepo
+DirectorAyudantesController -left-> ContratoRepo
+DirectorAyudantesController -left-> UsuarioRepo
+DirectorAyudantesController -left-> ProyectoRepo
+
+DirectorBitacoraController -left-> BitacoraRepo
+DirectorBitacoraController -left-> InformeSemanalRepo
+DirectorBitacoraController -left-> ActividadRepo
+
+AyudanteBitacoraController -left-> ContratoRepo
+AyudanteBitacoraController -left-> BitacoraRepo
+AyudanteBitacoraController -left-> InformeSemanalRepo
+AyudanteBitacoraController -left-> ActividadRepo
+
+BitacoraDebugController -down-> "JdbcTemplate"
+
+' ============================================
+' RELACIONES CONTROLLERS -> SERVICES
+' ============================================
+
+JefaturaController -down-> NotificacionPort
+DirectorAyudantesController -down-> NotificacionPort
+
+' ============================================
+' RELACIONES CONTROLLERS -> UTIL
+' ============================================
+
+JefaturaController ..> PasswordGenerator
+DirectorAyudantesController ..> PasswordGenerator
+
+' ============================================
+' RELACIONES DTOs -> CONTROLLERS
+' ============================================
+
+JefaturaController .up.> CrearProyectoReq
+DirectorAyudantesController .up.> RegistrarAyudanteReq
+DirectorProyectoController .up.> ActualizarProyectoReq
+AyudanteBitacoraController .up.> CrearInformeSemanalReq
+AyudanteBitacoraController .up.> CrearActividadReq
+
+@enduml
