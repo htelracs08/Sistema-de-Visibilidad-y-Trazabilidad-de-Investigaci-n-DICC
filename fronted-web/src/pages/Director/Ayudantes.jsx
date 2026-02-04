@@ -296,11 +296,14 @@ export default function DirAyudantes() {
     setLoading(true);
     setToast({ msg: "", kind: "info" });
     try {
+        console.log("📡 Cargando ayudantes del proyecto:", selected.id);
       const res = await apiGet(`/api/v1/director/proyectos/${selected.id}/ayudantes`);
       const arr = Array.isArray(res) ? res : (res?.items ?? []);
+      console.log("✅ Ayudantes cargados:", arr.length);
       setRows(arr);
       setToast({ msg: `✅ ${arr.length} contratos cargados`, kind: "ok" });
     } catch (e) {
+        console.error("❌ Error cargando ayudantes:", e);
       setToast({ msg: e.message, kind: "bad" });
     } finally {
       setLoading(false);
@@ -308,7 +311,10 @@ export default function DirAyudantes() {
   }
 
   useEffect(() => { 
-    if (selected?.id) load(); 
+    if (selected?.id) {
+        console.log("🎯 Proyecto seleccionado cambió:", selected);
+        load(); 
+    }
   }, [selected?.id]);
 
   const filtered = useMemo(() => {
@@ -409,23 +415,98 @@ export default function DirAyudantes() {
       return;
     }
 
+
+// ✅ VALIDACIÓN 3: Fecha fin posterior a fecha inicio
+    const inicio = new Date(fechaInicioContrato);
+    const fin = new Date(fechaFinContrato);
+    
+    if (fin <= inicio) {
+      setToast({ msg: "⚠️ La fecha de fin debe ser posterior a la fecha de inicio", kind: "bad" });
+      return;
+    }
+
+    // ✅ VALIDACIÓN 4: Correo institucional válido
+    if (!correoInstitucional.includes("@")) {
+      setToast({ msg: "⚠️ El correo institucional debe ser válido", kind: "bad" });
+      return;
+    }
+
+    const payload = {
+      nombres: nombres.trim(),
+      apellidos: apellidos.trim(),
+      correoInstitucional: correoInstitucional.trim().toLowerCase(),
+      facultad: facultad.trim(),
+      quintil: q,
+      tipoAyudante: tipoAyudante,
+      fechaInicioContrato: fechaInicioContrato, // Ya viene en formato YYYY-MM-DD del input type="date"
+      fechaFinContrato: fechaFinContrato
+    };
+
+    console.log("📤 Enviando registro de ayudante:");
+    console.log("  - Proyecto ID:", selected.id);
+    console.log("  - Payload:", payload);
+
+
+
+
+
+//     try {
+//       await apiPost(`/api/v1/director/proyectos/${selected.id}/ayudantes`, {
+//         nombres: nombres.trim(),
+//         apellidos: apellidos.trim(),
+//         correoInstitucional: correoInstitucional.trim().toLowerCase(),
+//         facultad: facultad.trim(),
+//         quintil: q,
+//         tipoAyudante: tipoAyudante,
+//         fechaInicioContrato: fechaInicioContrato,
+//         fechaFinContrato: fechaFinContrato
+//       });
+
+//       setOpenRegistro(false);
+//       setToast({ msg: "✅ Ayudante registrado correctamente", kind: "ok" });
+//       await load();
+//     } catch (e) {
+//       setToast({ msg: `❌ ${e.message}`, kind: "bad" });
+//     }
+//   }
     try {
-      await apiPost(`/api/v1/director/proyectos/${selected.id}/ayudantes`, {
-        nombres: nombres.trim(),
-        apellidos: apellidos.trim(),
-        correoInstitucional: correoInstitucional.trim().toLowerCase(),
-        facultad: facultad.trim(),
-        quintil: q,
-        tipoAyudante: tipoAyudante,
-        fechaInicioContrato: fechaInicioContrato,
-        fechaFinContrato: fechaFinContrato
-      });
+      const response = await apiPost(`/api/v1/director/proyectos/${selected.id}/ayudantes`, payload);
+      
+      console.log("📥 Respuesta del backend:", response);
+
+      // ✅ Verificar si el backend retornó error
+      if (response && response.ok === false) {
+        throw new Error(response.msg || response.message || "Error desconocido del backend");
+      }
 
       setOpenRegistro(false);
       setToast({ msg: "✅ Ayudante registrado correctamente", kind: "ok" });
+      
+      // Recargar la tabla
       await load();
     } catch (e) {
-      setToast({ msg: `❌ ${e.message}`, kind: "bad" });
+      console.error("❌ Error registrando ayudante:", e);
+      console.error("   Tipo:", typeof e);
+      console.error("   Mensaje:", e.message);
+      console.error("   Stack:", e.stack);
+      
+      // Mostrar error detallado al usuario
+      let errorMsg = e.message || "Error desconocido";
+      
+      // Parsear errores comunes del backend
+      if (errorMsg.includes("404")) {
+        errorMsg = "⚠️ Proyecto no encontrado o inactivo. Verifica que el proyecto esté activo en la base de datos.";
+      } else if (errorMsg.includes("403")) {
+        errorMsg = "⚠️ No tienes permisos para registrar ayudantes en este proyecto.";
+      } else if (errorMsg.includes("400")) {
+        errorMsg = "⚠️ Datos inválidos. Verifica que todas las fechas y tipos sean correctos.";
+      } else if (errorMsg.includes("500")) {
+        errorMsg = "⚠️ Error interno del servidor. Verifica los logs del backend.";
+      } else if (errorMsg.includes("Network") || errorMsg.includes("Failed to fetch")) {
+        errorMsg = "⚠️ No se puede conectar al backend. Verifica que esté corriendo en http://localhost:8080";
+      }
+      
+      setToast({ msg: `❌ ${errorMsg}`, kind: "bad" });
     }
   }
 
@@ -510,6 +591,11 @@ export default function DirAyudantes() {
 
       {/* Modal: Registrar ayudante */}
       <Modal open={openRegistro} title="➕ Registrar Ayudante" onClose={() => setOpenRegistro(false)}>
+        <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-200">
+          <p className="text-sm text-blue-800">
+            <strong>ℹ️ Proyecto:</strong> {selected?.codigo} - {selected?.nombre}
+          </p>
+        </div>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-gray-600 font-semibold">Nombres *</label>
@@ -517,7 +603,7 @@ export default function DirAyudantes() {
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={regForm.nombres}
               onChange={(e) => setRegForm({ ...regForm, nombres: e.target.value })}
-              placeholder="Juan Carlos"
+              placeholder="Juan Marcos"
             />
           </div>
 
@@ -534,6 +620,7 @@ export default function DirAyudantes() {
           <div className="md:col-span-2">
             <label className="text-sm text-gray-600 font-semibold">Correo Institucional *</label>
             <input 
+                type="email"
               className="mt-1 w-full rounded-xl border px-3 py-2"
               value={regForm.correoInstitucional}
               onChange={(e) => setRegForm({ ...regForm, correoInstitucional: e.target.value })}

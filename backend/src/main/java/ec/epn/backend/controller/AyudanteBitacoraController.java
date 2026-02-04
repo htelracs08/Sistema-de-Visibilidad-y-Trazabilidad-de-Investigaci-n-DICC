@@ -448,6 +448,7 @@ public class AyudanteBitacoraController {
     if (n == 0) return Map.of("ok", false, "msg", "Bitácora no encontrada");
 
     return Map.of("ok", true);
+    
   }
 
   // =========================

@@ -308,7 +308,8 @@ export default function DirProyectos() {
   const [selectedId, setSelectedId] = useState(getDirectorSelectedProject()?.id || "");
   const [toast, setToast] = useState({ msg: "", kind: "info" });
 
-  const [showEditForm, setShowEditForm] = useState(false);
+  
+  //const [showEditForm, setShowEditForm] = useState(false);
   const [edit, setEdit] = useState({
     fechaInicio: "",
     fechaFin: "",
@@ -424,7 +425,8 @@ export default function DirProyectos() {
     setSelectedId(p.id);
     setDirectorSelectedProject({ id: p.id, codigo: p.codigo, nombre: p.nombre });
     precargarFormulario(p);
-    setShowEditForm(true);
+
+    //setShowEditForm(true);
     setToast({ msg: `📁 Proyecto seleccionado: ${p.codigo}`, kind: "ok" });
   }
 
@@ -495,7 +497,8 @@ export default function DirProyectos() {
       </div>
 
       {/* Formulario de edición (solo visible si hay proyecto seleccionado) */}
-      {showEditForm && selectedId && (
+      
+      {/* {showEditForm && selectedId && (
         <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -510,6 +513,15 @@ export default function DirProyectos() {
             >
               ✕
             </button>
+          </div> */}
+
+        {selectedId && (
+        <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-5">
+          <div className="mb-4">
+            <div className="text-lg font-bold text-poli-ink">⚙️ Actualizar detalles del proyecto</div>
+            <div className="text-sm text-gray-500">
+              Editando: <strong>{rows.find(r => r.id === selectedId)?.codigo}</strong>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">

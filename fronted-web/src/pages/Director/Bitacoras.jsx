@@ -4,48 +4,9 @@ import Table from "../../components/Table.jsx";
 import Loading from "../../components/Loading.jsx";
 import Modal from "../../components/Modal.jsx";
 import Toast from "../../components/Toast.jsx";
+import ConfirmDialog from "../../components/ConfirmDialog.jsx"; // ✅ IMPORTAR ESTO
 import { getDirectorSelectedProject } from "../../lib/state";
 import { exportBitacoraPdf } from "../../lib/pdf";
-
-function safe(v) {
-  return (v ?? "").toString().replace(/\n/g, " ").replace(/\r/g, " ").trim();
-}
-
-function padRight(text, width) {
-  const t = safe(text);
-  if (t.length >= width) return t.substring(0, width);
-  return t + " ".repeat(width - t.length);
-}
-
-function wrapCell(text, width) {
-  const t = safe(text);
-  if (!t) return [padRight("", width)];
-  const words = t.split(/\s+/);
-  const lines = [];
-  let line = "";
-  for (const w of words) {
-    if (!line) line = w;
-    else if ((line.length + 1 + w.length) <= width) line += " " + w;
-    else {
-      lines.push(padRight(line, width));
-      line = w;
-    }
-  }
-  if (line) lines.push(padRight(line, width));
-  return lines;
-}
-
-function wrapRow(row, widths) {
-  const wrapped = row.map((c, i) => wrapCell(c, widths[i]));
-  const maxLines = Math.max(...wrapped.map((x) => x.length), 1);
-
-  const out = [];
-  for (let i = 0; i < maxLines; i++) {
-    const cells = wrapped.map((cellLines) => (i < cellLines.length ? cellLines[i] : padRight("", cellLines[0].length)));
-    out.push(cells.map((c, idx) => (idx < cells.length - 1 ? c + " | " : c)).join(""));
-  }
-  return out;
-}
 
 export default function DirBitacoras() {
   const selected = getDirectorSelectedProject();
@@ -56,12 +17,20 @@ export default function DirBitacoras() {
 
   const [openView, setOpenView] = useState(false);
   const [viewLoading, setViewLoading] = useState(false);
-  const [bitacoraData, setBitacoraData] = useState(null); // { bitacora, semanas }
+  const [bitacoraData, setBitacoraData] = useState(null);
   const [bitacoraId, setBitacoraId] = useState("");
+
+  // ✅ Estados para confirmaciones
+  const [confirmDialog, setConfirmDialog] = useState({
+    open: false,
+    action: null,
+    bitacoraId: null
+  });
+  const [observacion, setObservacion] = useState("");
 
   async function load() {
     if (!selected?.id) {
-      setToast({ msg: "Primero selecciona un proyecto en Proyectos.", kind: "bad" });
+      setToast({ msg: "Primero selecciona un proyecto en la pestaña Proyectos.", kind: "bad" });
       return;
     }
 
@@ -97,7 +66,7 @@ export default function DirBitacoras() {
           className="rounded-xl px-3 py-2 bg-poli-gray hover:bg-gray-200 font-bold"
           onClick={() => ver(r.bitacoraId)}
         >
-          Ver
+          👁️ Ver
         </button>
       )
     }
@@ -111,10 +80,17 @@ export default function DirBitacoras() {
 
     try {
       const res = await apiGet(`/api/v1/director/bitacoras/${id}`);
-      // contrato esperado: { ok:true, bitacora:{...}, semanas:[...] }
       const bitacora = res?.bitacora ?? null;
       const semanas = Array.isArray(res?.semanas) ? res.semanas : [];
-      setBitacoraData({ bitacora, semanas });
+      
+      const estudiante = bitacora ? {
+        nombres: res.nombres || "",
+        apellidos: res.apellidos || "",
+        correoInstitucional: res.correoInstitucional || "",
+        facultad: res.facultad || ""
+      } : null;
+
+      setBitacoraData({ bitacora, semanas, estudiante });
     } catch (e) {
       setToast({ msg: e.message, kind: "bad" });
       setOpenView(false);
@@ -123,81 +99,59 @@ export default function DirBitacoras() {
     }
   }
 
-  const tableRows = useMemo(() => {
-    if (!bitacoraData) return [];
-    const widths = [18, 22, 18, 12, 24, 8, 8, 6]; // como tu Swing
-    const out = [];
-
-    for (const semana of bitacoraData.semanas || []) {
-      const semanaLabel = `${safe(semana.fechaInicioSemana)} - ${safe(semana.fechaFinSemana)}`.trim();
-      const actSemana = safe(semana.actividadesRealizadas);
-      const obs = safe(semana.observaciones);
-      const anexos = safe(semana.anexos);
-
-      const acts = Array.isArray(semana.actividades) ? semana.actividades : [];
-
-      if (!acts.length) {
-        out.push({ semana: semanaLabel, actSemana, obs, anexos, actividad: "", ini: "", sal: "", hrs: "" });
-        continue;
-      }
-
-      for (const act of acts) {
-        out.push({
-          semana: semanaLabel,
-          actSemana,
-          obs,
-          anexos,
-          actividad: safe(act.descripcion),
-          ini: safe(act.horaInicio),
-          sal: safe(act.horaSalida),
-          hrs: safe(act.totalHoras)
-        });
-      }
-    }
-
-    return { out, widths };
-  }, [bitacoraData]);
-
+  // ✅ Función para descargar PDF
   function descargarPdf() {
     if (!bitacoraData) return;
 
-    const widths = tableRows.widths;
-    const flatLines = [];
-
-    // Encabezado tabla tipo texto
-    const header = ["Semana", "Act.Semana", "Observ.", "Anexos", "Actividad", "Ini", "Sal", "Hrs"]
-      .map((c, i) => padRight(c, widths[i]))
-      .map((c, idx, arr) => (idx < arr.length - 1 ? c + " | " : c))
-      .join("");
-
-    flatLines.push(header);
-
-    for (const r of tableRows.out) {
-      const row = [r.semana, r.actSemana, r.obs, r.anexos, r.actividad, r.ini, r.sal, r.hrs];
-      const lines = wrapRow(row, widths);
-      flatLines.push(...lines);
-    }
-
-    exportBitacoraPdf({
-      bitacoraId,
-      bitacora: bitacoraData.bitacora,
-      rows: flatLines
-    });
-  }
-
-  async function revisar(decision) {
-    if (!bitacoraId) return;
-
-    const obs = prompt("Observación (opcional):", "") ?? "";
-
     try {
-      await apiPost(`/api/v1/director/bitacoras/${bitacoraId}/revisar`, {
-        decision,
-        observacion: obs
+      const fileName = exportBitacoraPdf({
+        bitacoraId,
+        bitacora: bitacoraData.bitacora,
+        semanas: bitacoraData.semanas,
+        estudiante: bitacoraData.estudiante
       });
 
-      setToast({ msg: `Revisión realizada: ${decision}`, kind: "ok" });
+      setToast({ msg: `✅ PDF generado: ${fileName}`, kind: "ok" });
+    } catch (e) {
+      setToast({ msg: `❌ Error generando PDF: ${e.message}`, kind: "bad" });
+    }
+  }
+
+  // ✅ Abrir confirmación
+  function abrirConfirmacion(action) {
+    setConfirmDialog({
+      open: true,
+      action,
+      bitacoraId
+    });
+    setObservacion("");
+  }
+
+  // ✅ Revisar bitácora
+  async function revisar() {
+    const { action, bitacoraId: id } = confirmDialog;
+    if (!id || !action) return;
+
+    const decision = action === "aprobar" ? "APROBAR" : "RECHAZAR";
+
+    // Validar observación si es rechazo
+    if (action === "rechazar" && !observacion.trim()) {
+      setToast({ msg: "La observación es requerida al rechazar", kind: "bad" });
+      return;
+    }
+
+    try {
+      await apiPost(`/api/v1/director/bitacoras/${id}/revisar`, {
+        decision,
+        observacion: observacion.trim() || ""
+      });
+
+      setToast({ 
+        msg: `✅ Bitácora ${decision === "APROBAR" ? "aprobada" : "rechazada"} correctamente`, 
+        kind: "ok" 
+      });
       setOpenView(false);
+      setConfirmDialog({ open: false, action: null, bitacoraId: null });
       await load();
     } catch (e) {
       setToast({ msg: e.message, kind: "bad" });
@@ -215,18 +169,40 @@ export default function DirBitacoras() {
     { key: "hrs", label: "Horas" }
   ];
 
-  const viewRows = bitacoraData
-    ? (tableRows.out || []).map((r) => ({
-        semana: r.semana,
-        actSemana: r.actSemana,
-        obs: r.obs,
-        anexos: r.anexos,
-        actividad: r.actividad,
-        ini: r.ini,
-        sal: r.sal,
-        hrs: r.hrs
-      }))
-    : [];
+  const viewRows = useMemo(() => {
+    if (!bitacoraData) return [];
+    
+    const rows = [];
+    for (const semana of bitacoraData.semanas || []) {
+      const acts = Array.isArray(semana.actividades) ? semana.actividades : [];
+      if (!acts.length) {
+        rows.push({
+          semana: `${semana.fechaInicioSemana || ""} - ${semana.fechaFinSemana || ""}`.trim(),
+          actSemana: semana.actividadesRealizadas || "",
+          obs: semana.observaciones || "",
+          anexos: semana.anexos || "",
+          actividad: "",
+          ini: "",
+          sal: "",
+          hrs: ""
+        });
+      } else {
+        for (const a of acts) {
+          rows.push({
+            semana: `${semana.fechaInicioSemana || ""} - ${semana.fechaFinSemana || ""}`.trim(),
+            actSemana: semana.actividadesRealizadas || "",
+            obs: semana.observaciones || "",
+            anexos: semana.anexos || "",
+            actividad: a.descripcion || "",
+            ini: a.horaInicio || "",
+            sal: a.horaSalida || "",
+            hrs: a.totalHoras || ""
+          });
+        }
+      }
+    }
+    return rows;
+  }, [bitacoraData]);
 
   const header = selected?.id
     ? `Proyecto seleccionado: ${selected.codigo} - ${selected.nombre}`
@@ -241,16 +217,26 @@ export default function DirBitacoras() {
         </div>
 
         <button onClick={load} className="rounded-xl px-4 py-2 bg-poli-gray hover:bg-gray-200 font-bold">
-          Refrescar
+          🔄 Refrescar
         </button>
       </div>
 
       {loading ? <Loading /> : <Table columns={columns} rows={rows} />}
 
-      <Modal open={openView} title={`Bitácora ${bitacoraId}`} onClose={() => setOpenView(false)}>
+      <Modal open={openView} title={`📋 Bitácora ${bitacoraId}`} onClose={() => setOpenView(false)}>
         {viewLoading && <Loading />}
         {!viewLoading && bitacoraData && (
           <div className="space-y-3">
+            {bitacoraData.estudiante && (
+              <div className="rounded-xl bg-blue-50 p-4 border border-blue-200">
+                <div className="font-bold text-blue-900">👤 Ayudante:</div>
+                <div className="text-sm text-blue-800 mt-1">
+                  {bitacoraData.estudiante.nombres} {bitacoraData.estudiante.apellidos}
+                </div>
+                <div className="text-xs text-blue-600">{bitacoraData.estudiante.correoInstitucional}</div>
+              </div>
+            )}
+
             <div className="rounded-xl bg-poli-gray p-3 border border-gray-200 text-sm">
               <b>Estado:</b> {bitacoraData.bitacora?.estado ?? "-"}{" "}
               <span className="mx-2">|</span>
@@ -260,14 +246,23 @@ export default function DirBitacoras() {
             </div>
 
             <div className="flex flex-wrap gap-2 justify-end">
-              <button onClick={descargarPdf} className="rounded-xl px-4 py-2 bg-poli-navy text-white font-bold">
-                Descargar PDF
+              <button 
+                onClick={descargarPdf} 
+                className="rounded-xl px-4 py-2 bg-poli-navy text-white font-bold hover:bg-blue-900"
+              >
+                📄 Descargar PDF
               </button>
-              <button onClick={() => revisar("APROBAR")} className="rounded-xl px-4 py-2 bg-emerald-600 text-white font-bold">
-                Aprobar
+              <button 
+                onClick={() => abrirConfirmacion("aprobar")} 
+                className="rounded-xl px-4 py-2 bg-emerald-600 text-white font-bold hover:bg-emerald-700"
+              >
+                ✅ Aprobar
               </button>
-              <button onClick={() => revisar("RECHAZAR")} className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold">
-                Rechazar
+              <button 
+                onClick={() => abrirConfirmacion("rechazar")} 
+                className="rounded-xl px-4 py-2 bg-poli-red text-white font-bold hover:bg-red-700"
+              >
+                ❌ Rechazar
               </button>
             </div>
 
@@ -275,6 +270,40 @@ export default function DirBitacoras() {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={
+          confirmDialog.action === "aprobar"
+            ? "¿Aprobar esta bitácora?"
+            : "¿Rechazar esta bitácora?"
+        }
+        message={
+          <div>
+            <p className="mb-3">
+              {confirmDialog.action === "aprobar"
+                ? "Al aprobar, el ayudante recibirá una notificación y la bitácora quedará registrada."
+                : "Al rechazar, el ayudante deberá corregir y reenviar la bitácora."}
+            </p>
+            <div>
+              <label className="text-sm text-gray-600 font-semibold">
+                Observación {confirmDialog.action === "rechazar" && <span className="text-red-600">(requerida)</span>}:
+              </label>
+              <textarea
+                className="mt-1 w-full rounded-xl border px-3 py-2 min-h-[80px]"
+                value={observacion}
+                onChange={(e) => setObservacion(e.target.value)}
+                placeholder="Escribe aquí tus comentarios..."
+              />
+            </div>
+          </div>
+        }
+        confirmText={confirmDialog.action === "aprobar" ? "Aprobar" : "Rechazar"}
+        cancelText="Cancelar"
+        onConfirm={revisar}
+        onCancel={() => setConfirmDialog({ open: false, action: null, bitacoraId: null })}
+        type={confirmDialog.action === "aprobar" ? "info" : "danger"}
+      />
 
       <Toast msg={toast.msg} kind={toast.kind} onClose={() => setToast({ msg: "", kind: "info" })} />
     </div>

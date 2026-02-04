@@ -13,10 +13,12 @@ import DirectorLayout from "./pages/Director/DirectorLayout.jsx";
 import DirProyectos from "./pages/Director/Proyectos.jsx";
 import DirAyudantes from "./pages/Director/Ayudantes.jsx";
 import DirBitacoras from "./pages/Director/Bitacoras.jsx";
+import DirHistorial from "./pages/Director/Historial.jsx";
 
 import AyudanteLayout from "./pages/Ayudante/AyudanteLayout.jsx";
 import AyuBitacoraActual from "./pages/Ayudante/BitacoraActual.jsx";
 import AyuBitacoraVer from "./pages/Ayudante/BitacoraVer.jsx";
+import AyuHistorialBitacoras from "./pages/Ayudante/Historial.jsx";
 
 export default function App() {
   return (
@@ -50,6 +52,8 @@ export default function App() {
         <Route path="proyectos" element={<DirProyectos />} />
         <Route path="ayudantes" element={<DirAyudantes />} />
         <Route path="bitacoras" element={<DirBitacoras />} />
+      //Para Director
+        <Route path="historial" element={<DirHistorial />} />
       </Route>
 
       <Route
@@ -63,6 +67,9 @@ export default function App() {
         <Route index element={<Navigate to="/ayudante/bitacora-actual" replace />} />
         <Route path="bitacora-actual" element={<AyuBitacoraActual />} />
         <Route path="bitacora/:id" element={<AyuBitacoraVer />} />
+     //Para Ayudante
+        <Route path="historial" element={<AyuHistorialBitacoras />} />
+
       </Route>
 
       <Route path="*" element={<Navigate to="/login" replace />} />

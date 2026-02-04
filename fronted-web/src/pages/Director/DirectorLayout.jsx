@@ -67,6 +67,13 @@ const menuItems = [
     icon: "📋",
     title: "Revisión de Bitácoras",
     description: "Revisa y aprueba las bitácoras mensuales"
+  },
+    { 
+    path: "/director/Historial", 
+    label: "Historial", 
+    icon: "📋",
+    title: "Ver Historial de Bitácoras",
+    description: "Consulta el historial de bitácoras enviadas"
   }
 ];
 
